@@ -3,539 +3,796 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scent Memory Playground</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>Fragrance Playground</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8f5f2;
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+            min-height: 100vh;
+            display: flex;
+            overflow: hidden;
         }
 
-        h1, h2, h3, .serif {
-            font-family: 'Playfair Display', serif;
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            transition: margin-left 0.3s ease;
+            position: relative;
+            z-index: 10;
         }
 
-        /* Custom Scrollbar for the sidebar */
-        .sidebar-scroll::-webkit-scrollbar {
-            width: 6px;
+        .sidebar.collapsed {
+            margin-left: -280px;
         }
-        .sidebar-scroll::-webkit-scrollbar-track {
-            background: transparent;
+
+        .toggle-btn {
+            position: absolute;
+            right: -40px;
+            top: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 0 5px 5px 0;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            font-size: 18px;
         }
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-            background-color: #e5e7eb;
+
+        .sidebar-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .sidebar-header h2 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .family {
+            border-bottom: 1px solid #eee;
+        }
+
+        .family-header {
+            padding: 15px 20px;
+            background: #f8f8f8;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .family-header:hover {
+            background: #f0f0f0;
+        }
+
+        .family-notes {
+            padding: 10px;
+            display: none;
+        }
+
+        .family.open .family-notes {
+            display: block;
+        }
+
+        .family.open .arrow {
+            transform: rotate(90deg);
+        }
+
+        .arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .note {
+            background: white;
+            padding: 8px 12px;
+            margin: 5px;
             border-radius: 20px;
-        }
-
-        /* Draggable item styling */
-        .note-chip {
-            cursor: grab;
+            cursor: move;
+            display: inline-block;
+            border: 2px solid #ddd;
+            font-size: 13px;
             transition: all 0.2s ease;
-            user-select: none;
         }
-        .note-chip:active {
-            cursor: grabbing;
-            transform: scale(0.95);
+
+        .note:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            border-color: #667eea;
         }
-        .note-chip.dragging {
+
+        .note.dragging {
             opacity: 0.5;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
-        /* Squircle Clip Path */
-        .squircle-container {
-            clip-path: url(#squircleClip);
-            border-radius: 24px; /* Fallback */
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
         }
 
-        /* Pyramid Zones */
+        .title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title h1 {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .title p {
+            color: #666;
+            font-style: italic;
+        }
+
+        .pyramid-container {
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .pyramid-level {
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .level-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
         .drop-zone {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 80px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
         }
+
         .drop-zone.drag-over {
-            background-color: #f3f4f6;
-            border-color: #9ca3af;
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #667eea;
             transform: scale(1.02);
         }
-        
-        /* Animation */
-        .fade-in {
-            animation: fadeIn 0.8s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        .drop-zone.top {
+            width: 50%;
+            margin: 0 auto;
         }
 
-        /* Sparkle Button Animation */
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        .drop-zone.heart {
+            width: 70%;
+            margin: 0 auto;
         }
-        .animate-shimmer {
-            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
-            background-size: 200% 100%;
-            animation: shimmer 2s infinite;
+
+        .drop-zone.base {
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        .placed-note {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remove-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .remove-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .memory-scene {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            min-height: 200px;
+        }
+
+        .memory-scene h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+
+        .memory-scene p {
+            color: #555;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        .memory-scene.empty {
+            text-align: center;
+            color: #999;
         }
     </style>
 </head>
-<body class="h-screen flex overflow-hidden text-slate-800">
-
-    <!-- SVG Definition for Squircle -->
-    <svg width="0" height="0" class="absolute">
-        <defs>
-            <clipPath id="squircleClip" clipPathUnits="objectBoundingBox">
-                <path d="M .5,0 C .1,0 0,.1 0,.5 0,.9 .1,1 .5,1 .9,1 1,.9 1,.5 1,.1 .9,0 .5,0 Z" />
-            </clipPath>
-        </defs>
-    </svg>
-
-    <!-- SIDEBAR -->
-    <aside id="sidebar" class="w-72 bg-white border-r border-stone-200 flex flex-col transition-all duration-300 relative z-20 shadow-lg">
-        <div class="p-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
-            <h2 class="font-bold text-stone-700 tracking-wide uppercase text-sm" id="sidebar-title">Fragrance Notes</h2>
-            <button onclick="toggleSidebar()" class="p-1 hover:bg-stone-200 rounded text-stone-500 transition-colors">
-                <i data-lucide="panel-left-close" id="toggle-icon"></i>
-            </button>
+<body>
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        <div class="sidebar-header">
+            <h2>Fragrance Notes</h2>
+            <p>Drag notes to create your blend</p>
         </div>
         
-        <div class="flex-1 overflow-y-auto p-4 sidebar-scroll space-y-6" id="notes-container">
-            <!-- JS generates content here -->
+        <div class="family open">
+            <div class="family-header" onclick="toggleFamily(this)">
+                <span>🌸 Floral</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="family-notes">
+                <div class="note" draggable="true" data-note="lavender" data-family="floral">Lavender</div>
+                <div class="note" draggable="true" data-note="clary sage" data-family="floral">Clary Sage</div>
+                <div class="note" draggable="true" data-note="geranium" data-family="floral">Geranium</div>
+                <div class="note" draggable="true" data-note="saffron" data-family="floral">Saffron</div>
+                <div class="note" draggable="true" data-note="lotus" data-family="floral">Lotus</div>
+                <div class="note" draggable="true" data-note="lily-of-the-valley" data-family="floral">Lily-of-the-Valley</div>
+                <div class="note" draggable="true" data-note="marigold" data-family="floral">Marigold</div>
+                <div class="note" draggable="true" data-note="begonia" data-family="floral">Begonia</div>
+                <div class="note" draggable="true" data-note="jasmine" data-family="floral">Jasmine</div>
+                <div class="note" draggable="true" data-note="wild cyclamen" data-family="floral">Wild Cyclamen</div>
+            </div>
         </div>
 
-        <div class="p-4 bg-stone-50 text-xs text-stone-400 border-t border-stone-100 text-center">
-            Drag notes to the pyramid
+        <div class="family open">
+            <div class="family-header" onclick="toggleFamily(this)">
+                <span>🌲 Woody</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="family-notes">
+                <div class="note" draggable="true" data-note="cedar" data-family="woody">Cedar</div>
+                <div class="note" draggable="true" data-note="sandalwood" data-family="woody">Sandalwood</div>
+                <div class="note" draggable="true" data-note="oud" data-family="woody">Oud</div>
+                <div class="note" draggable="true" data-note="vetiver" data-family="woody">Vetiver</div>
+                <div class="note" draggable="true" data-note="oak" data-family="woody">Oak</div>
+                <div class="note" draggable="true" data-note="cypress" data-family="woody">Cypress</div>
+            </div>
         </div>
-    </aside>
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col h-full relative overflow-y-auto bg-[#FAFAFA]">
-        
-        <!-- Open Sidebar Button -->
-        <button id="open-sidebar-btn" onclick="toggleSidebar()" class="absolute top-4 left-4 z-10 p-2 bg-white shadow-md rounded-md hover:bg-stone-50 hidden">
-            <i data-lucide="panel-left-open"></i>
-        </button>
+        <div class="family">
+            <div class="family-header" onclick="toggleFamily(this)">
+                <span>🍊 Citrus</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="family-notes">
+                <div class="note" draggable="true" data-note="bergamot" data-family="citrus">Bergamot</div>
+                <div class="note" draggable="true" data-note="bitter orange" data-family="citrus">Bitter Orange</div>
+                <div class="note" draggable="true" data-note="citron" data-family="citrus">Citron</div>
+                <div class="note" draggable="true" data-note="grapefruit" data-family="citrus">Grapefruit</div>
+                <div class="note" draggable="true" data-note="lemon" data-family="citrus">Lemon</div>
+                <div class="note" draggable="true" data-note="lemongrass" data-family="citrus">Lemongrass</div>
+                <div class="note" draggable="true" data-note="mandarin orange" data-family="citrus">Mandarin Orange</div>
+            </div>
+        </div>
 
-        <!-- Header -->
-        <header class="pt-8 pb-4 px-8 text-center">
-            <h1 class="text-3xl md:text-4xl text-stone-800 mb-2 serif italic">The Olfactory Playground</h1>
-            <p class="text-stone-500 max-w-2xl mx-auto">Drag ingredients into the pyramid. The memory scene below will evolve as you blend.</p>
-        </header>
+        <div class="family">
+            <div class="family-header" onclick="toggleFamily(this)">
+                <span>🍎 Fruit</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="family-notes">
+                <div class="note" draggable="true" data-note="apple" data-family="fruit">Apple</div>
+                <div class="note" draggable="true" data-note="apricot" data-family="fruit">Apricot</div>
+                <div class="note" draggable="true" data-note="banana" data-family="fruit">Banana</div>
+                <div class="note" draggable="true" data-note="blueberry" data-family="fruit">Blueberry</div>
+                <div class="note" draggable="true" data-note="cherry" data-family="fruit">Cherry</div>
+                <div class="note" draggable="true" data-note="coconut" data-family="fruit">Coconut</div>
+            </div>
+        </div>
 
-        <!-- Workspace -->
-        <div class="flex-1 px-4 md:px-8 pb-8 flex flex-col items-center justify-start gap-8">
-            
-            <!-- Pyramid -->
-            <div class="w-full max-w-3xl flex flex-col gap-2">
-                
-                <!-- TOP -->
-                <div class="flex items-center gap-4">
-                    <div class="w-24 text-right hidden sm:block">
-                        <span class="text-xs font-bold uppercase tracking-widest text-stone-400">Top</span>
-                        <div class="text-[10px] text-stone-300">First Impression</div>
-                    </div>
-                    <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" 
-                         ondrop="drop(event, 'top')" ondragover="allowDrop(event)" id="zone-top">
-                         <span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Top Notes Here</span>
-                    </div>
-                </div>
+        <div class="family">
+            <div class="family-header" onclick="toggleFamily(this)">
+                <span>🌿 Greens</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="family-notes">
+                <div class="note" draggable="true" data-note="basil" data-family="greens">Basil</div>
+                <div class="note" draggable="true" data-note="blackcurrant leaf" data-family="greens">Blackcurrant Leaf</div>
+                <div class="note" draggable="true" data-note="citron leaf" data-family="greens">Citron Leaf</div>
+                <div class="note" draggable="true" data-note="oolong" data-family="greens">Oolong</div>
+                <div class="note" draggable="true" data-note="ginkgo" data-family="greens">Ginkgo</div>
+                <div class="note" draggable="true" data-note="juniper leaf" data-family="greens">Juniper Leaf</div>
+                <div class="note" draggable="true" data-note="mint" data-family="greens">Mint</div>
+            </div>
+        </div>
 
-                <!-- HEART -->
-                <div class="flex items-center gap-4">
-                    <div class="w-24 text-right hidden sm:block">
-                        <span class="text-xs font-bold uppercase tracking-widest text-pink-300">Heart</span>
-                        <div class="text-[10px] text-stone-300">The Core</div>
-                    </div>
-                    <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" 
-                         ondrop="drop(event, 'heart')" ondragover="allowDrop(event)" id="zone-heart">
-                         <span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Heart Notes Here</span>
-                    </div>
-                </div>
+        <div class="family">
+            <div class="family-header" onclick="toggleFamily(this)">
+                <span>🦌 Musks</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="family-notes">
+                <div class="note" draggable="true" data-note="amber" data-family="musk">Amber</div>
+                <div class="note" draggable="true" data-note="ambergris" data-family="musk">Ambergris</div>
+                <div class="note" draggable="true" data-note="white musk" data-family="musk">White Musk</div>
+                <div class="note" draggable="true" data-note="musk" data-family="musk">Musk</div>
+            </div>
+        </div>
 
-                <!-- BASE -->
-                <div class="flex items-center gap-4">
-                    <div class="w-24 text-right hidden sm:block">
-                        <span class="text-xs font-bold uppercase tracking-widest text-amber-700">Base</span>
-                        <div class="text-[10px] text-stone-300">The Trail</div>
-                    </div>
-                    <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" 
-                         ondrop="drop(event, 'base')" ondragover="allowDrop(event)" id="zone-base">
-                         <span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Base Notes Here</span>
-                    </div>
-                </div>
+        <div class="family">
+            <div class="family-header" onclick="toggleFamily(this)">
+                <span>🔥 Warm</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="family-notes">
+                <div class="note" draggable="true" data-note="honey" data-family="warm">Honey</div>
+                <div class="note" draggable="true" data-note="tobacco" data-family="warm">Tobacco</div>
+                <div class="note" draggable="true" data-note="incense" data-family="warm">Incense</div>
+                <div class="note" draggable="true" data-note="frankincense" data-family="warm">Frankincense</div>
+            </div>
+        </div>
 
-                <!-- Controls -->
-                <div class="flex justify-between items-center mt-2 w-full">
-                    <button onclick="getAICritique()" id="btn-critique" class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-stone-800 transition-colors border border-stone-200">
-                        <span class="text-purple-500">✨</span> Consult the Alchemist
-                    </button>
-                    <button onclick="resetPyramid()" class="text-xs text-red-400 hover:text-red-600 underline cursor-pointer">Clear All Notes</button>
-                </div>
+        <div class="family">
+            <div class="family-header" onclick="toggleFamily(this)">
+                <span>⚡ Synthetic</span>
+                <span class="arrow">▶</span>
+            </div>
+            <div class="family-notes">
+                <div class="note" draggable="true" data-note="ambroxan" data-family="synthetic">Ambroxan</div>
+                <div class="note" draggable="true" data-note="ozonic note" data-family="synthetic">Ozonic Note</div>
+                <div class="note" draggable="true" data-note="airy note" data-family="synthetic">Airy Note</div>
+                <div class="note" draggable="true" data-note="marine note" data-family="synthetic">Marine Note</div>
+                <div class="note" draggable="true" data-note="salty note" data-family="synthetic">Salty Note</div>
+            </div>
+        </div>
+    </div>
 
-                <!-- Alchemist Feedback Area -->
-                <div id="alchemist-feedback" class="hidden w-full bg-stone-50 border border-stone-200 p-4 rounded-xl text-sm text-stone-700 mt-2 relative">
-                    <button onclick="this.parentElement.classList.add('hidden')" class="absolute top-2 right-2 text-stone-400 hover:text-stone-600">×</button>
-                    <h4 class="font-serif font-bold text-stone-800 mb-1 flex items-center gap-2"><span class="text-lg">⚗️</span> The Alchemist says:</h4>
-                    <p id="alchemist-text" class="italic">Analyzing...</p>
-                </div>
+    <div class="main-content">
+        <div class="title">
+            <h1>Fragrance Playground</h1>
+            <p>Create your perfect scent memory by blending notes</p>
+        </div>
+
+        <div class="pyramid-container">
+            <div class="pyramid-level">
+                <div class="level-label">Top Notes</div>
+                <div class="drop-zone top" data-level="top"></div>
             </div>
 
-            <!-- MEMORY SCENE -->
-            <div class="w-full max-w-2xl mt-4">
-                <div class="relative w-full aspect-[16/9] md:aspect-[21/9] bg-stone-900 text-stone-100 flex flex-col items-center justify-center p-8 md:p-12 shadow-2xl squircle-container overflow-hidden rounded-[2rem] group">
-                    
-                    <!-- Background Aesthetic -->
-                    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gray-100 via-gray-900 to-black pointer-events-none transition-opacity duration-1000" id="scene-bg"></div>
-
-                    <div class="relative z-10 text-center max-w-xl flex flex-col items-center">
-                        <h3 class="text-xl md:text-2xl font-serif mb-4 text-white/90 italic" id="scene-title">The Blank Canvas</h3>
-                        <p class="text-sm md:text-base text-stone-300 leading-relaxed font-light min-h-[4.5rem]" id="scene-desc">
-                            The air is still, waiting for the first drop of inspiration. The room is silent, a void of pure potential where memories have yet to be formed. Begin by adding a note to shape this world.
-                        </p>
-                        
-                        <!-- AI Dream Button -->
-                        <button onclick="generateAIDream()" id="btn-dream" class="mt-6 group/btn relative overflow-hidden rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 px-6 py-2 text-sm font-medium transition-all backdrop-blur-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300">
-                            <span class="absolute inset-0 animate-shimmer opacity-0 group-hover/btn:opacity-100"></span>
-                            <span>✨ Dream up a Scene</span>
-                        </button>
-                        
-                        <!-- Loader -->
-                        <div id="dream-loader" class="hidden mt-6">
-                            <div class="flex items-center gap-2 text-xs text-white/50 uppercase tracking-widest">
-                                <span class="animate-bounce" style="animation-delay: 0s">●</span>
-                                <span class="animate-bounce" style="animation-delay: 0.1s">●</span>
-                                <span class="animate-bounce" style="animation-delay: 0.2s">●</span>
-                                Dreaming
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
+            <div class="pyramid-level">
+                <div class="level-label">Heart Notes</div>
+                <div class="drop-zone heart" data-level="heart"></div>
             </div>
 
+            <div class="pyramid-level">
+                <div class="level-label">Base Notes</div>
+                <div class="drop-zone base" data-level="base"></div>
+            </div>
         </div>
-    </main>
+
+        <div class="memory-scene empty" id="memoryScene">
+            <p>Start adding notes to discover your memory scene...</p>
+        </div>
+    </div>
 
     <script>
-        /** * ------------------------------------------------------------------
-         * CONFIGURATION
-         * ------------------------------------------------------------------
-         * 1. Go to https://aistudio.google.com/ to get your API Key.
-         * 2. Paste it between the quotes below.
-         * 3. IMPORTANT: If hosting publicly on GitHub, set "API Key Restrictions"
-         * in Google Cloud Console to only allow your GitHub Pages domain.
-         */
-        const GOOGLE_API_KEY = "AIzaSyBFMctCXLAsor1702aKC34rSH4QJ2pdZ0M"; 
-        // ------------------------------------------------------------------
-
-
-        const families = {
-            "Floral": ["Lavender", "Clary sage", "Geranium", "Saffron", "Lotus", "Lily-of-the-valley", "Marigold", "Begonia", "Jasmine", "Wild cyclamen"],
-            "Woody": ["Cedar", "Sandalwood", "Oud", "Incense", "Vetiver", "Oak", "Cypress"],
-            "Citrus": ["Bergamot", "Bitter orange", "Citron", "Grapefruit", "Lemon", "Lemongrass", "Mandarin orange"],
-            "Fruit": ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Coconut"],
-            "Greens": ["Basil", "Blackcurrant leaf", "Citron leaf", "Oolong", "Ginkgo", "Juniper leaf", "Mint"],
-            "Musks": ["Amber", "Ambergris", "White musk", "Musk"],
-            "Warm": ["Honey", "Tobacco", "Frankincense"],
-            "Synthetic": ["Ambroxan", "Ozonic note", "Airy note", "Marine note", "Salty note"]
+        const composition = {
+            top: [],
+            heart: [],
+            base: []
         };
 
-        const familyColors = {
-            "Floral": "bg-pink-100 text-pink-800 border-pink-200",
-            "Woody": "bg-amber-800 text-amber-100 border-amber-900",
-            "Citrus": "bg-yellow-100 text-yellow-800 border-yellow-200",
-            "Fruit": "bg-orange-100 text-orange-800 border-orange-200",
-            "Greens": "bg-green-100 text-green-800 border-green-200",
-            "Musks": "bg-purple-100 text-purple-800 border-purple-200",
-            "Warm": "bg-amber-100 text-amber-800 border-amber-200",
-            "Synthetic": "bg-slate-100 text-slate-800 border-slate-200"
-        };
-
-        let currentMix = { top: [], heart: [], base: [] };
-
-        // --- GEMINI API CALLER ---
-        // --- GEMINI API CALLER (UPDATED) ---
-        async function callGemini(prompt, schema = null) {
-            if (!GOOGLE_API_KEY) {
-                alert("API Key missing! Open the HTML file in a text editor and add your Google API Key near the top.");
-                return null;
-            }
-
-            // UPDATED: Using the stable 1.5 Flash model
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_API_KEY}`;
-            
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { responseMimeType: "application/json" }
-            };
-
-            if (schema) payload.generationConfig.responseSchema = schema;
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                const data = await response.json();
-
-                if (!response.ok) {
-                    // This will print the ACTUAL error from Google to your browser console
-                    console.error("Google API Error Detail:", data);
-                    throw new Error(`API Error: ${data.error?.message || response.status}`);
-                }
-                
-                return JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
-            } catch (error) {
-                console.error("Connection Failed:", error);
-                alert("Error connecting to AI. Press F12 (Developer Tools) and check the Console tab for the specific error message.");
-                return null;
-            }
-        }
-
-        // --- AI FEATURES ---
-        async function generateAIDream() {
-            const btn = document.getElementById('btn-dream');
-            const loader = document.getElementById('dream-loader');
-            const titleEl = document.getElementById('scene-title');
-            const descEl = document.getElementById('scene-desc');
-            
-            // Validate
-            if (currentMix.top.length === 0 && currentMix.heart.length === 0 && currentMix.base.length === 0) {
-                alert("Please add at least one note before dreaming.");
-                return;
-            }
-
-            // UI Loading
-            btn.classList.add('hidden');
-            loader.classList.remove('hidden');
-            descEl.classList.add('opacity-50');
-
-            const mixString = `
-                Top: ${currentMix.top.map(n=>n.name).join(', ') || "None"}
-                Heart: ${currentMix.heart.map(n=>n.name).join(', ') || "None"}
-                Base: ${currentMix.base.map(n=>n.name).join(', ') || "None"}
-            `;
-
-            const prompt = `
-                You are a master perfumer and poet. 
-                Based on this fragrance blend:
-                ${mixString}
-                
-                1. Create a creative, abstract name for this perfume (max 4 words).
-                2. Write a short, evocative, sensory paragraph describing the memory or scene this scent evokes (approx 3-4 sentences). Focus on lighting, texture, and mood.
-                
-                Return JSON: { "name": "string", "description": "string" }
-            `;
-
-            const result = await callGemini(prompt);
-
-            // Restore UI
-            loader.classList.add('hidden');
-            btn.classList.remove('hidden');
-            descEl.classList.remove('opacity-50');
-
-            if (result) {
-                titleEl.classList.remove('fade-in');
-                descEl.classList.remove('fade-in');
-                void titleEl.offsetWidth; // trigger reflow
-                titleEl.classList.add('fade-in');
-                descEl.classList.add('fade-in');
-
-                titleEl.innerText = result.name;
-                descEl.innerText = result.description;
-            }
-        }
-
-        async function getAICritique() {
-            const btn = document.getElementById('btn-critique');
-            const feedbackBox = document.getElementById('alchemist-feedback');
-            const feedbackText = document.getElementById('alchemist-text');
-
-            if (currentMix.top.length === 0 && currentMix.heart.length === 0 && currentMix.base.length === 0) {
-                feedbackBox.classList.remove('hidden');
-                feedbackText.innerText = "The vessel is empty. Add ingredients before seeking counsel.";
-                return;
-            }
-
-            const originalBtnText = btn.innerHTML;
-            btn.innerHTML = `<span class="animate-spin">⏳</span> Consulting...`;
-            btn.disabled = true;
-
-            const mixString = `
-                Top: ${currentMix.top.map(n=>n.name).join(', ')}
-                Heart: ${currentMix.heart.map(n=>n.name).join(', ')}
-                Base: ${currentMix.base.map(n=>n.name).join(', ')}
-            `;
-
-            const prompt = `
-                You are a strict but helpful fragrance alchemist. Analyze this blend:
-                ${mixString}
-
-                1. Critique the balance (is it top-heavy? lacking depth? clashing?).
-                2. Suggest ONE specific note to add/remove to improve it.
-                
-                Keep it brief (2 sentences max).
-                Return JSON: { "critique": "string" }
-            `;
-
-            const result = await callGemini(prompt);
-
-            btn.innerHTML = originalBtnText;
-            btn.disabled = false;
-
-            if (result) {
-                feedbackBox.classList.remove('hidden');
-                feedbackText.innerText = result.critique;
-            }
-        }
-
-        // --- APP LOGIC ---
-        function init() {
-            lucide.createIcons();
-            renderSidebar();
-        }
-
-        function renderSidebar() {
-            const container = document.getElementById('notes-container');
-            container.innerHTML = '';
-            for (const [family, notes] of Object.entries(families)) {
-                const group = document.createElement('div');
-                group.className = 'mb-6';
-                const title = document.createElement('h3');
-                title.className = 'text-xs font-bold text-stone-400 uppercase tracking-wider mb-2';
-                title.innerText = family;
-                group.appendChild(title);
-                const noteContainer = document.createElement('div');
-                noteContainer.className = 'flex flex-wrap gap-2';
-                notes.forEach(note => {
-                    const chip = document.createElement('div');
-                    chip.className = `note-chip px-3 py-1.5 rounded-full text-xs font-medium border shadow-sm ${familyColors[family]}`;
-                    chip.draggable = true;
-                    chip.innerText = note;
-                    chip.dataset.note = note;
-                    chip.dataset.family = family;
-                    chip.addEventListener('dragstart', drag);
-                    noteContainer.appendChild(chip);
-                });
-                group.appendChild(noteContainer);
-                container.appendChild(group);
-            }
-        }
-
-        function drag(ev) {
-            ev.dataTransfer.setData("note", ev.target.dataset.note);
-            ev.dataTransfer.setData("family", ev.target.dataset.family);
-            ev.target.classList.add('dragging');
-        }
-
-        function allowDrop(ev) {
-            ev.preventDefault();
-            const zone = ev.target.closest('.drop-zone');
-            if (zone) zone.classList.add('drag-over');
-        }
-
-        document.addEventListener('dragend', (ev) => {
-            document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
-            ev.target.classList.remove('dragging');
-        });
-
-        document.addEventListener('dragleave', (ev) => {
-            if (ev.target.classList.contains('drop-zone')) {
-                ev.target.classList.remove('drag-over');
-            }
-        });
-
-        function drop(ev, zoneName) {
-            ev.preventDefault();
-            const zone = document.getElementById(`zone-${zoneName}`);
-            zone.classList.remove('drag-over');
-            const noteName = ev.dataTransfer.getData("note");
-            const familyName = ev.dataTransfer.getData("family");
-            if (!noteName) return;
-            if (currentMix[zoneName].find(n => n.name === noteName)) return;
-            currentMix[zoneName].push({ name: noteName, family: familyName });
-            const chip = document.createElement('div');
-            chip.className = `note-chip px-3 py-1 rounded-full text-xs font-medium border flex items-center gap-1 bg-white border-stone-300 shadow-sm animate-in fade-in zoom-in duration-200`;
-            chip.innerHTML = `<span class="w-2 h-2 rounded-full ${familyColors[familyName].split(' ')[0]}"></span>${noteName}<button class="ml-1 text-stone-400 hover:text-red-500" onclick="removeNote('${zoneName}', '${noteName}', this)">×</button>`;
-            const emptyLabel = zone.querySelector('.empty-label');
-            if (emptyLabel) emptyLabel.style.display = 'none';
-            zone.appendChild(chip);
-            generateStandardScene();
-            document.getElementById('btn-dream').classList.remove('hidden');
-        }
-
-        function removeNote(zoneName, noteName, btnElement) {
-            currentMix[zoneName] = currentMix[zoneName].filter(n => n.name !== noteName);
-            btnElement.parentElement.remove();
-            const zone = document.getElementById(`zone-${zoneName}`);
-            if (currentMix[zoneName].length === 0) zone.querySelector('.empty-label').style.display = 'flex';
-            generateStandardScene();
-        }
-
-        function resetPyramid() {
-            currentMix = { top: [], heart: [], base: [] };
-            ['top', 'heart', 'base'].forEach(zone => {
-                const el = document.getElementById(`zone-${zone}`);
-                const span = el.querySelector('span');
-                el.innerHTML = '';
-                el.appendChild(span);
-                span.style.display = 'flex';
+        // Drag and drop functionality
+        document.querySelectorAll('.note').forEach(note => {
+            note.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', e.target.dataset.note);
+                e.target.classList.add('dragging');
             });
-            document.getElementById('alchemist-feedback').classList.add('hidden');
-            generateStandardScene();
+
+            note.addEventListener('dragend', (e) => {
+                e.target.classList.remove('dragging');
+            });
+        });
+
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('drag-over');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('drag-over');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                
+                const noteName = e.dataTransfer.getData('text/plain');
+                const level = zone.dataset.level;
+                
+                addNoteToLevel(noteName, level, zone);
+                updateMemoryScene();
+            });
+        });
+
+        function addNoteToLevel(noteName, level, zone) {
+            if (composition[level].includes(noteName)) return;
+            
+            composition[level].push(noteName);
+            
+            const placedNote = document.createElement('div');
+            placedNote.className = 'placed-note';
+            placedNote.innerHTML = `
+                ${noteName}
+                <button class="remove-btn" onclick="removeNote('${noteName}', '${level}')">×</button>
+            `;
+            
+            zone.appendChild(placedNote);
         }
 
-        function generateStandardScene() {
-            const allNotes = [...currentMix.top, ...currentMix.heart, ...currentMix.base];
-            const titleEl = document.getElementById('scene-title');
-            const descEl = document.getElementById('scene-desc');
+        function removeNote(noteName, level) {
+            composition[level] = composition[level].filter(n => n !== noteName);
+            updateDropZone(level);
+            updateMemoryScene();
+        }
+
+        function updateDropZone(level) {
+            const zone = document.querySelector(`.drop-zone.${level}`);
+            zone.innerHTML = '';
+            composition[level].forEach(noteName => {
+                const placedNote = document.createElement('div');
+                placedNote.className = 'placed-note';
+                placedNote.innerHTML = `
+                    ${noteName}
+                    <button class="remove-btn" onclick="removeNote('${noteName}', '${level}')">×</button>
+                `;
+                zone.appendChild(placedNote);
+            });
+        }
+
+        function updateMemoryScene() {
+            const scene = document.getElementById('memoryScene');
+            const allNotes = [...composition.top, ...composition.heart, ...composition.base];
+            
             if (allNotes.length === 0) {
-                titleEl.innerText = "The Blank Canvas";
-                descEl.innerText = "The air is still, waiting for the first drop of inspiration. The room is silent, a void of pure potential where memories have yet to be formed. Begin by adding a note to shape this world.";
+                scene.className = 'memory-scene empty';
+                scene.innerHTML = '<p>Start adding notes to discover your memory scene...</p>';
                 return;
             }
-            const familyCounts = {};
-            allNotes.forEach(n => familyCounts[n.family] = (familyCounts[n.family] || 0) + 1);
-            let dominantFamily = Object.keys(familyCounts).reduce((a, b) => familyCounts[a] > familyCounts[b] ? a : b);
-            let draftTitle = "Untitled Blend";
-            let draftDesc = "A unique mix is forming...";
-            const traits = {
-                "Floral": ["The Secret Garden", "A lush, velvety atmosphere."],
-                "Woody": ["The Ancient Cabin", "A deep, grounding presence."],
-                "Citrus": ["Sunlit Orchard", "A radiant burst of energy."],
-                "Fruit": ["Market Day", "A playful, succulent sweetness."],
-                "Greens": ["After the Rain", "A crisp, revitalizing breeze."],
-                "Musks": ["Velvet Room", "An intimate, skin-like warmth."],
-                "Warm": ["Amber Sunset", "A cozy, golden embrace."],
-                "Synthetic": ["City Lights", "A modern, ethereal aura."]
-            };
-            if (traits[dominantFamily]) {
-                draftTitle = traits[dominantFamily][0];
-                draftDesc = traits[dominantFamily][1] + " (Click 'Dream' for a full story)";
+
+            scene.className = 'memory-scene';
+            const memory = generateMemoryScene(allNotes, composition);
+            scene.innerHTML = `
+                <h3>${memory.title}</h3>
+                <p>${memory.description}</p>
+            `;
+        }
+
+        function generateMemoryScene(allNotes, comp) {
+            // Helper function to check if notes contain certain elements
+            const has = (...notes) => notes.some(n => allNotes.includes(n));
+            const hasAny = (noteArray) => noteArray.some(n => allNotes.includes(n));
+            
+            // Define note categories
+            const florals = ['lavender', 'clary sage', 'geranium', 'saffron', 'lotus', 'lily-of-the-valley', 'marigold', 'begonia', 'jasmine', 'wild cyclamen'];
+            const woody = ['cedar', 'sandalwood', 'oud', 'vetiver', 'oak', 'cypress'];
+            const citrus = ['bergamot', 'bitter orange', 'citron', 'grapefruit', 'lemon', 'lemongrass', 'mandarin orange'];
+            const fruits = ['apple', 'apricot', 'banana', 'blueberry', 'cherry', 'coconut'];
+            const greens = ['basil', 'blackcurrant leaf', 'citron leaf', 'oolong', 'ginkgo', 'juniper leaf', 'mint'];
+            const musks = ['amber', 'ambergris', 'white musk', 'musk'];
+            const warm = ['honey', 'tobacco', 'incense', 'frankincense'];
+            const synthetic = ['ambroxan', 'ozonic note', 'airy note', 'marine note', 'salty note'];
+            
+            const hasFloral = hasAny(florals);
+            const hasWoody = hasAny(woody);
+            const hasCitrus = hasAny(citrus);
+            const hasFruit = hasAny(fruits);
+            const hasGreen = hasAny(greens);
+            const hasMusk = hasAny(musks);
+            const hasWarm = hasAny(warm);
+            const hasSynthetic = hasAny(synthetic);
+            
+            // Specific combinations - order matters (more specific first)
+            
+            // Marine/Synthetic combinations
+            if (has('marine note', 'salty note') && hasCitrus) {
+                return {
+                    title: "Cliffside at Dawn",
+                    description: "Salt spray mists your face as waves crash against ancient rocks below. The first rays of sun illuminate citrus groves climbing the hillside, their bright scent carried on ocean winds. You stand at the edge of land and sea, breathing in the raw power of nature's meeting point."
+                };
             }
-            titleEl.innerText = draftTitle;
-            descEl.innerText = draftDesc;
+            
+            if (has('ozonic note') && hasCitrus && hasGreen) {
+                return {
+                    title: "After the Storm",
+                    description: "Rain-washed air sparkles with electricity as storm clouds retreat over distant hills. Crushed leaves and bright citrus mingle in puddles reflecting clearing skies. Everything feels impossibly clean, renewed, alive with possibility."
+                };
+            }
+            
+            if (has('marine note') && hasWoody) {
+                return {
+                    title: "Driftwood Beach",
+                    description: "Weathered timber stretches along endless sand, smoothed by years of tides. Salt air mingles with the ghost of ancient forests, creating a scent both fresh and eternal. Seabirds call overhead as foam traces patterns in the wet shore."
+                };
+            }
+            
+            // Citrus dominant combinations
+            if (hasCitrus && hasFruit && hasFloral) {
+                return {
+                    title: "Mediterranean Orchard",
+                    description: "Sunlight filters through lemon trees heavy with fruit, their blossoms perfuming the warm air. Stone walls radiate heat as bees drift between orange blossoms and wild herbs. Time moves slowly here, measured in the ripening of fruit and the lengthening of shadows."
+                };
+            }
+            
+            if (hasCitrus && hasGreen && hasMusk) {
+                return {
+                    title: "Secret Garden Path",
+                    description: "A hidden trail winds through an overgrown estate, where bergamot trees lean over moss-covered stones. Fresh herbs crush underfoot, releasing aromatic oils that blend with the garden's mysterious, animalic warmth. This place remembers centuries of careful tending and wild abandon."
+                };
+            }
+            
+            if (hasCitrus && hasWoody && comp.top.length >= 2) {
+                return {
+                    title: "Italian Bergamot Grove",
+                    description: "Morning mist clings to terraced hillsides where bergamot trees grow between ancient cedars. The air is sharp with citrus zest and rich wood sap, a combination that speaks of traditions handed down through generations. Somewhere below, the Mediterranean glimmers."
+                };
+            }
+            
+            // Fruity combinations
+            if (hasFruit && hasFloral && hasWarm) {
+                return {
+                    title: "Harvest Festival",
+                    description: "Market stalls overflow with ripe stone fruits and jams simmering in copper pots. Flower garlands frame doorways as honey cakes cool on windowsills. The whole village celebrates abundance, sweet and golden and alive with joy."
+                };
+            }
+            
+            if (has('coconut') && hasFloral && hasMusk) {
+                return {
+                    title: "Tropical Night Garden",
+                    description: "Moonlight silvers palm fronds swaying over night-blooming flowers. Coconut husks scatter the sand as warm breezes carry jasmine and something deeper, almost animal. The boundary between paradise and wilderness blurs in the velvet darkness."
+                };
+            }
+            
+            if (hasFruit && hasCitrus && hasGreen) {
+                return {
+                    title: "Summer Breakfast Terrace",
+                    description: "Morning light dances on a table laden with fresh fruit and herb-infused waters. Citrus slices float in crystal pitchers as mint leaves perfume the air. Every breath tastes of vacation, leisure, and the simple pleasure of sun-warmed fruit."
+                };
+            }
+            
+            // Green dominant combinations
+            if (hasGreen && hasWoody && has('oolong')) {
+                return {
+                    title: "Mountain Tea House",
+                    description: "Steam rises from earthenware cups in a wooden pavilion perched above cloud forests. The scent of oolong tea mingles with cypress wood and fresh mountain herbs. Silence here is not empty but full—of breath, of contemplation, of peace."
+                };
+            }
+            
+            if (has('mint', 'basil') && hasCitrus) {
+                return {
+                    title: "Chef's Herb Garden",
+                    description: "Sunlight warms a kitchen garden where mint and basil grow wild beside lemon trees. You run your fingers through leaves, releasing oils that make your mouth water. This is the scent of home-cooked meals and summer dinners stretching into starlight."
+                };
+            }
+            
+            if (hasGreen && hasMusk && hasFloral) {
+                return {
+                    title: "Victorian Greenhouse",
+                    description: "Glass panes trap humid heat where ferns unfurl beside prized orchids. The air is thick with green growth and subtle animal warmth from aged wood and vintage perfumes. Outside it may be winter, but here spring is eternal."
+                };
+            }
+            
+            // Sacred/Warm combinations
+            if (has('incense', 'frankincense') && hasFloral) {
+                return {
+                    title: "Temple at Prayer Time",
+                    description: "Sacred smoke spirals toward painted ceilings as devotional flowers wilt on ancient altars. The air vibrates with whispered mantras and centuries of faith. Every breath feels like both question and answer, earth reaching toward heaven."
+                };
+            }
+            
+            if (has('tobacco', 'honey') && hasWoody) {
+                return {
+                    title: "Gentleman's Study",
+                    description: "Leather chairs cradle worn cushions in a room lined with oak shelves. Pipe smoke curls lazily through honey-colored lamplight as rain patters on windows. This is a sanctuary of thought, comfort, and quiet contemplation."
+                };
+            }
+            
+            if (hasWarm && hasMusk && comp.base.length >= 2) {
+                return {
+                    title: "Ancient Spice Route",
+                    description: "Caravan trails wind through amber dunes where merchants traded frankincense and mystery. The air shimmers with heat and precious aromatics wrapped in silk and secrets. You can almost hear the bells of approaching camels laden with treasures."
+                };
+            }
+            
+            // Floral combinations
+            if (has('jasmine', 'saffron') && hasMusk) {
+                return {
+                    title: "Persian Palace Garden",
+                    description: "Night falls on a marble courtyard where jasmine vines climb ancient walls. Saffron-stained carpets flutter in archways as servants light oil lamps. The air is thick with luxury, sensuality, and the weight of empires."
+                };
+            }
+            
+            if (has('lavender') && hasWoody && hasCitrus) {
+                return {
+                    title: "Provence Farmhouse",
+                    description: "Purple fields stretch toward cedar-shuttered windows where lemon cakes cool on stone sills. Cicadas drone in the afternoon heat as lavender waves in the mistral wind. This is summer distilled to its essence—warm, languid, perfect."
+                };
+            }
+            
+            if (has('lotus') && hasGreen && hasSynthetic) {
+                return {
+                    title: "Zen Water Garden",
+                    description: "Lotus flowers float on mirror-still ponds reflecting minimal architecture. The scent is clean, green, almost transparent—more concept than perfume. Here, you learn that emptiness itself can be beautiful, that less speaks volumes."
+                };
+            }
+            
+            // Woody combinations
+            if (has('oud', 'saffron') && hasMusk) {
+                return {
+                    title: "Sultan's Private Chamber",
+                    description: "Oud smoke curls through silk curtains in rooms where sunlight filters through pierced brass. Saffron threads stain porcelain bowls as amber beads warm against skin. Opulence and restraint meet in a dance of shadow and gold."
+                };
+            }
+            
+            if (has('cedar', 'vetiver') && hasGreen) {
+                return {
+                    title: "Forest After Rain",
+                    description: "Water drips from pine needles onto earth dark with ancient leaf mold. Cedar bark releases its oils in the damp air as ferns unfurl new fronds. You're surrounded by growth, decay, and rebirth in perfect balance."
+                };
+            }
+            
+            if (has('sandalwood') && hasFloral && comp.base.includes('sandalwood')) {
+                return {
+                    title: "Indian Wedding Ceremony",
+                    description: "Sandalwood paste marks blessed foreheads as flower garlands pile shoulder-high. Incense spirals through silk saris while drums pulse ancient rhythms. Joy and solemnity intertwine like the couple's joined hands, bound with sacred thread."
+                };
+            }
+            
+            // Musk dominant
+            if (hasMusk && hasSynthetic && !hasFloral) {
+                return {
+                    title: "Modernist Penthouse",
+                    description: "Floor-to-ceiling windows frame the city below as minimalist furniture casts geometric shadows. The air is clean, sophisticated, almost invisible—designed skin-musk amplified by technology. Everything here speaks of now, of progress, of the future arriving."
+                };
+            }
+            
+            if (has('amber', 'ambergris') && hasWoody) {
+                return {
+                    title: "Antiquarian's Study",
+                    description: "Amber beads rest on velvet beside fossils pressed in ancient stone. The room smells of time itself—resinous, salty, woody, alive with the ghosts of extinct species. History isn't dead here; it breathes."
+                };
+            }
+            
+            // Complex multi-family combinations
+            if (hasCitrus && hasFloral && hasWoody && hasMusk) {
+                return {
+                    title: "Grand Hotel Lobby, 1920s",
+                    description: "Art deco columns frame arrangements of lilies and citrus as guests in evening wear cross marble floors. The air is a calculated masterpiece—fresh yet opulent, natural yet refined. This is the scent of an era when glamour was an art form."
+                };
+            }
+            
+            if (hasFruit && hasFloral && hasGreen && hasWarm) {
+                return {
+                    title: "Countryside Wedding",
+                    description: "Wildflowers crown tables laden with pies still warm from the oven. Herb bundles hang drying as honey mead fills mason jars. Everything speaks of handmade joy, of community gathered to celebrate love rooted in the earth."
+                };
+            }
+            
+            if (hasSynthetic && hasWoody && hasCitrus) {
+                return {
+                    title: "Contemporary Art Museum",
+                    description: "Concrete and cedar frame installations bathed in calculated light. The air is intentionally composed—ozonic freshness cutting through warm wood, citrus brightening white walls. Even the scent here is curated, conceptual, a medium in itself."
+                };
+            }
+            
+            // Family-based fallbacks
+            if (hasFloral && allNotes.length >= 4) {
+                return {
+                    title: "Florist's Workshop",
+                    description: "Buckets overflow with blooms from morning market runs as water drips on wooden floors. Stems pile high on work tables where arrangements take shape for weddings, funerals, apologies, declarations. Flowers speak every language; you're learning their grammar."
+                };
+            }
+            
+            if (hasWoody && allNotes.length >= 3) {
+                return {
+                    title: "Carpenter's Studio",
+                    description: "Sawdust catches afternoon light streaming through workshop windows. Different woods release distinct perfumes as planes shave curls from aged timber. The scent is honest, elemental—trees transformed by craft into art."
+                };
+            }
+            
+            if (hasCitrus && allNotes.length >= 3) {
+                return {
+                    title: "Citrus Market, Sicily",
+                    description: "Vendors slice fruit for tasting as juice runs sticky-sweet down their forearms. The whole square vibrates with color and commerce, crates stacked high as church bells mark the hour. This is abundance, sun-soaked and sharp."
+                };
+            }
+            
+            if (hasFruit && allNotes.length >= 2) {
+                return {
+                    title: "Orchard at Harvest",
+                    description: "Ladders lean against branches bowing under ripe weight. Fruit bruises where it falls, fermenting sweetly in the grass. The air is thick with the season's generosity, with work done and winter stores secured."
+                };
+            }
+            
+            if (hasGreen) {
+                return {
+                    title: "Botanical Research Station",
+                    description: "Specimens press between pages as field notes document rare plants. The air tastes green—chlorophyll and cellulose, photosynthesis in progress. Science and nature collaborate here in quiet, methodical wonder."
+                };
+            }
+            
+            if (hasMusk) {
+                return {
+                    title: "Vintage Perfumer's Lab",
+                    description: "Glass bottles line shelves labeled in faded ink, their contents amber and mysterious. Musk tinctures age in oak, growing richer with time. This room knows secrets—formulas lost, scents extinct, beauty preserved."
+                };
+            }
+            
+            if (hasWarm) {
+                return {
+                    title: "Winter Hearthside",
+                    description: "Flames dance behind grated iron as shadows stretch across stone floors. The air grows thick with smoke and sweetness, with warmth that seeps into bones. Outside, snow falls; inside, time suspends."
+                };
+            }
+            
+            if (hasSynthetic) {
+                return {
+                    title: "Laboratory of the Future",
+                    description: "Sterile surfaces reflect fluorescent precision where molecules are designed, not discovered. The air is deliberately composed—technological, intentional, engineered. Nature isn't mimicked here; it's reimagined."
+                };
+            }
+            
+            // Ultimate fallback
+            const noteList = allNotes.slice(0, 5).join(', ');
+            const extras = allNotes.length > 5 ? ` and ${allNotes.length - 5} more` : '';
+            
+            return {
+                title: "Your Personal Composition",
+                description: `This unique blend of ${noteList}${extras} creates a scent landscape entirely your own. Like a half-remembered dream or a place that exists only in imagination, it defies simple description—a private world built from nature's most precious essences, arranged by your intuition alone.`
+            };
         }
 
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const btn = document.getElementById('open-sidebar-btn');
-            if (sidebar.classList.contains('-ml-72')) {
-                sidebar.classList.remove('-ml-72');
-                btn.classList.add('hidden');
-            } else {
-                sidebar.classList.add('-ml-72');
-                btn.classList.remove('hidden');
-            }
+            document.getElementById('sidebar').classList.toggle('collapsed');
         }
 
-        init();
+        function toggleFamily(header) {
+            header.parentElement.classList.toggle('open');
+        }
     </script>
 </body>
 </html>

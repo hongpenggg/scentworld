@@ -258,13 +258,15 @@
         let currentMix = { top: [], heart: [], base: [] };
 
         // --- GEMINI API CALLER ---
+        // --- GEMINI API CALLER (UPDATED) ---
         async function callGemini(prompt, schema = null) {
             if (!GOOGLE_API_KEY) {
                 alert("API Key missing! Open the HTML file in a text editor and add your Google API Key near the top.");
                 return null;
             }
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GOOGLE_API_KEY}`;
+            // UPDATED: Using the stable 1.5 Flash model
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_API_KEY}`;
             
             const payload = {
                 contents: [{ parts: [{ text: prompt }] }],
@@ -280,12 +282,18 @@
                     body: JSON.stringify(payload)
                 });
                 
-                if (!response.ok) throw new Error(`API Error: ${response.status}`);
                 const data = await response.json();
+
+                if (!response.ok) {
+                    // This will print the ACTUAL error from Google to your browser console
+                    console.error("Google API Error Detail:", data);
+                    throw new Error(`API Error: ${data.error?.message || response.status}`);
+                }
+                
                 return JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
             } catch (error) {
-                console.error("Gemini Error:", error);
-                alert("Error connecting to AI. Check your API Key or Console.");
+                console.error("Connection Failed:", error);
+                alert("Error connecting to AI. Press F12 (Developer Tools) and check the Console tab for the specific error message.");
                 return null;
             }
         }

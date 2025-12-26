@@ -221,15 +221,10 @@
     </main>
 
     <script>
-        /** * ------------------------------------------------------------------
+        /** ------------------------------------------------------------------
          * CONFIGURATION
-         * ------------------------------------------------------------------
-         * 1. Go to https://aistudio.google.com/ to get your API Key.
-         * 2. Paste it between the quotes below.
-         * 3. IMPORTANT: If hosting publicly on GitHub, set "API Key Restrictions"
-         * in Google Cloud Console to only allow your GitHub Pages domain.
          */
-        const GOOGLE_API_KEY = "AIzaSyBFMctCXLAsor1702aKC34rSH4QJ2pdZ0M"; 
+        const GOOGLE_API_KEY = "AIzaSyBxUNXyOfS5aBldZOiEKV_5hgA8VU3pkGA"; // PASTE YOUR KEY HERE
         // ------------------------------------------------------------------
 
 
@@ -257,16 +252,15 @@
 
         let currentMix = { top: [], heart: [], base: [] };
 
-        // --- GEMINI API CALLER ---
-        // --- GEMINI API CALLER (UPDATED) ---
+        // --- GEMINI API CALLER (FIXED) ---
         async function callGemini(prompt, schema = null) {
             if (!GOOGLE_API_KEY) {
                 alert("API Key missing! Open the HTML file in a text editor and add your Google API Key near the top.");
                 return null;
             }
 
-            // UPDATED: Using the stable 1.5 Flash model
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_API_KEY}`;
+            // FIXED: Using "gemini-1.5-flash-latest" instead of "gemini-1.5-flash"
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GOOGLE_API_KEY}`;
             
             const payload = {
                 contents: [{ parts: [{ text: prompt }] }],
@@ -285,7 +279,6 @@
                 const data = await response.json();
 
                 if (!response.ok) {
-                    // This will print the ACTUAL error from Google to your browser console
                     console.error("Google API Error Detail:", data);
                     throw new Error(`API Error: ${data.error?.message || response.status}`);
                 }
@@ -305,13 +298,11 @@
             const titleEl = document.getElementById('scene-title');
             const descEl = document.getElementById('scene-desc');
             
-            // Validate
             if (currentMix.top.length === 0 && currentMix.heart.length === 0 && currentMix.base.length === 0) {
                 alert("Please add at least one note before dreaming.");
                 return;
             }
 
-            // UI Loading
             btn.classList.add('hidden');
             loader.classList.remove('hidden');
             descEl.classList.add('opacity-50');
@@ -335,7 +326,6 @@
 
             const result = await callGemini(prompt);
 
-            // Restore UI
             loader.classList.add('hidden');
             btn.classList.remove('hidden');
             descEl.classList.remove('opacity-50');
@@ -343,7 +333,7 @@
             if (result) {
                 titleEl.classList.remove('fade-in');
                 descEl.classList.remove('fade-in');
-                void titleEl.offsetWidth; // trigger reflow
+                void titleEl.offsetWidth; 
                 titleEl.classList.add('fade-in');
                 descEl.classList.add('fade-in');
 

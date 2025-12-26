@@ -100,19 +100,19 @@
          * 1. Use your working key from the Debug Tool.
          * 2. Paste it below.
          */
-        const GOOGLE_API_KEY = "AIzaSyBxUNXyOfS5aBldZOiEKV_5hgA8VU3pkGA"; // PASTE KEY HERE
-        
+        const GOOGLE_API_KEY = "AIzaSyBxUNXyOfS5aBldZOiEKV_5hgA8VU3pkGA"; 
+                
         // ------------------------------------------------------------------
 
         const families = {
-            "Floral": ["Lavender", "Clary sage", "Geranium", "Saffron", "Lotus", "Lily-of-the-valley", "Marigold", "Begonia", "Jasmine", "Wild cyclamen"],
-            "Woody": ["Cedar", "Sandalwood", "Oud", "Incense", "Vetiver", "Oak", "Cypress"],
-            "Citrus": ["Bergamot", "Bitter orange", "Citron", "Grapefruit", "Lemon", "Lemongrass", "Mandarin orange"],
-            "Fruit": ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Coconut"],
-            "Greens": ["Basil", "Blackcurrant leaf", "Citron leaf", "Oolong", "Ginkgo", "Juniper leaf", "Mint"],
-            "Musks": ["Amber", "Ambergris", "White musk", "Musk"],
-            "Warm": ["Honey", "Tobacco", "Frankincense"],
-            "Synthetic": ["Ambroxan", "Ozonic note", "Airy note", "Marine note", "Salty note"]
+            "Floral": ["Lavender", "Clary sage", "Geranium", "Saffron", "Lotus", "Lily-of-the-valley", "Marigold", "Begonia", "Jasmine", "Wild cyclamen", "Ylang Ylang", "Rose", "Heliotrope", "Tuberose", "Osmanthus", "Magnolia", "Immortelle", "Violet", "Iris", "Water Lily", "Freesia", "Vanilla", "Gardenia", "Frangipani", "Honeysuckle", "Mimosa"],
+            "Woody": ["Cedar", "Sandalwood", "Oud", "Incense", "Vetiver", "Oak", "Cypress", "Rosewood", "Guaicwood", "Patchouli", "Oakmoss", "Tree Moss", "Hazelnut", "Tonka Bean"],
+            "Citrus": ["Bergamot", "Bitter orange", "Citron", "Grapefruit", "Lemon", "Lemongrass", "Mandarin orange", "Pomelo", "Yuzu", "Blood Orange", "Lime", "Tangerine"],
+            "Fruit": ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Coconut", "Peach", "Plum", "Fig"],
+            "Greens": ["Basil", "Blackcurrant leaf", "Citron leaf", "Oolong", "Ginkgo", "Juniper leaf", "Mint", "Fig Leaf", "Violet Leaf", "Red Tea", "Black Tea", "Rosemary", "Thyme", "Fennel", "Sage", "Anise", "Forest Fern"],
+            "Musks": ["Amber", "Ambergris", "White musk", "Musk", "Beeswax", "Milk"],
+            "Warm": ["Honey", "Tobacco", "Frankincense", "Cinnamon", "Pepper", "Ginger", "Coriander", "Tamarind"],
+            "Synthetic": ["Ambroxan", "Ozonic note", "Airy note", "Marine note", "Salty note", "Ink", "Leather Notes", "Suede Notes"]
         };
         const familyColors = { "Floral": "bg-pink-100 text-pink-800 border-pink-200", "Woody": "bg-amber-800 text-amber-100 border-amber-900", "Citrus": "bg-yellow-100 text-yellow-800 border-yellow-200", "Fruit": "bg-orange-100 text-orange-800 border-orange-200", "Greens": "bg-green-100 text-green-800 border-green-200", "Musks": "bg-purple-100 text-purple-800 border-purple-200", "Warm": "bg-amber-100 text-amber-800 border-amber-200", "Synthetic": "bg-slate-100 text-slate-800 border-slate-200" };
         let currentMix = { top: [], heart: [], base: [] };
@@ -242,17 +242,76 @@
             ['top', 'heart', 'base'].forEach(zone => { const el = document.getElementById(`zone-${zone}`); const span = el.querySelector('span'); el.innerHTML = ''; el.appendChild(span); span.style.display = 'flex'; });
             document.getElementById('alchemist-feedback').classList.add('hidden'); generateStandardScene();
         }
+
+        // --- ENHANCED DEFAULT SCENE GENERATOR (Combinatorial Logic) ---
         function generateStandardScene() {
             const allNotes = [...currentMix.top, ...currentMix.heart, ...currentMix.base];
             const titleEl = document.getElementById('scene-title'); const descEl = document.getElementById('scene-desc');
-            if (allNotes.length === 0) { titleEl.innerText = "The Blank Canvas"; descEl.innerText = "The air is still, waiting for the first drop of inspiration. The room is silent, a void of pure potential where memories have yet to be formed. Begin by adding a note to shape this world."; return; }
-            const familyCounts = {}; allNotes.forEach(n => familyCounts[n.family] = (familyCounts[n.family] || 0) + 1);
-            let dominantFamily = Object.keys(familyCounts).reduce((a, b) => familyCounts[a] > familyCounts[b] ? a : b);
-            let draftTitle = "Untitled Blend"; let draftDesc = "A unique mix is forming...";
-            const traits = { "Floral": ["The Secret Garden", "A lush, velvety atmosphere."], "Woody": ["The Ancient Cabin", "A deep, grounding presence."], "Citrus": ["Sunlit Orchard", "A radiant burst of energy."], "Fruit": ["Market Day", "A playful, succulent sweetness."], "Greens": ["After the Rain", "A crisp, revitalizing breeze."], "Musks": ["Velvet Room", "An intimate, skin-like warmth."], "Warm": ["Amber Sunset", "A cozy, golden embrace."], "Synthetic": ["City Lights", "A modern, ethereal aura."] };
-            if (traits[dominantFamily]) { draftTitle = traits[dominantFamily][0]; draftDesc = traits[dominantFamily][1] + " (Click 'Dream' for a full story)"; }
-            titleEl.innerText = draftTitle; descEl.innerText = draftDesc;
+            
+            if (allNotes.length === 0) { 
+                titleEl.innerText = "The Blank Canvas"; 
+                descEl.innerText = "The air is still, waiting for the first drop of inspiration. The room is silent, a void of pure potential where memories have yet to be formed. Begin by adding a note to shape this world."; 
+                return; 
+            }
+
+            const familyCounts = {}; 
+            allNotes.forEach(n => familyCounts[n.family] = (familyCounts[n.family] || 0) + 1);
+            
+            // Sort families by count to get Dominant and Secondary
+            const sortedFamilies = Object.keys(familyCounts).sort((a,b) => familyCounts[b] - familyCounts[a]);
+            const primary = sortedFamilies[0];
+            const secondary = sortedFamilies[1] || primary; // Fallback to primary if only one family
+
+            // 1. Base Settings (Primary)
+            const baseSettings = {
+                "Floral": { title: "The Secret Garden", text: "You step into a lush, overgrown garden at twilight." },
+                "Woody": { title: "The Ancient Forest", text: "You are walking through a dense forest where shadows dance on mahogany bark." },
+                "Citrus": { title: "Sunlit Terrace", text: "Bright sunlight explodes over a Mediterranean terrace, blindingly white." },
+                "Fruit": { title: "Summer Market", text: "The air is sticky and sweet in a bustling town square." },
+                "Greens": { title: "After the Rain", text: "You are standing in a meadow just after a storm, the earth wet and alive." },
+                "Musks": { title: "Velvet Chamber", text: "The room is dimly lit and intimate, filled with soft textures." },
+                "Warm": { title: "Golden Library", text: "You are wrapped in a blanket near a crackling fire in an old study." },
+                "Synthetic": { title: "Neon Gallery", text: "You are in a sleek, modern space reflecting cold, electric light." }
+            };
+
+            // 2. Atmospheric Modifiers (Secondary)
+            const modifiers = {
+                "Floral": "The breeze carries a velvety romance of blooming petals.",
+                "Woody": "A deep, grounding scent of dry earth and roots anchors the scene.",
+                "Citrus": "Energy surges through the air, sharp and revitalizing.",
+                "Fruit": "A playful, mouth-watering sweetness lingers in the background.",
+                "Greens": "The scent of crushed leaves and herbal freshness cuts through the air.",
+                "Musks": "There is a whisper of warm skin and clean linens, close and personal.",
+                "Warm": "A spicy, golden aura radiates warmth, triggering deep nostalgia.",
+                "Synthetic": "An ethereal, almost metallic hum vibrates in the atmosphere."
+            };
+
+            let finalTitle = baseSettings[primary].title;
+            let finalText = baseSettings[primary].text + " " + modifiers[secondary];
+
+            // 3. Specific Note Overrides (The "Secret Sauce")
+            // These check for specific note names to add unique flavor text
+            const noteNames = allNotes.map(n => n.name);
+            
+            if (noteNames.includes("Ink")) finalText += " A spilled bottle of black calligraphy ink stains the desk.";
+            if (noteNames.includes("Milk") || noteNames.includes("Vanilla")) finalText += " A comforting, creamy softness smooths out the edges.";
+            if (noteNames.includes("Leather Notes") || noteNames.includes("Suede Notes")) finalText += " You sink into a well-worn leather armchair.";
+            if (noteNames.includes("Marine note") || noteNames.includes("Salty note")) finalText += " The distant sound of crashing waves echoes in your ears.";
+            if (noteNames.includes("Oud") || noteNames.includes("Incense")) finalText += " Smoke curls lazily towards the ceiling, adding a sacred weight.";
+            if (noteNames.includes("Fig") || noteNames.includes("Fig Leaf")) finalText += " The milky, green sap of crushed fruit stains your fingers.";
+            if (noteNames.includes("Yuzu") || noteNames.includes("Pomelo")) finalText += " An exotic, sparkling zest awakens your senses.";
+
+            // Rename title if specific combos exist
+            if (primary === "Floral" && secondary === "Woody") finalTitle = "Enchanted Woods";
+            if (primary === "Citrus" && secondary === "Synthetic") finalTitle = "Cyberpunk Soda";
+            if (primary === "Musks" && secondary === "Warm") finalTitle = "Cashmere Embrace";
+
+            finalText += " (Click 'Dream' for a unique AI story)";
+
+            titleEl.innerText = finalTitle;
+            descEl.innerText = finalText;
         }
+
         function toggleSidebar() { const sidebar = document.getElementById('sidebar'); const btn = document.getElementById('open-sidebar-btn'); if (sidebar.classList.contains('-ml-72')) { sidebar.classList.remove('-ml-72'); btn.classList.add('hidden'); } else { sidebar.classList.add('-ml-72'); btn.classList.remove('hidden'); } }
         init();
     </script>

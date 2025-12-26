@@ -5,178 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scent Memory Playground</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap');
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8f5f2;
-        }
-
-        h1, h2, h3, .serif {
-            font-family: 'Playfair Display', serif;
-        }
-
-        /* Custom Scrollbar for the sidebar */
-        .sidebar-scroll::-webkit-scrollbar {
-            width: 6px;
-        }
-        .sidebar-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-            background-color: #e5e7eb;
-            border-radius: 20px;
-        }
-
-        /* Draggable item styling */
-        .note-chip {
-            cursor: grab;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-        .note-chip:active {
-            cursor: grabbing;
-            transform: scale(0.95);
-        }
-        .note-chip.dragging {
-            opacity: 0.5;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Squircle Clip Path */
-        .squircle-container {
-            clip-path: url(#squircleClip);
-            border-radius: 24px; /* Fallback */
-        }
-
-        /* Pyramid Zones */
-        .drop-zone {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .drop-zone.drag-over {
-            background-color: #f3f4f6;
-            border-color: #9ca3af;
-            transform: scale(1.02);
-        }
-        
-        /* Animation */
-        .fade-in {
-            animation: fadeIn 0.8s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Sparkle Button Animation */
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        .animate-shimmer {
-            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
-            background-size: 200% 100%;
-            animation: shimmer 2s infinite;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8f5f2; }
+        h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
+        .sidebar-scroll::-webkit-scrollbar { width: 6px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 20px; }
+        .note-chip { cursor: grab; transition: all 0.2s ease; user-select: none; }
+        .note-chip:active { cursor: grabbing; transform: scale(0.95); }
+        .note-chip.dragging { opacity: 0.5; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .squircle-container { clip-path: url(#squircleClip); border-radius: 24px; }
+        .drop-zone { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .drop-zone.drag-over { background-color: #f3f4f6; border-color: #9ca3af; transform: scale(1.02); }
+        .fade-in { animation: fadeIn 0.8s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .animate-shimmer { background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%); background-size: 200% 100%; animation: shimmer 2s infinite; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden text-slate-800">
+    <svg width="0" height="0" class="absolute"><defs><clipPath id="squircleClip" clipPathUnits="objectBoundingBox"><path d="M .5,0 C .1,0 0,.1 0,.5 0,.9 .1,1 .5,1 .9,1 1,.9 1,.5 1,.1 .9,0 .5,0 Z" /></clipPath></defs></svg>
 
-    <!-- SVG Definition for Squircle -->
-    <svg width="0" height="0" class="absolute">
-        <defs>
-            <clipPath id="squircleClip" clipPathUnits="objectBoundingBox">
-                <path d="M .5,0 C .1,0 0,.1 0,.5 0,.9 .1,1 .5,1 .9,1 1,.9 1,.5 1,.1 .9,0 .5,0 Z" />
-            </clipPath>
-        </defs>
-    </svg>
-
-    <!-- SIDEBAR -->
     <aside id="sidebar" class="w-72 bg-white border-r border-stone-200 flex flex-col transition-all duration-300 relative z-20 shadow-lg">
         <div class="p-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
             <h2 class="font-bold text-stone-700 tracking-wide uppercase text-sm" id="sidebar-title">Fragrance Notes</h2>
-            <button onclick="toggleSidebar()" class="p-1 hover:bg-stone-200 rounded text-stone-500 transition-colors">
-                <i data-lucide="panel-left-close" id="toggle-icon"></i>
-            </button>
+            <button onclick="toggleSidebar()" class="p-1 hover:bg-stone-200 rounded text-stone-500 transition-colors"><i data-lucide="panel-left-close" id="toggle-icon"></i></button>
         </div>
-        
-        <div class="flex-1 overflow-y-auto p-4 sidebar-scroll space-y-6" id="notes-container">
-            <!-- JS generates content here -->
-        </div>
-
-        <div class="p-4 bg-stone-50 text-xs text-stone-400 border-t border-stone-100 text-center">
-            Drag notes to the pyramid
-        </div>
+        <div class="flex-1 overflow-y-auto p-4 sidebar-scroll space-y-6" id="notes-container"></div>
+        <div class="p-4 bg-stone-50 text-xs text-stone-400 border-t border-stone-100 text-center">Drag notes to the pyramid</div>
     </aside>
 
-    <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col h-full relative overflow-y-auto bg-[#FAFAFA]">
-        
-        <!-- Open Sidebar Button -->
-        <button id="open-sidebar-btn" onclick="toggleSidebar()" class="absolute top-4 left-4 z-10 p-2 bg-white shadow-md rounded-md hover:bg-stone-50 hidden">
-            <i data-lucide="panel-left-open"></i>
-        </button>
-
-        <!-- Header -->
+        <button id="open-sidebar-btn" onclick="toggleSidebar()" class="absolute top-4 left-4 z-10 p-2 bg-white shadow-md rounded-md hover:bg-stone-50 hidden"><i data-lucide="panel-left-open"></i></button>
         <header class="pt-8 pb-4 px-8 text-center">
             <h1 class="text-3xl md:text-4xl text-stone-800 mb-2 serif italic">The Olfactory Playground</h1>
             <p class="text-stone-500 max-w-2xl mx-auto">Drag ingredients into the pyramid. The memory scene below will evolve as you blend.</p>
         </header>
 
-        <!-- Workspace -->
         <div class="flex-1 px-4 md:px-8 pb-8 flex flex-col items-center justify-start gap-8">
-            
-            <!-- Pyramid -->
             <div class="w-full max-w-3xl flex flex-col gap-2">
-                
                 <!-- TOP -->
                 <div class="flex items-center gap-4">
-                    <div class="w-24 text-right hidden sm:block">
-                        <span class="text-xs font-bold uppercase tracking-widest text-stone-400">Top</span>
-                        <div class="text-[10px] text-stone-300">First Impression</div>
-                    </div>
-                    <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" 
-                         ondrop="drop(event, 'top')" ondragover="allowDrop(event)" id="zone-top">
-                         <span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Top Notes Here</span>
-                    </div>
+                    <div class="w-24 text-right hidden sm:block"><span class="text-xs font-bold uppercase tracking-widest text-stone-400">Top</span><div class="text-[10px] text-stone-300">First Impression</div></div>
+                    <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" ondrop="drop(event, 'top')" ondragover="allowDrop(event)" id="zone-top"><span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Top Notes Here</span></div>
                 </div>
-
                 <!-- HEART -->
                 <div class="flex items-center gap-4">
-                    <div class="w-24 text-right hidden sm:block">
-                        <span class="text-xs font-bold uppercase tracking-widest text-pink-300">Heart</span>
-                        <div class="text-[10px] text-stone-300">The Core</div>
-                    </div>
-                    <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" 
-                         ondrop="drop(event, 'heart')" ondragover="allowDrop(event)" id="zone-heart">
-                         <span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Heart Notes Here</span>
-                    </div>
+                    <div class="w-24 text-right hidden sm:block"><span class="text-xs font-bold uppercase tracking-widest text-pink-300">Heart</span><div class="text-[10px] text-stone-300">The Core</div></div>
+                    <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" ondrop="drop(event, 'heart')" ondragover="allowDrop(event)" id="zone-heart"><span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Heart Notes Here</span></div>
                 </div>
-
                 <!-- BASE -->
                 <div class="flex items-center gap-4">
-                    <div class="w-24 text-right hidden sm:block">
-                        <span class="text-xs font-bold uppercase tracking-widest text-amber-700">Base</span>
-                        <div class="text-[10px] text-stone-300">The Trail</div>
-                    </div>
-                    <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" 
-                         ondrop="drop(event, 'base')" ondragover="allowDrop(event)" id="zone-base">
-                         <span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Base Notes Here</span>
-                    </div>
+                    <div class="w-24 text-right hidden sm:block"><span class="text-xs font-bold uppercase tracking-widest text-amber-700">Base</span><div class="text-[10px] text-stone-300">The Trail</div></div>
+                    <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" ondrop="drop(event, 'base')" ondragover="allowDrop(event)" id="zone-base"><span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Base Notes Here</span></div>
                 </div>
-
-                <!-- Controls -->
+                
                 <div class="flex justify-between items-center mt-2 w-full">
-                    <button onclick="getAICritique()" id="btn-critique" class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-stone-800 transition-colors border border-stone-200">
-                        <span class="text-purple-500">✨</span> Consult the Alchemist
-                    </button>
+                    <button onclick="getAICritique()" id="btn-critique" class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-stone-800 transition-colors border border-stone-200"><span class="text-purple-500">✨</span> Consult the Alchemist</button>
                     <button onclick="resetPyramid()" class="text-xs text-red-400 hover:text-red-600 underline cursor-pointer">Clear All Notes</button>
                 </div>
 
-                <!-- Alchemist Feedback Area -->
                 <div id="alchemist-feedback" class="hidden w-full bg-stone-50 border border-stone-200 p-4 rounded-xl text-sm text-stone-700 mt-2 relative">
                     <button onclick="this.parentElement.classList.add('hidden')" class="absolute top-2 right-2 text-stone-400 hover:text-stone-600">×</button>
                     <h4 class="font-serif font-bold text-stone-800 mb-1 flex items-center gap-2"><span class="text-lg">⚗️</span> The Alchemist says:</h4>
@@ -184,49 +75,34 @@
                 </div>
             </div>
 
-            <!-- MEMORY SCENE -->
             <div class="w-full max-w-2xl mt-4">
                 <div class="relative w-full aspect-[16/9] md:aspect-[21/9] bg-stone-900 text-stone-100 flex flex-col items-center justify-center p-8 md:p-12 shadow-2xl squircle-container overflow-hidden rounded-[2rem] group">
-                    
-                    <!-- Background Aesthetic -->
                     <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gray-100 via-gray-900 to-black pointer-events-none transition-opacity duration-1000" id="scene-bg"></div>
-
                     <div class="relative z-10 text-center max-w-xl flex flex-col items-center">
                         <h3 class="text-xl md:text-2xl font-serif mb-4 text-white/90 italic" id="scene-title">The Blank Canvas</h3>
-                        <p class="text-sm md:text-base text-stone-300 leading-relaxed font-light min-h-[4.5rem]" id="scene-desc">
-                            The air is still, waiting for the first drop of inspiration. The room is silent, a void of pure potential where memories have yet to be formed. Begin by adding a note to shape this world.
-                        </p>
-                        
-                        <!-- AI Dream Button -->
+                        <p class="text-sm md:text-base text-stone-300 leading-relaxed font-light min-h-[4.5rem]" id="scene-desc">The air is still, waiting for the first drop of inspiration. The room is silent, a void of pure potential where memories have yet to be formed. Begin by adding a note to shape this world.</p>
                         <button onclick="generateAIDream()" id="btn-dream" class="mt-6 group/btn relative overflow-hidden rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 px-6 py-2 text-sm font-medium transition-all backdrop-blur-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300">
-                            <span class="absolute inset-0 animate-shimmer opacity-0 group-hover/btn:opacity-100"></span>
-                            <span>✨ Dream up a Scene</span>
+                            <span class="absolute inset-0 animate-shimmer opacity-0 group-hover/btn:opacity-100"></span><span>✨ Dream up a Scene</span>
                         </button>
-                        
-                        <!-- Loader -->
                         <div id="dream-loader" class="hidden mt-6">
-                            <div class="flex items-center gap-2 text-xs text-white/50 uppercase tracking-widest">
-                                <span class="animate-bounce" style="animation-delay: 0s">●</span>
-                                <span class="animate-bounce" style="animation-delay: 0.1s">●</span>
-                                <span class="animate-bounce" style="animation-delay: 0.2s">●</span>
-                                Dreaming
-                            </div>
+                            <div class="flex items-center gap-2 text-xs text-white/50 uppercase tracking-widest"><span class="animate-bounce" style="animation-delay: 0s">●</span><span class="animate-bounce" style="animation-delay: 0.1s">●</span><span class="animate-bounce" style="animation-delay: 0.2s">●</span> Dreaming</div>
                         </div>
-
                     </div>
                 </div>
             </div>
-
         </div>
     </main>
 
     <script>
-        /** ------------------------------------------------------------------
-         * CONFIGURATION
+        /** =================================================================
+         * IMPORTANT: API KEY SETUP
+         * =================================================================
+         * 1. Use a key from https://aistudio.google.com/ (NOT Cloud Console)
+         * 2. Paste it below.
          */
-        const GOOGLE_API_KEY = "AIzaSyBxUNXyOfS5aBldZOiEKV_5hgA8VU3pkGA"; // PASTE YOUR KEY HERE
+        const GOOGLE_API_KEY = "AIzaSyBxUNXyOfS5aBldZOiEKV_5hgA8VU3pkGA";
+        
         // ------------------------------------------------------------------
-
 
         const families = {
             "Floral": ["Lavender", "Clary sage", "Geranium", "Saffron", "Lotus", "Lily-of-the-valley", "Marigold", "Begonia", "Jasmine", "Wild cyclamen"],
@@ -238,29 +114,18 @@
             "Warm": ["Honey", "Tobacco", "Frankincense"],
             "Synthetic": ["Ambroxan", "Ozonic note", "Airy note", "Marine note", "Salty note"]
         };
-
-        const familyColors = {
-            "Floral": "bg-pink-100 text-pink-800 border-pink-200",
-            "Woody": "bg-amber-800 text-amber-100 border-amber-900",
-            "Citrus": "bg-yellow-100 text-yellow-800 border-yellow-200",
-            "Fruit": "bg-orange-100 text-orange-800 border-orange-200",
-            "Greens": "bg-green-100 text-green-800 border-green-200",
-            "Musks": "bg-purple-100 text-purple-800 border-purple-200",
-            "Warm": "bg-amber-100 text-amber-800 border-amber-200",
-            "Synthetic": "bg-slate-100 text-slate-800 border-slate-200"
-        };
-
+        const familyColors = { "Floral": "bg-pink-100 text-pink-800 border-pink-200", "Woody": "bg-amber-800 text-amber-100 border-amber-900", "Citrus": "bg-yellow-100 text-yellow-800 border-yellow-200", "Fruit": "bg-orange-100 text-orange-800 border-orange-200", "Greens": "bg-green-100 text-green-800 border-green-200", "Musks": "bg-purple-100 text-purple-800 border-purple-200", "Warm": "bg-amber-100 text-amber-800 border-amber-200", "Synthetic": "bg-slate-100 text-slate-800 border-slate-200" };
         let currentMix = { top: [], heart: [], base: [] };
 
-        // --- GEMINI API CALLER (FIXED) ---
+        // --- GEMINI API CALLER ---
         async function callGemini(prompt, schema = null) {
             if (!GOOGLE_API_KEY) {
-                alert("API Key missing! Open the HTML file in a text editor and add your Google API Key near the top.");
+                alert("API Key missing! Open the HTML file and add your key.");
                 return null;
             }
 
-            // FIXED: Using "gemini-1.5-flash-latest" instead of "gemini-1.5-flash"
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GOOGLE_API_KEY}`;
+            // Using the standard Flash model
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_API_KEY}`;
             
             const payload = {
                 contents: [{ parts: [{ text: prompt }] }],
@@ -279,19 +144,25 @@
                 const data = await response.json();
 
                 if (!response.ok) {
-                    console.error("Google API Error Detail:", data);
-                    throw new Error(`API Error: ${data.error?.message || response.status}`);
+                    // Check for common 'API not enabled' 404/403 errors
+                    if (response.status === 404) {
+                        alert("Error 404: The API Model was not found. \n\nFIX: Your API Key might be from the wrong place. Please create a new key at 'aistudio.google.com' (not Google Cloud Console).");
+                    } else if (response.status === 403) {
+                         alert("Error 403: Permission Denied. \n\nFIX: Your API Key is restricted or the API service is not enabled.");
+                    } else {
+                        console.error("API Error:", data);
+                        alert(`API Error: ${data.error?.message || response.status}`);
+                    }
+                    return null;
                 }
-                
                 return JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
             } catch (error) {
                 console.error("Connection Failed:", error);
-                alert("Error connecting to AI. Press F12 (Developer Tools) and check the Console tab for the specific error message.");
                 return null;
             }
         }
 
-        // --- AI FEATURES ---
+        // --- FEATURES ---
         async function generateAIDream() {
             const btn = document.getElementById('btn-dream');
             const loader = document.getElementById('dream-loader');
@@ -303,42 +174,17 @@
                 return;
             }
 
-            btn.classList.add('hidden');
-            loader.classList.remove('hidden');
-            descEl.classList.add('opacity-50');
+            btn.classList.add('hidden'); loader.classList.remove('hidden'); descEl.classList.add('opacity-50');
 
-            const mixString = `
-                Top: ${currentMix.top.map(n=>n.name).join(', ') || "None"}
-                Heart: ${currentMix.heart.map(n=>n.name).join(', ') || "None"}
-                Base: ${currentMix.base.map(n=>n.name).join(', ') || "None"}
-            `;
-
-            const prompt = `
-                You are a master perfumer and poet. 
-                Based on this fragrance blend:
-                ${mixString}
-                
-                1. Create a creative, abstract name for this perfume (max 4 words).
-                2. Write a short, evocative, sensory paragraph describing the memory or scene this scent evokes (approx 3-4 sentences). Focus on lighting, texture, and mood.
-                
-                Return JSON: { "name": "string", "description": "string" }
-            `;
+            const mixString = `Top: ${currentMix.top.map(n=>n.name).join(', ')||'None'}, Heart: ${currentMix.heart.map(n=>n.name).join(', ')||'None'}, Base: ${currentMix.base.map(n=>n.name).join(', ')||'None'}`;
+            const prompt = `You are a master perfumer and poet. Based on this fragrance blend: ${mixString}. 1. Create a creative name (max 4 words). 2. Write a short, evocative memory/scene description (3-4 sentences). Return JSON: { "name": "string", "description": "string" }`;
 
             const result = await callGemini(prompt);
 
-            loader.classList.add('hidden');
-            btn.classList.remove('hidden');
-            descEl.classList.remove('opacity-50');
-
+            loader.classList.add('hidden'); btn.classList.remove('hidden'); descEl.classList.remove('opacity-50');
             if (result) {
-                titleEl.classList.remove('fade-in');
-                descEl.classList.remove('fade-in');
-                void titleEl.offsetWidth; 
-                titleEl.classList.add('fade-in');
-                descEl.classList.add('fade-in');
-
-                titleEl.innerText = result.name;
-                descEl.innerText = result.description;
+                titleEl.classList.remove('fade-in'); descEl.classList.remove('fade-in'); void titleEl.offsetWidth; titleEl.classList.add('fade-in'); descEl.classList.add('fade-in');
+                titleEl.innerText = result.name; descEl.innerText = result.description;
             }
         }
 
@@ -348,183 +194,72 @@
             const feedbackText = document.getElementById('alchemist-text');
 
             if (currentMix.top.length === 0 && currentMix.heart.length === 0 && currentMix.base.length === 0) {
-                feedbackBox.classList.remove('hidden');
-                feedbackText.innerText = "The vessel is empty. Add ingredients before seeking counsel.";
-                return;
+                feedbackBox.classList.remove('hidden'); feedbackText.innerText = "The vessel is empty. Add ingredients before seeking counsel."; return;
             }
 
             const originalBtnText = btn.innerHTML;
-            btn.innerHTML = `<span class="animate-spin">⏳</span> Consulting...`;
-            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin">⏳</span> Consulting...`; btn.disabled = true;
 
-            const mixString = `
-                Top: ${currentMix.top.map(n=>n.name).join(', ')}
-                Heart: ${currentMix.heart.map(n=>n.name).join(', ')}
-                Base: ${currentMix.base.map(n=>n.name).join(', ')}
-            `;
-
-            const prompt = `
-                You are a strict but helpful fragrance alchemist. Analyze this blend:
-                ${mixString}
-
-                1. Critique the balance (is it top-heavy? lacking depth? clashing?).
-                2. Suggest ONE specific note to add/remove to improve it.
-                
-                Keep it brief (2 sentences max).
-                Return JSON: { "critique": "string" }
-            `;
+            const mixString = `Top: ${currentMix.top.map(n=>n.name).join(', ')}, Heart: ${currentMix.heart.map(n=>n.name).join(', ')}, Base: ${currentMix.base.map(n=>n.name).join(', ')}`;
+            const prompt = `You are a fragrance alchemist. Analyze this blend: ${mixString}. 1. Critique the balance. 2. Suggest ONE note to add/remove. Brief (2 sentences). Return JSON: { "critique": "string" }`;
 
             const result = await callGemini(prompt);
 
-            btn.innerHTML = originalBtnText;
-            btn.disabled = false;
-
-            if (result) {
-                feedbackBox.classList.remove('hidden');
-                feedbackText.innerText = result.critique;
-            }
+            btn.innerHTML = originalBtnText; btn.disabled = false;
+            if (result) { feedbackBox.classList.remove('hidden'); feedbackText.innerText = result.critique; }
         }
 
-        // --- APP LOGIC ---
-        function init() {
-            lucide.createIcons();
-            renderSidebar();
-        }
-
+        function init() { lucide.createIcons(); renderSidebar(); }
         function renderSidebar() {
-            const container = document.getElementById('notes-container');
-            container.innerHTML = '';
+            const container = document.getElementById('notes-container'); container.innerHTML = '';
             for (const [family, notes] of Object.entries(families)) {
-                const group = document.createElement('div');
-                group.className = 'mb-6';
-                const title = document.createElement('h3');
-                title.className = 'text-xs font-bold text-stone-400 uppercase tracking-wider mb-2';
-                title.innerText = family;
-                group.appendChild(title);
-                const noteContainer = document.createElement('div');
-                noteContainer.className = 'flex flex-wrap gap-2';
+                const group = document.createElement('div'); group.className = 'mb-6';
+                const title = document.createElement('h3'); title.className = 'text-xs font-bold text-stone-400 uppercase tracking-wider mb-2'; title.innerText = family; group.appendChild(title);
+                const noteContainer = document.createElement('div'); noteContainer.className = 'flex flex-wrap gap-2';
                 notes.forEach(note => {
-                    const chip = document.createElement('div');
-                    chip.className = `note-chip px-3 py-1.5 rounded-full text-xs font-medium border shadow-sm ${familyColors[family]}`;
-                    chip.draggable = true;
-                    chip.innerText = note;
-                    chip.dataset.note = note;
-                    chip.dataset.family = family;
-                    chip.addEventListener('dragstart', drag);
-                    noteContainer.appendChild(chip);
+                    const chip = document.createElement('div'); chip.className = `note-chip px-3 py-1.5 rounded-full text-xs font-medium border shadow-sm ${familyColors[family]}`;
+                    chip.draggable = true; chip.innerText = note; chip.dataset.note = note; chip.dataset.family = family;
+                    chip.addEventListener('dragstart', drag); noteContainer.appendChild(chip);
                 });
-                group.appendChild(noteContainer);
-                container.appendChild(group);
+                group.appendChild(noteContainer); container.appendChild(group);
             }
         }
-
-        function drag(ev) {
-            ev.dataTransfer.setData("note", ev.target.dataset.note);
-            ev.dataTransfer.setData("family", ev.target.dataset.family);
-            ev.target.classList.add('dragging');
-        }
-
-        function allowDrop(ev) {
-            ev.preventDefault();
-            const zone = ev.target.closest('.drop-zone');
-            if (zone) zone.classList.add('drag-over');
-        }
-
-        document.addEventListener('dragend', (ev) => {
-            document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
-            ev.target.classList.remove('dragging');
-        });
-
-        document.addEventListener('dragleave', (ev) => {
-            if (ev.target.classList.contains('drop-zone')) {
-                ev.target.classList.remove('drag-over');
-            }
-        });
-
+        function drag(ev) { ev.dataTransfer.setData("note", ev.target.dataset.note); ev.dataTransfer.setData("family", ev.target.dataset.family); ev.target.classList.add('dragging'); }
+        function allowDrop(ev) { ev.preventDefault(); const zone = ev.target.closest('.drop-zone'); if (zone) zone.classList.add('drag-over'); }
+        document.addEventListener('dragend', (ev) => { document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over')); ev.target.classList.remove('dragging'); });
+        document.addEventListener('dragleave', (ev) => { if (ev.target.classList.contains('drop-zone')) ev.target.classList.remove('drag-over'); });
         function drop(ev, zoneName) {
-            ev.preventDefault();
-            const zone = document.getElementById(`zone-${zoneName}`);
-            zone.classList.remove('drag-over');
-            const noteName = ev.dataTransfer.getData("note");
-            const familyName = ev.dataTransfer.getData("family");
-            if (!noteName) return;
-            if (currentMix[zoneName].find(n => n.name === noteName)) return;
+            ev.preventDefault(); const zone = document.getElementById(`zone-${zoneName}`); zone.classList.remove('drag-over');
+            const noteName = ev.dataTransfer.getData("note"); const familyName = ev.dataTransfer.getData("family");
+            if (!noteName || currentMix[zoneName].find(n => n.name === noteName)) return;
             currentMix[zoneName].push({ name: noteName, family: familyName });
-            const chip = document.createElement('div');
-            chip.className = `note-chip px-3 py-1 rounded-full text-xs font-medium border flex items-center gap-1 bg-white border-stone-300 shadow-sm animate-in fade-in zoom-in duration-200`;
+            const chip = document.createElement('div'); chip.className = `note-chip px-3 py-1 rounded-full text-xs font-medium border flex items-center gap-1 bg-white border-stone-300 shadow-sm animate-in fade-in zoom-in duration-200`;
             chip.innerHTML = `<span class="w-2 h-2 rounded-full ${familyColors[familyName].split(' ')[0]}"></span>${noteName}<button class="ml-1 text-stone-400 hover:text-red-500" onclick="removeNote('${zoneName}', '${noteName}', this)">×</button>`;
-            const emptyLabel = zone.querySelector('.empty-label');
-            if (emptyLabel) emptyLabel.style.display = 'none';
-            zone.appendChild(chip);
-            generateStandardScene();
-            document.getElementById('btn-dream').classList.remove('hidden');
+            const emptyLabel = zone.querySelector('.empty-label'); if (emptyLabel) emptyLabel.style.display = 'none'; zone.appendChild(chip);
+            generateStandardScene(); document.getElementById('btn-dream').classList.remove('hidden');
         }
-
         function removeNote(zoneName, noteName, btnElement) {
-            currentMix[zoneName] = currentMix[zoneName].filter(n => n.name !== noteName);
-            btnElement.parentElement.remove();
-            const zone = document.getElementById(`zone-${zoneName}`);
-            if (currentMix[zoneName].length === 0) zone.querySelector('.empty-label').style.display = 'flex';
+            currentMix[zoneName] = currentMix[zoneName].filter(n => n.name !== noteName); btnElement.parentElement.remove();
+            const zone = document.getElementById(`zone-${zoneName}`); if (currentMix[zoneName].length === 0) zone.querySelector('.empty-label').style.display = 'flex';
             generateStandardScene();
         }
-
         function resetPyramid() {
             currentMix = { top: [], heart: [], base: [] };
-            ['top', 'heart', 'base'].forEach(zone => {
-                const el = document.getElementById(`zone-${zone}`);
-                const span = el.querySelector('span');
-                el.innerHTML = '';
-                el.appendChild(span);
-                span.style.display = 'flex';
-            });
-            document.getElementById('alchemist-feedback').classList.add('hidden');
-            generateStandardScene();
+            ['top', 'heart', 'base'].forEach(zone => { const el = document.getElementById(`zone-${zone}`); const span = el.querySelector('span'); el.innerHTML = ''; el.appendChild(span); span.style.display = 'flex'; });
+            document.getElementById('alchemist-feedback').classList.add('hidden'); generateStandardScene();
         }
-
         function generateStandardScene() {
             const allNotes = [...currentMix.top, ...currentMix.heart, ...currentMix.base];
-            const titleEl = document.getElementById('scene-title');
-            const descEl = document.getElementById('scene-desc');
-            if (allNotes.length === 0) {
-                titleEl.innerText = "The Blank Canvas";
-                descEl.innerText = "The air is still, waiting for the first drop of inspiration. The room is silent, a void of pure potential where memories have yet to be formed. Begin by adding a note to shape this world.";
-                return;
-            }
-            const familyCounts = {};
-            allNotes.forEach(n => familyCounts[n.family] = (familyCounts[n.family] || 0) + 1);
+            const titleEl = document.getElementById('scene-title'); const descEl = document.getElementById('scene-desc');
+            if (allNotes.length === 0) { titleEl.innerText = "The Blank Canvas"; descEl.innerText = "The air is still, waiting for the first drop of inspiration. The room is silent, a void of pure potential where memories have yet to be formed. Begin by adding a note to shape this world."; return; }
+            const familyCounts = {}; allNotes.forEach(n => familyCounts[n.family] = (familyCounts[n.family] || 0) + 1);
             let dominantFamily = Object.keys(familyCounts).reduce((a, b) => familyCounts[a] > familyCounts[b] ? a : b);
-            let draftTitle = "Untitled Blend";
-            let draftDesc = "A unique mix is forming...";
-            const traits = {
-                "Floral": ["The Secret Garden", "A lush, velvety atmosphere."],
-                "Woody": ["The Ancient Cabin", "A deep, grounding presence."],
-                "Citrus": ["Sunlit Orchard", "A radiant burst of energy."],
-                "Fruit": ["Market Day", "A playful, succulent sweetness."],
-                "Greens": ["After the Rain", "A crisp, revitalizing breeze."],
-                "Musks": ["Velvet Room", "An intimate, skin-like warmth."],
-                "Warm": ["Amber Sunset", "A cozy, golden embrace."],
-                "Synthetic": ["City Lights", "A modern, ethereal aura."]
-            };
-            if (traits[dominantFamily]) {
-                draftTitle = traits[dominantFamily][0];
-                draftDesc = traits[dominantFamily][1] + " (Click 'Dream' for a full story)";
-            }
-            titleEl.innerText = draftTitle;
-            descEl.innerText = draftDesc;
+            let draftTitle = "Untitled Blend"; let draftDesc = "A unique mix is forming...";
+            const traits = { "Floral": ["The Secret Garden", "A lush, velvety atmosphere."], "Woody": ["The Ancient Cabin", "A deep, grounding presence."], "Citrus": ["Sunlit Orchard", "A radiant burst of energy."], "Fruit": ["Market Day", "A playful, succulent sweetness."], "Greens": ["After the Rain", "A crisp, revitalizing breeze."], "Musks": ["Velvet Room", "An intimate, skin-like warmth."], "Warm": ["Amber Sunset", "A cozy, golden embrace."], "Synthetic": ["City Lights", "A modern, ethereal aura."] };
+            if (traits[dominantFamily]) { draftTitle = traits[dominantFamily][0]; draftDesc = traits[dominantFamily][1] + " (Click 'Dream' for a full story)"; }
+            titleEl.innerText = draftTitle; descEl.innerText = draftDesc;
         }
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const btn = document.getElementById('open-sidebar-btn');
-            if (sidebar.classList.contains('-ml-72')) {
-                sidebar.classList.remove('-ml-72');
-                btn.classList.add('hidden');
-            } else {
-                sidebar.classList.add('-ml-72');
-                btn.classList.remove('hidden');
-            }
-        }
-
+        function toggleSidebar() { const sidebar = document.getElementById('sidebar'); const btn = document.getElementById('open-sidebar-btn'); if (sidebar.classList.contains('-ml-72')) { sidebar.classList.remove('-ml-72'); btn.classList.add('hidden'); } else { sidebar.classList.add('-ml-72'); btn.classList.remove('hidden'); } }
         init();
     </script>
 </body>

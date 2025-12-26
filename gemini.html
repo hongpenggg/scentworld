@@ -97,10 +97,10 @@
         /** =================================================================
          * IMPORTANT: API KEY SETUP
          * =================================================================
-         * 1. Use a key from https://aistudio.google.com/ (NOT Cloud Console)
+         * 1. Use your working key from the Debug Tool.
          * 2. Paste it below.
          */
-        const GOOGLE_API_KEY = "AIzaSyBxUNXyOfS5aBldZOiEKV_5hgA8VU3pkGA";
+        const GOOGLE_API_KEY = "AIzaSyBxUNXyOfS5aBldZOiEKV_5hgA8VU3pkGA"; // PASTE KEY HERE
         
         // ------------------------------------------------------------------
 
@@ -124,8 +124,8 @@
                 return null;
             }
 
-            // Using the standard Flash model
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_API_KEY}`;
+            // UPDATED: Using 'gemini-2.5-flash' based on your available model list
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`;
             
             const payload = {
                 contents: [{ parts: [{ text: prompt }] }],
@@ -144,20 +144,14 @@
                 const data = await response.json();
 
                 if (!response.ok) {
-                    // Check for common 'API not enabled' 404/403 errors
-                    if (response.status === 404) {
-                        alert("Error 404: The API Model was not found. \n\nFIX: Your API Key might be from the wrong place. Please create a new key at 'aistudio.google.com' (not Google Cloud Console).");
-                    } else if (response.status === 403) {
-                         alert("Error 403: Permission Denied. \n\nFIX: Your API Key is restricted or the API service is not enabled.");
-                    } else {
-                        console.error("API Error:", data);
-                        alert(`API Error: ${data.error?.message || response.status}`);
-                    }
+                    console.error("API Error:", data);
+                    alert(`API Error: ${data.error?.message || response.status}`);
                     return null;
                 }
                 return JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
             } catch (error) {
                 console.error("Connection Failed:", error);
+                alert("Connection failed. Check console for details.");
                 return null;
             }
         }

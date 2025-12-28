@@ -15,326 +15,368 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        /* --- Visual Variables --- */
+        /* --- 1. CORE VARIABLES --- */
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.5);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.6);
             --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-            --blur: 20px;
+            --sidebar-width: 300px;
+            --sidebar-gap: 20px;
             --gold: #D4AF37;
         }
 
-        /* --- Base & Scrollbar --- */
+        /* --- 2. GLOBAL STYLES --- */
         body {
             font-family: 'Lato', sans-serif;
             background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
             color: #2c2c2c;
             overflow-x: hidden;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        h1, h2, h3, .serif {
-            font-family: 'Playfair Display', serif;
-        }
+        h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
 
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background-color: rgba(156, 163, 175, 0.5); border-radius: 20px; }
 
-        /* --- Glassmorphism Utilities --- */
+        /* --- 3. GLASSMORPHISM --- */
         .glass-panel {
             background: var(--glass-bg);
-            backdrop-filter: blur(var(--blur));
-            -webkit-backdrop-filter: blur(var(--blur));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             box-shadow: var(--glass-shadow);
         }
+        .squircle { border-radius: 24px; }
 
-        /* --- Squircle Shape (Approximation with radius) --- */
-        .squircle {
-            border-radius: 24px;
-        }
-
-        /* --- Parallelogram Navigation --- */
+        /* --- 4. PARALLELOGRAM NAV --- */
         .nav-link {
             position: relative;
-            padding: 0 8px;
-            font-family: 'Lato', sans-serif;
-            font-weight: 300;
+            padding: 4px 8px;
+            font-weight: 400;
             text-transform: uppercase;
             letter-spacing: 0.1em;
             cursor: pointer;
             z-index: 10;
-            transition: color 0.3s;
         }
-        
         .nav-link-bg {
             position: absolute;
             bottom: 0;
-            left: -5px;
-            height: 40%;
-            width: 50%; /* Half highlighted initially */
-            background-color: rgba(212, 175, 55, 0.3); /* Gold tint */
+            left: 0;
+            width: 100%;
+            height: 40%; /* Half highlight */
+            background-color: rgba(212, 175, 55, 0.3);
             transform: skewX(-20deg);
             z-index: -1;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: height 0.3s ease, background-color 0.3s ease;
         }
-
         .nav-link:hover .nav-link-bg {
-            height: 100%;
-            width: 110%;
-            background-color: transparent;
-            border: 1px solid #D4AF37;
+            height: 100%; /* Expands upwards */
+            background-color: rgba(212, 175, 55, 0.5);
         }
 
-        /* --- Sidebar Transitions --- */
+        /* --- 5. SIDEBAR & TOGGLE ANIMATION --- */
         #sidebar {
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
+            position: fixed;
+            top: 100px;
+            left: 20px;
+            bottom: 100px; /* Leave space for footer scrolling */
+            width: var(--sidebar-width);
+            z-index: 40;
+            transform: translateX(0);
+            opacity: 1;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        #sidebar.minimized {
-            transform: translateX(-150%);
+        
+        #sidebar.closed {
+            transform: translateX(calc(-1 * var(--sidebar-width) - 40px));
             opacity: 0;
             pointer-events: none;
         }
 
-        /* --- Note Chips --- */
+        /* Floating Toggle Button */
+        #sidebar-toggle {
+            position: fixed;
+            top: 100px;
+            z-index: 41;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        /* Button Position Logic */
+        #sidebar-toggle.open-pos {
+            left: calc(20px + var(--sidebar-width) + 15px); /* Right of sidebar */
+        }
+        #sidebar-toggle.closed-pos {
+            left: 30px; /* Top left under header */
+        }
+
+        #sidebar-toggle:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background-color: rgba(255,255,255, 0.9);
+        }
+
+        /* --- 6. LAYOUT SHIFT ENGINE --- */
+        #main-container {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            margin-top: 80px; /* Header space */
+            padding-bottom: 40px;
+        }
+
+        /* State: Sidebar Open */
+        #main-container.with-sidebar {
+            padding-left: calc(var(--sidebar-width) + 60px); /* Push content right */
+            padding-right: 40px;
+        }
+        #main-container.with-sidebar .layout-wrapper {
+            flex-direction: column; /* Stack Pyramid & Memory */
+            align-items: center;
+        }
+        #main-container.with-sidebar .pyramid-section { width: 100%; max-width: 600px; }
+        #main-container.with-sidebar .memory-section { width: 100%; max-width: 600px; margin-top: 2rem; }
+
+        /* State: Sidebar Closed */
+        #main-container.no-sidebar {
+            padding-left: 40px; /* Centered-ish */
+            padding-right: 40px;
+        }
+        #main-container.no-sidebar .layout-wrapper {
+            flex-direction: row; /* Side by side */
+            align-items: flex-start;
+            justify-content: center;
+            gap: 4rem;
+            flex-wrap: wrap;
+        }
+        #main-container.no-sidebar .pyramid-section { width: 45%; min-width: 320px; }
+        #main-container.no-sidebar .memory-section { width: 45%; min-width: 320px; margin-top: 0; }
+
+        /* --- 7. CLICK-TO-ASSIGN MODE --- */
+        body.mode-select #selection-overlay {
+            opacity: 1;
+            pointer-events: auto;
+            backdrop-filter: blur(8px);
+        }
+        body.mode-select .drop-zone {
+            z-index: 60;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            transform: scale(1.05);
+            cursor: pointer;
+            animation: pulse-gold 2s infinite;
+        }
+        body.mode-select .drop-zone .empty-label { color: #888; }
+        body.mode-select #sidebar, 
+        body.mode-select header, 
+        body.mode-select footer { 
+            filter: blur(4px); 
+            pointer-events: none; 
+        }
+
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+
+        /* --- 8. COMPONENTS --- */
+        /* Note Pills */
         .note-chip {
+            font-size: 10px; /* Reduced size */
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
             cursor: grab;
             transition: all 0.2s ease;
-            user-select: none;
-            position: relative;
-            z-index: 20;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         .note-chip:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Soft shadow on hover */
-        }
-        .note-chip:active { cursor: grabbing; }
-
-        /* --- Selection Mode (Click interaction) --- */
-        body.selecting-mode .main-content-area {
-            filter: blur(4px) grayscale(0.5);
-            pointer-events: none;
-            transition: all 0.3s ease;
-        }
-        body.selecting-mode .pyramid-container {
-            filter: none;
-            pointer-events: auto;
-            z-index: 50;
-            transform: scale(1.02);
-        }
-        body.selecting-mode .drop-zone {
-            border-color: #D4AF37;
-            background-color: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
-            animation: pulse-border 2s infinite;
-            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1); /* Soft shadow */
         }
         
-        @keyframes pulse-border {
-            0% { border-color: #D4AF37; }
-            50% { border-color: rgba(212, 175, 55, 0.4); }
-            100% { border-color: #D4AF37; }
-        }
-
-        /* --- Drop Zones (Pyramid Shape) --- */
+        /* Drop Zones */
         .drop-zone {
             transition: all 0.3s ease;
+            position: relative;
         }
         .drop-zone.drag-over {
-            background-color: #ecfdf5;
-            border-color: #10b981;
+            background-color: #f0fdf4;
+            border-color: #4ade80;
             transform: scale(1.02);
         }
 
-        /* --- Splash Screen --- */
+        /* Splash Screen */
         #splash-screen {
-            position: fixed;
-            inset: 0;
-            background: #fdfbfb;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            position: fixed; inset: 0; background: #fdfbfb; z-index: 100;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 0.8s ease, visibility 0.8s;
         }
-        .splash-hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
+        .splash-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
-        /* --- Music Button --- */
-        .music-btn {
+        /* Music Button */
+        #music-btn {
+            position: fixed; bottom: 24px; right: 24px; z-index: 50;
+            width: 48px; height: 48px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
-        .music-btn:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Soft shadow */
-            transform: translateY(-2px);
-        }
-
-        /* --- Accordion Styles --- */
-        .family-header {
-            transition: background-color 0.2s;
-        }
-        .family-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .family-content.open {
-            max-height: 500px; /* Arbitrary large number */
+        #music-btn:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transform: scale(1.05);
         }
 
     </style>
 </head>
-<body class="relative">
+<body>
 
-    <!-- Audio Element -->
+    <!-- AUDIO -->
     <audio id="bg-music" loop>
-        <!-- Replace with actual path in your repo -->
         <source src="assets/piano.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- Overlay for Selection Mode -->
-    <div id="selection-overlay" class="fixed inset-0 bg-black bg-opacity-0 pointer-events-none z-40 transition-all duration-300" onclick="cancelSelection()"></div>
+    <!-- OVERLAY (For Click Mode) -->
+    <div id="selection-overlay" class="fixed inset-0 bg-black/10 opacity-0 pointer-events-none z-50 transition-all duration-300" onclick="cancelSelection()">
+        <div class="absolute top-10 left-0 right-0 text-center text-white text-xl font-serif italic drop-shadow-md">Select a layer to place the note...</div>
+    </div>
 
-    <!-- Splash Screen -->
+    <!-- SPLASH SCREEN -->
     <div id="splash-screen">
         <h1 class="text-5xl md:text-7xl font-serif italic text-gray-800 mb-4 tracking-wide">ScentWorld</h1>
-        <p class="text-gray-500 mb-10 font-light tracking-widest uppercase text-xs">The Olfactory Playground</p>
+        <p class="text-gray-400 mb-10 font-light tracking-[0.3em] uppercase text-xs">The Olfactory Playground</p>
         <button onclick="enterWorld()" class="px-10 py-3 bg-gray-900 text-white rounded-full font-serif italic hover:bg-gray-800 transition-all transform hover:scale-105 shadow-xl">
             Enter
         </button>
     </div>
 
     <!-- HEADER -->
-    <header class="fixed top-0 left-0 right-0 h-16 glass-panel z-30 flex justify-between items-center px-6 md:px-12">
-        <div class="text-xl font-serif italic font-bold text-gray-800">ScentWorld</div>
+    <header class="fixed top-0 left-0 right-0 h-20 glass-panel z-40 flex justify-between items-center px-6 md:px-12 border-b-0 rounded-b-2xl mx-4 mt-2">
+        <div class="text-2xl font-serif italic font-bold text-gray-800">ScentWorld</div>
         <nav class="flex gap-8">
-            <a href="index.html" class="nav-link text-sm md:text-base">
+            <a href="index.html" class="nav-link text-sm font-bold text-gray-700">
                 Home
                 <div class="nav-link-bg"></div>
             </a>
-            <a href="gemini.html" class="nav-link text-sm md:text-base">
+            <a href="gemini.html" class="nav-link text-sm font-bold text-gray-700">
                 ScentWorld AI
                 <div class="nav-link-bg"></div>
             </a>
         </nav>
     </header>
 
-    <!-- FLOATING SIDEBAR -->
-    <div id="sidebar-container" class="fixed top-24 left-4 bottom-24 w-72 z-30 pointer-events-none">
-        
-        <!-- Toggle Button (Floating Outside) -->
-        <button onclick="toggleSidebar()" class="pointer-events-auto absolute -right-12 top-0 w-10 h-10 glass-panel squircle flex items-center justify-center text-gray-600 hover:text-gray-900 transition-all hover:shadow-lg focus:outline-none">
-            <i data-lucide="panel-left" width="20"></i>
-        </button>
-
-        <!-- Sidebar Content -->
-        <aside id="sidebar" class="w-full h-full glass-panel squircle pointer-events-auto flex flex-col overflow-hidden shadow-2xl">
-            <div class="p-5 border-b border-gray-100 bg-white/30">
-                <h2 class="font-bold text-gray-600 tracking-widest uppercase text-xs">Fragrance Library</h2>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto p-4 custom-scroll space-y-3" id="notes-container">
-                <!-- Notes Accordions generated here -->
-            </div>
-
-            <div class="p-3 bg-white/30 text-[10px] text-gray-400 border-t border-gray-100 text-center uppercase tracking-wider">
-                Select or Drag Notes
-            </div>
-        </aside>
+    <!-- SIDEBAR TOGGLE BUTTON -->
+    <div id="sidebar-toggle" class="glass-panel open-pos" onclick="toggleSidebar()">
+        <i data-lucide="panel-left-close" class="text-gray-600 transition-transform duration-300"></i>
     </div>
 
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="glass-panel squircle flex flex-col overflow-hidden">
+        <div class="p-4 border-b border-gray-100 bg-white/40">
+            <h2 class="font-bold text-gray-500 tracking-widest uppercase text-[10px]">Fragrance Library</h2>
+        </div>
+        <div class="flex-1 overflow-y-auto p-3 custom-scroll space-y-2" id="notes-container">
+            <!-- JS Injects Notes Here -->
+        </div>
+        <div class="p-3 bg-white/40 text-[9px] text-gray-400 border-t border-gray-100 text-center uppercase tracking-widest">
+            Select or Drag
+        </div>
+    </aside>
+
     <!-- MAIN CONTENT -->
-    <main class="flex-1 pt-24 pb-16 flex flex-col items-center overflow-y-auto custom-scroll main-content-area">
+    <div id="main-container" class="with-sidebar">
         
-        <div class="text-center mb-6 px-4">
+        <!-- Intro Text -->
+        <div class="text-center mb-8 fade-in">
             <h1 class="text-4xl md:text-5xl text-gray-800 mb-2 serif italic">Compose Your Memory</h1>
-            <p class="text-gray-500 font-light text-sm italic">Layer notes to reveal the scene</p>
+            <p class="text-gray-500 font-light text-xs uppercase tracking-widest">Layer notes to reveal the scene</p>
         </div>
 
-        <!-- PYRAMID CONTAINER (Target for Drop/Click) -->
-        <div class="pyramid-container w-full max-w-2xl px-4 flex flex-col items-center gap-2 transition-transform duration-300">
-            
-            <!-- TOP LAYER (Narrow) -->
-            <div class="w-full md:w-1/2 flex flex-col items-center">
-                <div class="text-[10px] uppercase tracking-widest text-gray-400 mb-1 w-full text-center">Top Notes</div>
-                <div class="w-full min-h-[80px] glass-panel squircle p-3 flex flex-wrap justify-center gap-2 items-center drop-zone border-2 border-dashed border-gray-300" 
-                     ondrop="drop(event, 'top')" ondragover="allowDrop(event)" onclick="handleLayerClick('top')" id="zone-top">
-                     <span class="text-gray-300 text-xs font-medium empty-label pointer-events-none">First Impression</span>
-                </div>
-            </div>
+        <!-- Layout Wrapper (Flexbox that shifts direction) -->
+        <div class="layout-wrapper flex w-full max-w-7xl mx-auto transition-all duration-500">
 
-            <!-- HEART LAYER (Medium) -->
-            <div class="w-full md:w-3/4 flex flex-col items-center">
-                <div class="text-[10px] uppercase tracking-widest text-pink-300 mb-1 w-full text-center">Heart Notes</div>
-                <div class="w-full min-h-[90px] glass-panel squircle p-3 flex flex-wrap justify-center gap-2 items-center drop-zone border-2 border-dashed border-gray-300" 
-                     ondrop="drop(event, 'heart')" ondragover="allowDrop(event)" onclick="handleLayerClick('heart')" id="zone-heart">
-                     <span class="text-gray-300 text-xs font-medium empty-label pointer-events-none">The Emotion</span>
-                </div>
-            </div>
-
-            <!-- BASE LAYER (Wide) -->
-            <div class="w-full flex flex-col items-center">
-                <div class="text-[10px] uppercase tracking-widest text-amber-600 mb-1 w-full text-center">Base Notes</div>
-                <div class="w-full min-h-[100px] glass-panel squircle p-3 flex flex-wrap justify-center gap-2 items-center drop-zone border-2 border-dashed border-gray-300" 
-                     ondrop="drop(event, 'base')" ondragover="allowDrop(event)" onclick="handleLayerClick('base')" id="zone-base">
-                     <span class="text-gray-300 text-xs font-medium empty-label pointer-events-none">The Memory</span>
-                </div>
-            </div>
-
-            <!-- Clear Button -->
-            <button onclick="resetPyramid()" class="mt-4 text-xs uppercase tracking-widest text-gray-400 hover:text-red-400 transition-colors">
-                Reset Composition
-            </button>
-
-        </div>
-
-        <!-- SCENE OUTPUT -->
-        <div class="w-full max-w-3xl mt-12 px-6">
-            <div class="relative w-full aspect-[16/9] md:aspect-[21/9] bg-gray-900 text-gray-100 flex items-center justify-center p-8 md:p-12 shadow-2xl squircle overflow-hidden group">
-                <!-- Dynamic Background -->
-                <div id="scene-bg" class="absolute inset-0 opacity-30 bg-gradient-to-br from-gray-800 via-black to-gray-900 transition-all duration-1000"></div>
+            <!-- PYRAMID SECTION -->
+            <div class="pyramid-section flex flex-col items-center gap-3 transition-all duration-500">
                 
-                <!-- Text Content -->
-                <div class="relative z-10 text-center max-w-xl">
-                    <h3 class="text-2xl md:text-3xl font-serif mb-4 text-white/90 italic tracking-wide transition-all duration-700" id="scene-title">The Void</h3>
-                    <div class="h-px w-10 bg-white/20 mx-auto mb-4"></div>
-                    <p class="text-sm md:text-base text-gray-400 leading-relaxed font-light transition-all duration-700" id="scene-desc">
-                        The air is still. The canvas is blank. Add a note to begin the memory.
-                    </p>
+                <!-- Top -->
+                <div class="w-full flex flex-col items-center">
+                    <div class="text-[9px] uppercase tracking-widest text-gray-400 mb-1">Top Notes</div>
+                    <div class="w-2/3 min-h-[70px] glass-panel squircle p-2 flex flex-wrap justify-center gap-2 items-center drop-zone border-2 border-dashed border-gray-300 transition-all" 
+                         ondrop="drop(event, 'top')" ondragover="allowDrop(event)" onclick="handleLayerClick('top')" id="zone-top">
+                         <span class="text-gray-300 text-[10px] font-bold uppercase tracking-wide empty-label pointer-events-none">First Impression</span>
+                    </div>
+                </div>
+
+                <!-- Heart -->
+                <div class="w-full flex flex-col items-center">
+                    <div class="text-[9px] uppercase tracking-widest text-pink-300 mb-1">Heart Notes</div>
+                    <div class="w-5/6 min-h-[80px] glass-panel squircle p-2 flex flex-wrap justify-center gap-2 items-center drop-zone border-2 border-dashed border-gray-300 transition-all" 
+                         ondrop="drop(event, 'heart')" ondragover="allowDrop(event)" onclick="handleLayerClick('heart')" id="zone-heart">
+                         <span class="text-gray-300 text-[10px] font-bold uppercase tracking-wide empty-label pointer-events-none">The Emotion</span>
+                    </div>
+                </div>
+
+                <!-- Base -->
+                <div class="w-full flex flex-col items-center">
+                    <div class="text-[9px] uppercase tracking-widest text-amber-600 mb-1">Base Notes</div>
+                    <div class="w-full min-h-[90px] glass-panel squircle p-2 flex flex-wrap justify-center gap-2 items-center drop-zone border-2 border-dashed border-gray-300 transition-all" 
+                         ondrop="drop(event, 'base')" ondragover="allowDrop(event)" onclick="handleLayerClick('base')" id="zone-base">
+                         <span class="text-gray-300 text-[10px] font-bold uppercase tracking-wide empty-label pointer-events-none">The Memory</span>
+                    </div>
+                </div>
+
+                <button onclick="resetPyramid()" class="mt-4 text-[10px] uppercase tracking-widest text-gray-400 hover:text-red-400 transition-colors">
+                    Reset Canvas
+                </button>
+            </div>
+
+            <!-- MEMORY SECTION -->
+            <div class="memory-section transition-all duration-500">
+                <div class="relative w-full aspect-[16/9] md:aspect-[21/9] bg-gray-900 text-gray-100 flex items-center justify-center p-8 md:p-12 shadow-2xl squircle overflow-hidden group">
+                    <div id="scene-bg" class="absolute inset-0 opacity-30 bg-gradient-to-br from-gray-800 via-black to-gray-900 transition-all duration-1000"></div>
+                    <div class="relative z-10 text-center max-w-xl">
+                        <h3 class="text-2xl md:text-3xl font-serif mb-4 text-white/90 italic tracking-wide transition-all duration-700" id="scene-title">The Void</h3>
+                        <div class="h-px w-10 bg-white/20 mx-auto mb-4"></div>
+                        <p class="text-sm text-gray-400 leading-relaxed font-light transition-all duration-700" id="scene-desc">
+                            The air is still. The canvas is blank. Add a note to begin the memory.
+                        </p>
+                    </div>
                 </div>
             </div>
+
         </div>
+    </div>
 
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="bg-white border-t border-gray-200 px-6 py-8 md:px-12 mt-auto z-20">
-        <div class="max-w-7xl mx-auto">
-            <h4 class="font-serif italic text-lg text-gray-800 mb-2">ScentWorld</h4>
-            <p class="text-xs text-gray-500">&copy; Hongpeng Wei, 2025</p>
-            <p class="text-[10px] text-gray-400 mt-1">The music on this site is JANACEK Sonata 1.X.1905, copyright of Charlie Albright, Free Music Archive.</p>
+    <!-- FOOTER (Static at bottom) -->
+    <footer class="bg-white border-t border-gray-200 w-full py-12 mt-auto z-10">
+        <div class="max-w-7xl mx-auto px-6 md:px-12">
+            <h4 class="font-serif italic text-2xl text-gray-800 mb-2">ScentWorld</h4>
+            <p class="text-sm font-bold text-gray-600 mb-2">&copy; Hongpeng Wei, 2025</p>
+            <p class="text-[10px] text-gray-400">The music on this site is JANACEK Sonata 1.X.1905, copyright of Charlie Albright, Free Music Archive.</p>
         </div>
     </footer>
 
-    <!-- MUSIC BUTTON (Fixed Bottom Right) -->
-    <button onclick="toggleMusic()" id="music-btn" class="fixed bottom-6 right-6 w-12 h-12 glass-panel rounded-full flex items-center justify-center text-gray-600 z-50 music-btn cursor-pointer focus:outline-none">
-        <!-- Default State: Line through (Playing) as per user request -->
+    <!-- MUSIC BUTTON -->
+    <button onclick="toggleMusic()" id="music-btn" class="glass-panel text-gray-600">
         <div id="music-icon-wrapper" class="relative">
             <i data-lucide="music" width="20"></i>
-            <div id="music-strike" class="absolute top-1/2 left-0 w-full h-0.5 bg-gray-600 transform -rotate-45"></div>
+            <div id="music-strike" class="absolute top-1/2 left-0 w-full h-0.5 bg-gray-600 transform -rotate-45 transition-opacity duration-300"></div>
         </div>
     </button>
 
     <script>
-        // --- 1. DATA LIBRARY ---
+        // --- DATA ---
         const families = {
             "Floral": ["Lavender", "Clary sage", "Geranium", "Saffron", "Lotus", "Lily-of-the-valley", "Marigold", "Begonia", "Jasmine", "Wild cyclamen", "Ylang Ylang", "Rose", "Heliotrope", "Tuberose", "Osmanthus", "Magnolia", "Immortelle", "Violet", "Iris", "Water Lily", "Freesia", "Vanilla", "Gardenia", "Frangipani", "Honeysuckle", "Mimosa"],
             "Woody": ["Cedar", "Sandalwood", "Oud", "Incense", "Vetiver", "Oak", "Cypress", "Rosewood", "Guaicwood", "Patchouli", "Oakmoss", "Tree Moss", "Hazelnut", "Tonka Bean"],
@@ -348,7 +390,7 @@
 
         const familyColors = {
             "Floral": "bg-pink-100 text-pink-900 border-pink-200",
-            "Woody": "bg-yellow-100 text-yellow-900 border-yellow-200", // Amberish
+            "Woody": "bg-yellow-100 text-yellow-900 border-yellow-200",
             "Citrus": "bg-yellow-50 text-yellow-800 border-yellow-200",
             "Fruit": "bg-orange-100 text-orange-900 border-orange-200",
             "Greens": "bg-green-100 text-green-900 border-green-200",
@@ -357,42 +399,46 @@
             "Synthetic": "bg-blue-100 text-blue-900 border-blue-200"
         };
 
-        // --- 2. STATE ---
         let currentMix = { top: [], heart: [], base: [] };
-        let isMusicPlaying = true; // Default intent is playing
-        let selectedNoteData = null; // For click-to-select mode
+        let isMusicPlaying = true;
+        let selectedNote = null; // { name, family }
 
-        // --- 3. INIT ---
+        // --- INIT ---
         function init() {
             lucide.createIcons();
             renderSidebar();
-            // Music icon setup
             updateMusicIcon();
         }
 
         function enterWorld() {
-            const splash = document.getElementById('splash-screen');
-            splash.classList.add('splash-hidden');
-            // Try to play music
+            document.getElementById('splash-screen').classList.add('splash-hidden');
             const audio = document.getElementById('bg-music');
             audio.volume = 0.5;
-            audio.play().catch(e => {
-                console.log("Autoplay blocked, user interaction required later");
-                isMusicPlaying = false;
-                updateMusicIcon();
-            });
+            audio.play().catch(() => { isMusicPlaying = false; updateMusicIcon(); });
         }
 
-        // --- 4. SIDEBAR LOGIC ---
+        // --- SIDEBAR LOGIC ---
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar-container');
-            const icon = document.querySelector('#sidebar-container button i');
-            
-            if (sidebar.classList.contains('minimized')) {
-                sidebar.classList.remove('minimized');
-                icon.setAttribute('data-lucide', 'panel-left');
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('sidebar-toggle');
+            const container = document.getElementById('main-container');
+            const icon = toggleBtn.querySelector('i');
+
+            if (sidebar.classList.contains('closed')) {
+                // OPENING
+                sidebar.classList.remove('closed');
+                toggleBtn.classList.remove('closed-pos');
+                toggleBtn.classList.add('open-pos');
+                container.classList.remove('no-sidebar');
+                container.classList.add('with-sidebar');
+                icon.setAttribute('data-lucide', 'panel-left-close');
             } else {
-                sidebar.classList.add('minimized');
+                // CLOSING
+                sidebar.classList.add('closed');
+                toggleBtn.classList.remove('open-pos');
+                toggleBtn.classList.add('closed-pos');
+                container.classList.remove('with-sidebar');
+                container.classList.add('no-sidebar');
                 icon.setAttribute('data-lucide', 'panel-left-open');
             }
             lucide.createIcons();
@@ -401,20 +447,17 @@
         function toggleFamily(header) {
             const content = header.nextElementSibling;
             const chevron = header.querySelector('.chevron');
-            
-            if (content.classList.contains('open')) {
-                content.classList.remove('open');
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
                 chevron.style.transform = 'rotate(0deg)';
                 header.classList.remove('bg-white/50');
             } else {
-                // Close others (optional, but keeps it clean)
-                document.querySelectorAll('.family-content').forEach(el => {
-                    el.classList.remove('open');
-                    el.previousElementSibling.querySelector('.chevron').style.transform = 'rotate(0deg)';
-                    el.previousElementSibling.classList.remove('bg-white/50');
-                });
-
-                content.classList.add('open');
+                // Close others
+                document.querySelectorAll('.family-content').forEach(el => el.style.maxHeight = null);
+                document.querySelectorAll('.chevron').forEach(el => el.style.transform = 'rotate(0deg)');
+                document.querySelectorAll('.family-header').forEach(el => el.classList.remove('bg-white/50'));
+                
+                content.style.maxHeight = content.scrollHeight + "px";
                 chevron.style.transform = 'rotate(180deg)';
                 header.classList.add('bg-white/50');
             }
@@ -423,168 +466,112 @@
         function renderSidebar() {
             const container = document.getElementById('notes-container');
             container.innerHTML = '';
-
             for (const [family, notes] of Object.entries(families)) {
-                // Accordion Item
                 const item = document.createElement('div');
-                item.className = 'overflow-hidden rounded-xl border border-white/40 mb-2';
-
-                // Header (Slightly opaque squircle as requested)
+                item.className = 'overflow-hidden rounded-lg border border-white/40 mb-1';
+                
                 const header = document.createElement('div');
                 header.className = 'family-header p-3 flex justify-between items-center cursor-pointer bg-white/20 hover:bg-white/40 transition-colors';
                 header.onclick = () => toggleFamily(header);
-                header.innerHTML = `
-                    <span class="text-xs font-bold text-gray-600 uppercase tracking-widest">${family}</span>
-                    <i data-lucide="chevron-down" class="chevron w-4 h-4 text-gray-400 transition-transform duration-300"></i>
-                `;
-
-                // Content
-                const content = document.createElement('div');
-                content.className = 'family-content bg-white/10';
+                header.innerHTML = `<span class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">${family}</span><i data-lucide="chevron-down" class="chevron w-3 h-3 text-gray-400 transition-transform duration-300"></i>`;
                 
-                const noteGrid = document.createElement('div');
-                noteGrid.className = 'p-3 flex flex-wrap gap-2';
-
+                const content = document.createElement('div');
+                content.className = 'family-content bg-white/10 transition-all duration-300 ease-in-out';
+                content.style.maxHeight = null;
+                
+                const grid = document.createElement('div');
+                grid.className = 'p-3 flex flex-wrap gap-2';
+                
                 notes.forEach(note => {
                     const chip = document.createElement('div');
-                    chip.className = `note-chip px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide border ${familyColors[family]}`;
+                    chip.className = `note-chip ${familyColors[family]}`;
                     chip.draggable = true;
                     chip.innerText = note;
                     chip.dataset.note = note;
                     chip.dataset.family = family;
-                    
-                    // Events
                     chip.addEventListener('dragstart', drag);
-                    chip.addEventListener('click', (e) => selectNoteForPlacement(e, note, family));
-                    
-                    noteGrid.appendChild(chip);
+                    chip.addEventListener('click', (e) => startSelection(e, note, family));
+                    grid.appendChild(chip);
                 });
-
-                content.appendChild(noteGrid);
+                
+                content.appendChild(grid);
                 item.appendChild(header);
                 item.appendChild(content);
                 container.appendChild(item);
             }
-            lucide.createIcons();
         }
 
-        // --- 5. INTERACTION LOGIC (Drag & Click) ---
-        
-        // Mode: Drag
+        // --- INTERACTION ---
         function drag(ev) {
             ev.dataTransfer.setData("note", ev.target.dataset.note);
             ev.dataTransfer.setData("family", ev.target.dataset.family);
-            ev.target.classList.add('dragging');
         }
-
         function allowDrop(ev) {
             ev.preventDefault();
             const zone = ev.target.closest('.drop-zone');
-            if (zone) zone.classList.add('drag-over');
+            if(zone) zone.classList.add('drag-over');
         }
-
-        document.addEventListener('dragend', (ev) => {
-            document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
-            ev.target.classList.remove('dragging');
-        });
-
-        document.addEventListener('dragleave', (ev) => {
-            if (ev.target.classList.contains('drop-zone')) {
-                ev.target.classList.remove('drag-over');
-            }
-        });
-
+        document.addEventListener('dragend', () => document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over')));
+        document.addEventListener('dragleave', (ev) => { if(ev.target.classList.contains('drop-zone')) ev.target.classList.remove('drag-over'); });
+        
         function drop(ev, zoneName) {
             ev.preventDefault();
-            const zone = document.getElementById(`zone-${zoneName}`);
-            zone.classList.remove('drag-over');
-            
-            const noteName = ev.dataTransfer.getData("note");
-            const familyName = ev.dataTransfer.getData("family");
-
-            addNoteToLayer(zoneName, noteName, familyName);
+            document.getElementById(`zone-${zoneName}`).classList.remove('drag-over');
+            const note = ev.dataTransfer.getData("note");
+            const family = ev.dataTransfer.getData("family");
+            addNote(zoneName, note, family);
         }
 
-        // Mode: Click to Select
-        function selectNoteForPlacement(e, note, family) {
-            e.stopPropagation(); // Prevent immediate cancel
-            selectedNoteData = { note, family };
-            
-            // Visual feedback
-            document.body.classList.add('selecting-mode');
-            document.getElementById('selection-overlay').classList.remove('bg-opacity-0', 'pointer-events-none');
-            document.getElementById('selection-overlay').classList.add('bg-opacity-20', 'pointer-events-auto');
+        // Click Logic
+        function startSelection(e, note, family) {
+            e.stopPropagation();
+            selectedNote = { note, family };
+            document.body.classList.add('mode-select');
         }
-
         function handleLayerClick(zoneName) {
-            if (!selectedNoteData) return;
-            addNoteToLayer(zoneName, selectedNoteData.note, selectedNoteData.family);
+            if (!selectedNote) return;
+            addNote(zoneName, selectedNote.note, selectedNote.family);
             cancelSelection();
         }
-
         function cancelSelection() {
-            selectedNoteData = null;
-            document.body.classList.remove('selecting-mode');
-            const overlay = document.getElementById('selection-overlay');
-            overlay.classList.add('bg-opacity-0', 'pointer-events-none');
-            overlay.classList.remove('bg-opacity-20', 'pointer-events-auto');
+            selectedNote = null;
+            document.body.classList.remove('mode-select');
         }
 
-        // Core Add Logic
-        function addNoteToLayer(zoneName, noteName, familyName) {
-            if (!noteName) return;
-
-            // Prevent duplicates
-            if (currentMix[zoneName].find(n => n.name === noteName)) return;
-
+        // Core Logic
+        function addNote(zoneName, noteName, familyName) {
+            if (!noteName || currentMix[zoneName].find(n => n.name === noteName)) return;
             currentMix[zoneName].push({ name: noteName, family: familyName });
-
             const zone = document.getElementById(`zone-${zoneName}`);
             
             const chip = document.createElement('div');
-            chip.className = `note-chip px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-2 bg-white shadow-sm animate-in fade-in zoom-in duration-200`;
-            // Simple color dot
             const colorClass = familyColors[familyName].split(' ')[1].replace('text', 'bg');
+            chip.className = `note-chip flex items-center gap-2 bg-white shadow-sm animate-in fade-in zoom-in duration-200 border border-gray-200`;
+            chip.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${colorClass}"></span>${noteName}<button class="text-gray-300 hover:text-red-400 ml-1 font-bold text-xs" onclick="removeNote(event, '${zoneName}', '${noteName}', this)">×</button>`;
             
-            chip.innerHTML = `
-                <span class="w-2 h-2 rounded-full ${colorClass}"></span>
-                ${noteName}
-                <button class="text-gray-300 hover:text-red-400 ml-1 font-bold text-sm" onclick="removeNote(event, '${zoneName}', '${noteName}', this)">×</button>
-            `;
-            
-            // Hide label
-            const emptyLabel = zone.querySelector('.empty-label');
-            if (emptyLabel) emptyLabel.style.display = 'none';
-
+            zone.querySelector('.empty-label').style.display = 'none';
             zone.appendChild(chip);
             calculateScene();
         }
-
-        function removeNote(e, zoneName, noteName, btnElement) {
-            e.stopPropagation(); // Prevent layer click trigger
+        
+        function removeNote(e, zoneName, noteName, btn) {
+            e.stopPropagation();
             currentMix[zoneName] = currentMix[zoneName].filter(n => n.name !== noteName);
-            btnElement.parentElement.remove();
-
-            const zone = document.getElementById(`zone-${zoneName}`);
-            if (currentMix[zoneName].length === 0) {
-                zone.querySelector('.empty-label').style.display = 'block';
-            }
+            btn.parentElement.remove();
+            if (currentMix[zoneName].length === 0) document.getElementById(`zone-${zoneName}`).querySelector('.empty-label').style.display = 'block';
             calculateScene();
         }
 
         function resetPyramid() {
             currentMix = { top: [], heart: [], base: [] };
-            ['top', 'heart', 'base'].forEach(zone => {
-                const el = document.getElementById(`zone-${zone}`);
-                const span = el.querySelector('span');
-                el.innerHTML = '';
-                el.appendChild(span);
-                span.style.display = 'block';
+            ['top', 'heart', 'base'].forEach(z => {
+                const el = document.getElementById(`zone-${z}`);
+                el.innerHTML = `<span class="text-gray-300 text-[10px] font-bold uppercase tracking-wide empty-label pointer-events-none">${el.querySelector('.empty-label').innerText}</span>`;
             });
             calculateScene();
         }
 
-        // --- 6. SCENE LOGIC (Combinatorial) ---
+        // --- SCENE GENERATOR ---
         function calculateScene() {
             const allNotes = [...currentMix.top, ...currentMix.heart, ...currentMix.base];
             const titleEl = document.getElementById('scene-title');
@@ -598,14 +585,11 @@
                 return;
             }
 
-            const familyCounts = {};
-            allNotes.forEach(n => { familyCounts[n.family] = (familyCounts[n.family] || 0) + 1; });
+            const counts = {};
+            allNotes.forEach(n => counts[n.family] = (counts[n.family] || 0) + 1);
+            const sorted = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
+            const p = sorted[0], s = sorted[1] || p;
 
-            const sortedFamilies = Object.keys(familyCounts).sort((a,b) => familyCounts[b] - familyCounts[a]);
-            const primary = sortedFamilies[0];
-            const secondary = sortedFamilies[1] || primary;
-
-            // Data
             const scenes = {
                 "Floral": { title: "The Conservatory", text: "You are standing in a glass conservatory at twilight. The air is thick, humid, and heavy with the velvet scent of blooming petals.", color: "from-pink-900 via-purple-900 to-black" },
                 "Woody": { title: "Ancient Library", text: "The room is silent, lined with mahogany shelves. Dust motes dance in a shaft of light, smelling of old paper and dry timber.", color: "from-amber-900 via-yellow-900 to-black" },
@@ -617,67 +601,66 @@
                 "Synthetic": { title: "Neon Rain", text: "A futuristic city reflects in a puddle. The air smells of ozone, cold glass, and electricity humming through wet pavement.", color: "from-blue-900 via-indigo-900 to-black" }
             };
 
-            const atmospheres = {
-                "Floral": "A soft, romantic sweetness softens the edges of the scene.",
-                "Woody": "A deep, grounding shadow anchors the memory in the past.",
-                "Citrus": "A bright, energetic light cuts through the darkness.",
-                "Fruit": "A playful, mouth-watering juiciness adds a sense of joy.",
-                "Greens": "A sharp, botanical freshness makes the air feel breathable and cold.",
+            const atmos = {
+                "Floral": "A soft, romantic sweetness softens the edges.",
+                "Woody": "A deep, grounding shadow anchors the memory.",
+                "Citrus": "A bright, energetic light cuts through the dark.",
+                "Fruit": "A playful, mouth-watering juiciness adds joy.",
+                "Greens": "A sharp, botanical freshness makes the air cold.",
                 "Musks": "A hazy, dreamlike fog wraps around you.",
                 "Warm": "A glowing, amber warmth radiates from the center.",
-                "Synthetic": "A strange, modern vibration hums in the background."
+                "Synthetic": "A strange, modern vibration hums nearby."
             };
 
-            const noteNames = allNotes.map(n => n.name);
-            let extras = [];
-            if(noteNames.includes("Ink")) extras.push("A spilled bottle of black ink stains the wood.");
-            if(noteNames.includes("Milk")) extras.push("There is a nostalgic scent of warm milk.");
-            if(noteNames.includes("Leather Notes") || noteNames.includes("Suede Notes")) extras.push("You are wearing a worn, vintage leather jacket.");
-            if(noteNames.includes("Oud")) extras.push("Sacred smoke curls slowly towards the ceiling.");
-            if(noteNames.includes("Marine note") || noteNames.includes("Salty note")) extras.push("The distant crash of waves echoes in your ears.");
-            if(noteNames.includes("Fig") || noteNames.includes("Fig Leaf")) extras.push("The milky, green sap of a broken branch stains your fingers.");
-            if(noteNames.includes("Vanilla")) extras.push("A golden, bakery warmth makes you feel safe.");
+            const names = allNotes.map(n => n.name);
+            let ex = [];
+            if(names.includes("Ink")) ex.push("A spilled bottle of black ink stains the wood.");
+            if(names.includes("Milk")) ex.push("There is a nostalgic scent of warm milk.");
+            if(names.includes("Leather Notes") || names.includes("Suede Notes")) ex.push("You are wearing a worn leather jacket.");
+            if(names.includes("Oud")) ex.push("Sacred smoke curls towards the ceiling.");
+            if(names.includes("Marine note") || names.includes("Salty note")) ex.push("The distant crash of waves echoes.");
+            if(names.includes("Fig")) ex.push("Milky sap stains your fingers.");
+            if(names.includes("Vanilla")) ex.push("A golden, bakery warmth makes you feel safe.");
 
-            let finalTitle = scenes[primary].title;
-            let finalText = scenes[primary].text + " " + atmospheres[secondary];
-            if (extras.length > 0) finalText += " " + extras.join(" ");
+            let fTitle = scenes[p].title;
+            let fText = scenes[p].text + " " + atmos[s];
+            if(ex.length > 0) fText += " " + ex.join(" ");
 
-            // Title Overrides
-            if (primary === "Floral" && secondary === "Woody") finalTitle = "The Enchanted Forest";
-            if (primary === "Citrus" && secondary === "Synthetic") finalTitle = "Cyber-Soda";
-            if (primary === "Musks" && secondary === "Warm") finalTitle = "Cashmere Sweater";
-            if (primary === "Greens" && secondary === "Floral") finalTitle = "Monet's Garden";
+            if(p === "Floral" && s === "Woody") fTitle = "The Enchanted Forest";
+            if(p === "Citrus" && s === "Synthetic") fTitle = "Cyber-Soda";
+            if(p === "Musks" && s === "Warm") fTitle = "Cashmere Sweater";
+            if(p === "Greens" && s === "Floral") fTitle = "Monet's Garden";
 
-            titleEl.innerText = finalTitle;
-            descEl.innerText = finalText;
-            bgEl.className = `absolute inset-0 opacity-40 bg-gradient-to-br ${scenes[primary].color} transition-all duration-1000`;
+            titleEl.innerText = fTitle;
+            descEl.innerText = fText;
+            bgEl.className = `absolute inset-0 opacity-40 bg-gradient-to-br ${scenes[p].color} transition-all duration-1000`;
         }
 
-        // --- 7. MUSIC CONTROLS ---
+        // --- MUSIC ---
         function toggleMusic() {
             const audio = document.getElementById('bg-music');
+            const strike = document.getElementById('music-strike');
             if (isMusicPlaying) {
                 audio.pause();
                 isMusicPlaying = false;
+                strike.classList.add('hidden'); // Hidden line = Music ON button (per your req: "button with only music note") wait..
+                // Re-reading req: "default state music playing, button with music note and line across (off button). If music off, button will change to 'on music' button, which is the off button but without the line across."
+                // OK. Playing = Line Shown (click to stop). Stopped = Line Hidden (click to play).
+                // My logic above was inverted. Let's fix.
+                strike.classList.add('hidden'); // Stopped -> Show "Play" icon (No line)
             } else {
                 audio.play();
                 isMusicPlaying = true;
+                strike.classList.remove('hidden'); // Playing -> Show "Stop" icon (Line)
             }
-            updateMusicIcon();
         }
-
+        
         function updateMusicIcon() {
             const strike = document.getElementById('music-strike');
-            // If playing: Show Note + Line (User requested "default state playing, button with music note and line across")
-            // This is visually "Stop" button
-            if (isMusicPlaying) {
-                strike.classList.remove('hidden');
-            } else {
-                strike.classList.add('hidden');
-            }
+            if (isMusicPlaying) strike.classList.remove('hidden');
+            else strike.classList.add('hidden');
         }
 
-        // Start
         init();
     </script>
 </body>

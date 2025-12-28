@@ -9,622 +9,561 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- Custom Styles & Animations --- */
-        
+        /* --- Visual Variables --- */
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-bg: rgba(255, 255, 255, 0.75);
             --glass-border: rgba(255, 255, 255, 0.5);
             --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-            --blur-strength: 12px;
-            --primary-text: #2c2c2c;
-            --accent-gold: #D4AF37;
+            --blur: 20px;
+            --gold: #D4AF37;
         }
 
+        /* --- Base & Scrollbar --- */
         body {
             font-family: 'Lato', sans-serif;
             background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-            overflow: hidden; /* Prevent body scroll, manage in containers */
-            color: var(--primary-text);
+            color: #2c2c2c;
+            overflow-x: hidden;
         }
 
-        h1, h2, h3, .serif {
-            font-family: 'Playfair Display', serif;
-        }
+        .serif { font-family: 'Playfair Display', serif; }
 
-        /* Squircle Utility */
-        .squircle {
-            border-radius: 24px; /* Soft rounding */
-        }
+        /* Custom Scrollbar for Sidebar */
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 10px; }
 
-        /* Glassmorphism */
+        /* --- Glassmorphism & Shapes --- */
         .glass {
             background: var(--glass-bg);
-            backdrop-filter: blur(var(--blur-strength));
-            -webkit-backdrop-filter: blur(var(--blur-strength));
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
             border: 1px solid var(--glass-border);
             box-shadow: var(--glass-shadow);
         }
 
-        /* Floating Sidebar Transition */
-        #sidebar {
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
-        }
-        
-        #sidebar.minimized {
-            transform: translateX(-150%);
-            opacity: 0;
-            pointer-events: none;
-        }
+        .squircle { border-radius: 24px; }
 
-        /* Accordion Transitions */
+        /* --- Sidebar Animation --- */
+        #sidebar-container {
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 50;
+        }
+        #sidebar-container.closed { transform: translateX(-120%); }
+
+        /* --- Accordion --- */
         .family-content {
             max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease-in-out, opacity 0.4s ease;
             opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.3s ease;
         }
-        
         .family-header.active + .family-content {
-            max-height: 500px; /* Arbitrary large height */
+            max-height: 800px;
             opacity: 1;
         }
 
-        /* Parallelogram Links */
-        .nav-link {
-            position: relative;
-            text-decoration: none;
-            color: inherit;
-            padding: 0 5px;
-            display: inline-block;
-            transition: color 0.3s ease;
-        }
-
+        /* --- Parallelogram Links --- */
+        .nav-link { position: relative; text-decoration: none; color: #333; padding: 2px 8px; transition: color 0.3s ease; }
         .nav-link::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: -5px;
-            width: calc(100% + 10px);
-            height: 50%; /* Half height initially */
-            background: rgba(212, 175, 55, 0.3); /* Goldish transparent */
-            transform: skewX(-20deg);
-            z-index: -1;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            content: ''; position: absolute; bottom: 0; left: -4px;
+            width: calc(100% + 8px); height: 40%;
+            background: rgba(212, 175, 55, 0.25);
+            transform: skewX(-20deg); z-index: -1;
+            transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+        }
+        .nav-link:hover::before { height: 100%; background: rgba(212, 175, 55, 0.4); }
+
+        /* --- SELECTION MODE --- */
+        body.selection-active #bg-blur-target {
+            filter: blur(8px) grayscale(30%);
+            transition: filter 0.5s ease;
         }
 
-        .nav-link:hover::before {
-            top: 0;
-            height: 100%; /* Full height on hover */
-            background: rgba(212, 175, 55, 0.5);
+        body.selection-active #pyramid-wrapper {
+            z-index: 60 !important;
+            position: relative;
+            filter: none !important;
         }
 
-        /* Note Pills */
-        .note-pill {
-            transition: all 0.3s ease;
-            cursor: pointer;
-            user-select: none;
-        }
-        
-        .note-pill:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        /* Selection Mode Highlight */
+        /* Highlight Animation */
         .layer-highlight {
-            animation: pulse-border 2s infinite;
-            border-color: rgba(212, 175, 55, 0.8) !important;
-            background: rgba(255, 255, 255, 0.4);
-            z-index: 60;
+            animation: pulse-gold 2s infinite;
+            background: rgba(255, 255, 255, 0.6);
+            border: 2px solid rgba(212, 175, 55, 0.8);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
         }
 
-        @keyframes pulse-border {
+        @keyframes pulse-gold {
             0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
+            70% { box-shadow: 0 0 0 20px rgba(212, 175, 55, 0); }
             100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
         }
 
-        /* Pyramid Layers */
-        .pyramid-layer {
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        /* Floating toggle button hover */
-        .toggle-btn:hover {
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        /* --- Drag and Drop --- */
+        .note-dragging {
+            opacity: 0.5;
+            cursor: grabbing !important;
         }
 
-        /* Custom Scrollbar for sidebar */
-        .custom-scroll::-webkit-scrollbar {
-            width: 4px;
+        .drop-zone-active {
+            background: rgba(212, 175, 55, 0.2) !important;
+            border-color: var(--gold) !important;
+            transform: scale(1.02);
         }
-        .custom-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: rgba(0,0,0,0.1);
-            border-radius: 4px;
-        }
+
+        /* --- Animations --- */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
     </style>
 </head>
-<body class="h-screen w-screen relative bg-[#f5f5f7]">
+<body class="w-full min-h-screen relative overflow-x-hidden">
 
-    <!-- Background Audio -->
-    <!-- Note: Browsers block autoplay. We use an interaction overlay to start it. -->
+    <!-- AUDIO -->
     <audio id="bg-music" loop>
-        <!-- Placeholder for Janacek Sonata 1.X.1905. Using a reliable public domain piano piece for demo if specific file not found. 
-             In production, replace src with: 'path/to/Janacek_Sonata_1_X_1905.mp3' -->
-        <source src="https://upload.wikimedia.org/wikipedia/commons/e/eb/Leos_Janacek_-_Sonata_1.X.1905_-_2._Death.ogg" type="audio/ogg">
-        Your browser does not support the audio element.
+        <source src="assets/audio/piano.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- Initial Overlay to Start Experience (Required for Audio Autoplay) -->
-    <div id="start-overlay" class="fixed inset-0 z-[100] bg-[#f5f5f7] flex flex-col items-center justify-center transition-opacity duration-1000">
-        <h1 class="text-4xl md:text-6xl mb-4 text-gray-800 italic">ScentWorld</h1>
-        <p class="text-gray-500 mb-8 font-light">Click anywhere to begin your olfactory journey</p>
-        <div class="animate-bounce text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+    <!-- START OVERLAY -->
+    <div id="start-screen" class="fixed inset-0 z-[100] bg-[#fdfbfb] flex flex-col items-center justify-center transition-opacity duration-700 cursor-pointer">
+        <div class="text-center animate-fade-in">
+            <h1 class="text-6xl md:text-8xl font-serif text-gray-800 italic mb-6">ScentWorld</h1>
+            <p class="text-gray-500 font-light tracking-[0.3em] uppercase text-sm">Tap to Enter</p>
         </div>
     </div>
 
-    <!-- Selection Overlay (Blurs background when picking a note) -->
-    <div id="selection-overlay" class="fixed inset-0 bg-white/40 backdrop-blur-md z-40 hidden opacity-0 transition-opacity duration-300">
-        <div class="absolute top-10 left-0 right-0 text-center pointer-events-none">
-            <p class="text-xl md:text-2xl font-serif text-gray-800 animate-pulse">Select a layer to infuse with <span id="selected-note-name" class="font-bold italic"></span></p>
+    <!-- SELECTION OVERLAY -->
+    <div id="selection-overlay" class="fixed inset-0 bg-white/70 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div class="absolute top-32 left-0 w-full text-center">
+            <p class="text-3xl font-serif text-gray-800">Select a layer for <span id="selected-note-display" class="italic font-bold text-[#D4AF37]"></span></p>
         </div>
     </div>
 
-    <!-- Header -->
-    <header class="fixed top-0 left-0 w-full p-6 z-30 flex justify-between items-start pointer-events-none">
+    <!-- HEADER -->
+    <header class="fixed top-0 left-0 w-full px-8 py-6 z-30 flex justify-between items-start pointer-events-none">
         <div class="pointer-events-auto">
-            <h1 class="text-2xl md:text-3xl font-serif tracking-wide text-gray-800">ScentWorld</h1>
+            <h1 class="text-2xl font-serif font-bold text-gray-800 tracking-wide">ScentWorld</h1>
         </div>
-        <nav class="flex gap-8 pointer-events-auto">
-            <a href="index.html" class="nav-link text-sm uppercase tracking-widest font-bold text-gray-700">Home</a>
-            <a href="gemini.html" class="nav-link text-sm uppercase tracking-widest font-bold text-gray-700">ScentWorld AI</a>
+        <nav class="pointer-events-auto flex gap-8">
+            <a href="index.html" class="nav-link text-sm font-bold uppercase tracking-widest">Home</a>
+            <a href="gemini.html" class="nav-link text-sm font-bold uppercase tracking-widest">ScentWorld AI</a>
         </nav>
     </header>
 
-    <!-- Floating Sidebar -->
-    <aside id="sidebar" class="fixed top-24 bottom-24 left-6 w-72 glass squircle z-50 flex flex-col pointer-events-auto">
-        <!-- Header inside Sidebar -->
-        <div class="p-6 border-b border-white/30">
-            <h2 class="text-lg font-serif italic text-gray-600">Fragrance Library</h2>
-            <p class="text-xs text-gray-400 mt-1">Click a note, then place it on the pyramid.</p>
-        </div>
+    <!-- FLOATING SIDEBAR (Left) -->
+    <div id="sidebar-container" class="fixed top-24 bottom-12 left-6 w-80 z-50 flex flex-col pointer-events-auto">
+        <aside class="glass squircle w-full h-full flex flex-col relative">
+            
+            <!-- Toggle Button -->
+            <button id="sidebar-toggle" class="absolute -right-16 top-0 w-12 h-12 glass squircle flex items-center justify-center text-gray-600 transition-all duration-300 hover:text-gray-900 hover:scale-110 shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
 
-        <!-- Scrollable Content -->
-        <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-3" id="sidebar-content">
-            <!-- Content injected by JS -->
-        </div>
+            <!-- Sidebar Content -->
+            <div class="p-6 border-b border-white/40">
+                <h2 class="font-serif text-xl italic text-gray-700">Fragrance Library</h2>
+                <p class="text-xs text-gray-400 mt-2">Click or drag notes to your composition.</p>
+            </div>
+            <div id="notes-list" class="flex-1 overflow-y-auto custom-scroll p-4 space-y-3 pb-8">
+                <!-- Notes Injected Here -->
+            </div>
+        </aside>
+    </div>
 
-        <!-- Floating Toggle Button (Outside top-right) -->
-        <button id="toggle-sidebar" class="absolute -right-16 top-0 w-12 h-12 glass squircle flex items-center justify-center text-gray-600 transition-all duration-300 toggle-btn hover:text-gray-900 group" aria-label="Toggle Sidebar">
-            <!-- Icon changes based on state -->
-            <svg id="toggle-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transition-transform duration-300 group-hover:scale-110">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-        </button>
-    </aside>
-
-    <!-- Minimize/Maximize Restore Button (When sidebar is hidden) -->
-    <button id="restore-sidebar" class="fixed top-24 left-6 w-12 h-12 glass squircle z-40 flex items-center justify-center text-gray-600 transition-all duration-300 shadow-md hover:shadow-lg hidden">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- RESTORE BUTTON -->
+    <button id="sidebar-restore" class="fixed top-24 left-6 w-12 h-12 glass squircle z-40 flex items-center justify-center text-gray-600 shadow-lg hover:scale-110 transition-all duration-300 transform -translate-x-[150%] opacity-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="9" y1="3" x2="9" y2="21"></line>
         </svg>
     </button>
 
+    <!-- MAIN CONTENT AREA (Right Half) -->
+    <div id="bg-blur-target" class="w-full min-h-screen pl-0 md:pl-96 pr-4 md:pr-12 pt-24 flex justify-center transition-all duration-500">
+        
+        <div class="w-full max-w-4xl flex flex-col items-center gap-12">
 
-    <!-- Main Stage: Pyramid & Memory -->
-    <main class="fixed inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
-        <div class="relative w-full max-w-4xl flex flex-col md:flex-row items-center justify-center gap-12 p-6">
-            
-            <!-- Pyramid Container -->
-            <div class="relative w-[300px] h-[300px] md:w-[400px] md:h-[400px] flex flex-col pointer-events-auto transition-all duration-500" id="pyramid-container">
-                
-                <!-- Triangle SVG Background (Decorative) -->
-                <svg class="absolute inset-0 w-full h-full text-gray-200" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <polygon points="50,5 95,95 5,95" fill="none" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2 2" />
-                </svg>
+            <!-- PYRAMID (The Fragrance Tree) -->
+            <div id="pyramid-wrapper" class="w-full flex justify-center relative transition-all duration-300">
+                <div class="relative w-[340px] h-[340px] md:w-[450px] md:h-[450px]">
+                    
+                    <!-- Decorative Background -->
+                    <svg class="absolute inset-0 w-full h-full text-gray-300/40" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <polygon points="50,5 95,95 5,95" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4"/>
+                    </svg>
 
-                <!-- Layers -->
-                <!-- Top Notes (Triangle Top) -->
-                <div id="layer-top" class="pyramid-layer relative z-20 w-full h-[30%] flex flex-col items-center justify-end pb-2 cursor-pointer group" onclick="handleLayerClick('top')">
-                    <!-- Shape Mask -->
-                    <div class="absolute inset-0 bg-white/30 backdrop-blur-sm border-b border-white/40 transition-colors group-hover:bg-white/50" 
-                         style="clip-path: polygon(50% 0%, 100% 100%, 0% 100%);"></div>
-                    <span class="relative z-30 text-xs font-bold uppercase tracking-widest text-gray-500 mb-1 pointer-events-none">Top Notes</span>
-                    <div id="notes-top" class="relative z-30 flex flex-wrap justify-center gap-1 px-8"></div>
+                    <!-- Top Note Layer -->
+                    <div id="layer-top" class="drop-layer absolute w-full h-[30%] top-0 left-0 z-20 flex flex-col items-center justify-end pb-2 cursor-pointer group transition-all duration-300" data-level="top">
+                        <div class="absolute inset-0 bg-white/40 backdrop-blur-sm border-b border-white/60 transition-colors duration-300 group-hover:bg-white/60" 
+                             style="clip-path: polygon(50% 0%, 100% 100%, 0% 100%);"></div>
+                        <span class="relative z-30 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-1 pointer-events-none">Top Notes</span>
+                        <div id="content-top" class="relative z-30 flex flex-wrap justify-center gap-1 px-10 min-h-[24px]"></div>
+                    </div>
+
+                    <!-- Heart Note Layer -->
+                    <div id="layer-middle" class="drop-layer absolute w-full h-[30%] top-[30%] left-0 z-20 flex flex-col items-center justify-center cursor-pointer group transition-all duration-300" data-level="middle">
+                        <div class="absolute inset-0 bg-white/50 backdrop-blur-sm border-b border-white/60 transition-colors duration-300 group-hover:bg-white/70"
+                             style="clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);"></div>
+                        <span class="relative z-30 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-1 pointer-events-none">Heart Notes</span>
+                        <div id="content-middle" class="relative z-30 flex flex-wrap justify-center gap-1 px-14 min-h-[24px]"></div>
+                    </div>
+
+                    <!-- Base Note Layer -->
+                    <div id="layer-base" class="drop-layer absolute w-full h-[40%] top-[60%] left-0 z-20 flex flex-col items-center justify-start pt-6 cursor-pointer group transition-all duration-300" data-level="base">
+                        <div class="absolute inset-0 bg-white/60 backdrop-blur-sm transition-colors duration-300 group-hover:bg-white/80"
+                             style="clip-path: polygon(14% 0%, 86% 0%, 100% 100%, 0% 100%);"></div>
+                        <span class="relative z-30 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-1 pointer-events-none">Base Notes</span>
+                        <div id="content-base" class="relative z-30 flex flex-wrap justify-center gap-1 px-20 min-h-[24px]"></div>
+                    </div>
+
                 </div>
-
-                <!-- Middle Notes (Trapezoid) -->
-                <div id="layer-middle" class="pyramid-layer relative z-20 w-full h-[30%] flex flex-col items-center justify-center cursor-pointer group" onclick="handleLayerClick('middle')">
-                    <div class="absolute inset-0 bg-white/40 backdrop-blur-sm border-b border-white/40 transition-colors group-hover:bg-white/60"
-                         style="clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);"></div>
-                    <span class="relative z-30 text-xs font-bold uppercase tracking-widest text-gray-500 mb-1 pointer-events-none">Heart Notes</span>
-                    <div id="notes-middle" class="relative z-30 flex flex-wrap justify-center gap-1 px-12"></div>
-                </div>
-
-                <!-- Base Notes (Trapezoid Bottom) -->
-                <div id="layer-base" class="pyramid-layer relative z-20 w-full h-[40%] flex flex-col items-center justify-start pt-4 cursor-pointer group" onclick="handleLayerClick('base')">
-                    <div class="absolute inset-0 bg-white/50 backdrop-blur-sm transition-colors group-hover:bg-white/70"
-                         style="clip-path: polygon(14% 0%, 86% 0%, 100% 100%, 0% 100%);"></div>
-                    <span class="relative z-30 text-xs font-bold uppercase tracking-widest text-gray-500 mb-1 pointer-events-none">Base Notes</span>
-                    <div id="notes-base" class="relative z-30 flex flex-wrap justify-center gap-1 px-16"></div>
-                </div>
-
             </div>
 
-            <!-- Memory Text Output -->
-            <div class="w-full md:w-1/3 glass squircle p-8 pointer-events-auto min-h-[300px] flex flex-col justify-center transition-all duration-500">
-                <h3 id="memory-title" class="text-xl md:text-2xl serif text-gray-800 mb-4 transition-opacity duration-300">The Scent of Blank Canvas</h3>
-                <p id="memory-desc" class="text-gray-600 leading-relaxed font-light italic transition-opacity duration-300">
-                    Add notes to the pyramid to awaken a memory. The top notes introduce the moment, the heart notes tell the story, and the base notes linger like a feeling you can't shake.
-                </p>
+            <!-- SCENT MEMORY CONTAINER -->
+            <div class="w-full glass squircle p-10 min-h-[200px] flex flex-col justify-center relative transition-all duration-500">
+                <div id="memory-content" class="transition-opacity duration-500">
+                    <h3 class="text-3xl font-serif text-gray-800 mb-4 italic" id="mem-title">The Scent of Blank Canvas</h3>
+                    <p class="text-gray-600 font-light leading-relaxed text-lg" id="mem-desc">
+                        Add notes to the pyramid to awaken a memory. The top notes introduce the moment, the heart notes tell the story, and the base notes linger like a feeling you can't shake.
+                    </p>
+                </div>
             </div>
+
+            <!-- FOOTER -->
+            <footer class="w-full pt-20 pb-12 flex flex-col items-start border-t border-gray-200/50 mt-16">
+                <span class="font-serif font-bold text-gray-800 text-xl tracking-wider">ScentWorld</span>
+                <p class="text-sm text-gray-500 mt-2">&copy; Hongpeng Wei, 2025. All Rights Reserved.</p>
+                <p class="text-xs text-gray-400 mt-1 italic">The music on this site is JANACEK Sonata 1.X.1905, copyright of Charlie Albright, Free Music Archive.</p>
+            </footer>
 
         </div>
-    </main>
+    </div>
 
-    <!-- Music Control Button -->
-    <div class="fixed bottom-24 right-0 md:left-0 md:right-auto md:w-full flex justify-center z-50 pointer-events-none">
-        <button id="music-btn" class="w-14 h-14 rounded-full glass flex items-center justify-center text-gray-700 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-110 pointer-events-auto" title="Toggle Music">
-            <!-- Icon injected by JS -->
-            <span id="music-icon-container"></span>
+    <!-- MUSIC BUTTON (Fixed Bottom Right) -->
+    <div class="fixed bottom-8 right-8 z-[60] pointer-events-auto">
+        <button id="music-toggle" class="w-16 h-16 rounded-full glass flex items-center justify-center text-gray-700 shadow-xl hover:shadow-2xl transition-all duration-300 group hover:scale-105" title="Toggle Music">
+            <span id="music-icon-wrapper"></span>
         </button>
     </div>
 
-    <!-- Footer -->
-    <footer class="fixed bottom-0 left-0 w-full p-6 z-30 pointer-events-none">
-        <div class="flex flex-col items-start md:items-start space-y-1">
-            <span class="font-serif font-bold text-gray-800 text-lg">ScentWorld</span>
-            <p class="text-xs text-gray-500">&copy; Hongpeng Wei, 2025</p>
-            <p class="text-[10px] text-gray-400 opacity-70">The music on this site is JANACEK Sonata 1.X.1905, copyright of Charlie Albright, Free Music Archive.</p>
-        </div>
-    </footer>
-
-    <!-- Javascript Logic -->
+    <!-- LOGIC -->
     <script>
-        // --- Data ---
-        const fragranceFamilies = [
+        // --- Full Fragrance Database ---
+        const fragranceData = [
             {
-                name: "Citrus",
-                color: "bg-yellow-200 text-yellow-900 border-yellow-300",
-                notes: ["Bergamot", "Lemon", "Grapefruit", "Mandarin", "Lime", "Yuzu"]
+                family: "Floral",
+                color: "bg-pink-100 text-pink-900 border-pink-200",
+                notes: ['Lavender', 'Clary Sage', 'Geranium', 'Saffron', 'Lotus', 'Lily-of-the-Valley', 'Marigold', 'Begonia', 'Jasmine', 'Wild Cyclamen', 'Ylang Ylang', 'Rose', 'Heliotrope', 'Tuberose', 'Osmanthus', 'Magnolia', 'Immortelle', 'Violet', 'Iris', 'Water Lily', 'Freesia', 'Vanilla', 'Gardenia', 'Frangipani', 'Honeysuckle', 'Mimosa']
             },
             {
-                name: "Floral",
-                color: "bg-pink-200 text-pink-900 border-pink-300",
-                notes: ["Rose", "Jasmine", "Lavender", "Peony", "Tuberose", "Gardenia"]
+                family: "Woody",
+                color: "bg-stone-200 text-stone-900 border-stone-300",
+                notes: ['Cedar', 'Sandalwood', 'Oud', 'Vetiver', 'Oak', 'Cypress', 'Rosewood', 'Guaiacwood', 'Patchouli', 'Oakmoss', 'Tree Moss', 'Hazelnut', 'Tonka Bean']
             },
             {
-                name: "Woody",
-                color: "bg-stone-300 text-stone-800 border-stone-400",
-                notes: ["Sandalwood", "Cedar", "Vetiver", "Oud", "Patchouli", "Pine"]
+                family: "Citrus",
+                color: "bg-yellow-100 text-yellow-900 border-yellow-200",
+                notes: ['Bergamot', 'Bitter Orange', 'Citron', 'Grapefruit', 'Lemon', 'Lemongrass', 'Mandarin Orange', 'Pomelo', 'Yuzu', 'Blood Orange', 'Lime', 'Tangerine']
             },
             {
-                name: "Oriental",
-                color: "bg-amber-200 text-amber-900 border-amber-300",
-                notes: ["Vanilla", "Amber", "Musk", "Cinnamon", "Cardamom", "Myrrh"]
+                family: "Fruits",
+                color: "bg-orange-100 text-orange-900 border-orange-200",
+                notes: ['Apple', 'Apricot', 'Banana', 'Blueberry', 'Cherry', 'Coconut', 'Peach', 'Plum', 'Fig']
             },
             {
-                name: "Fresh",
-                color: "bg-sky-200 text-sky-900 border-sky-300",
-                notes: ["Sea Salt", "Rain", "Cucumber", "Green Tea", "Mint", "Sage"]
+                family: "Greens",
+                color: "bg-emerald-100 text-emerald-900 border-emerald-200",
+                notes: ['Basil', 'Blackcurrant Leaf', 'Citron Leaf', 'Oolong', 'Ginkgo', 'Juniper Leaf', 'Mint', 'Fig Leaf', 'Violet Leaf', 'Red Tea', 'Black Tea', 'Rosemary', 'Thyme', 'Fennel', 'Sage', 'Anise', 'Forest Fern']
+            },
+            {
+                family: "Musks",
+                color: "bg-purple-100 text-purple-900 border-purple-200",
+                notes: ['Amber', 'Ambergris', 'White Musk', 'Musk', 'Beeswax', 'Milk']
+            },
+            {
+                family: "Warm",
+                color: "bg-red-100 text-red-900 border-red-200",
+                notes: ['Honey', 'Tobacco', 'Incense', 'Frankincense', 'Cinnamon', 'Pepper', 'Ginger', 'Coriander', 'Tamarind']
+            },
+            {
+                family: "Synthetic",
+                color: "bg-slate-200 text-slate-900 border-slate-300",
+                notes: ['Ambroxan', 'Ozonic Note', 'Airy Note', 'Marine Note', 'Salty Note', 'Ink', 'Leather Note', 'Suede Note']
             }
         ];
 
         // --- State ---
-        let state = {
+        const state = {
             pyramid: { top: [], middle: [], base: [] },
-            selectedNote: null, // { name: string, familyColor: string }
-            isSidebarOpen: true,
-            isMusicPlaying: false // Starts false, tries to play on entry
+            selectedNote: null, 
+            isMusicPlaying: false,
+            sidebarOpen: true
         };
 
         // --- DOM Elements ---
         const dom = {
-            sidebar: document.getElementById('sidebar'),
-            sidebarContent: document.getElementById('sidebar-content'),
-            toggleBtn: document.getElementById('toggle-sidebar'),
-            toggleIcon: document.getElementById('toggle-icon'),
-            restoreBtn: document.getElementById('restore-sidebar'),
-            selectionOverlay: document.getElementById('selection-overlay'),
-            selectedNoteName: document.getElementById('selected-note-name'),
-            musicBtn: document.getElementById('music-btn'),
-            musicIconContainer: document.getElementById('music-icon-container'),
             audio: document.getElementById('bg-music'),
-            startOverlay: document.getElementById('start-overlay'),
-            memoryTitle: document.getElementById('memory-title'),
-            memoryDesc: document.getElementById('memory-desc'),
+            startScreen: document.getElementById('start-screen'),
+            sidebarContainer: document.getElementById('sidebar-container'),
+            sidebarToggle: document.getElementById('sidebar-toggle'),
+            sidebarRestore: document.getElementById('sidebar-restore'),
+            notesList: document.getElementById('notes-list'),
+            selectionOverlay: document.getElementById('selection-overlay'),
+            selectedNoteDisplay: document.getElementById('selected-note-display'),
+            pyramidWrapper: document.getElementById('pyramid-wrapper'),
+            musicToggle: document.getElementById('music-toggle'),
+            musicIconWrapper: document.getElementById('music-icon-wrapper'),
             layers: {
                 top: document.getElementById('layer-top'),
                 middle: document.getElementById('layer-middle'),
                 base: document.getElementById('layer-base')
             },
-            noteContainers: {
-                top: document.getElementById('notes-top'),
-                middle: document.getElementById('notes-middle'),
-                base: document.getElementById('notes-base')
-            }
+            contents: {
+                top: document.getElementById('content-top'),
+                middle: document.getElementById('content-middle'),
+                base: document.getElementById('content-base')
+            },
+            memTitle: document.getElementById('mem-title'),
+            memDesc: document.getElementById('mem-desc'),
+            memContainer: document.getElementById('memory-content')
         };
 
-        // --- Initialization ---
+        // --- Init ---
         function init() {
             renderSidebar();
-            updateMusicIcon();
+            renderMusicIcon();
+            setupDropZones();
             
-            // Sidebar Toggles
-            dom.toggleBtn.addEventListener('click', toggleSidebar);
-            dom.restoreBtn.addEventListener('click', toggleSidebar);
-            
-            // Music Toggle
-            dom.musicBtn.addEventListener('click', toggleMusic);
-
-            // Overlay Click (Cancel Selection)
-            dom.selectionOverlay.addEventListener('click', cancelSelection);
-
-            // Start Overlay (Handle Autoplay restriction)
-            dom.startOverlay.addEventListener('click', () => {
-                dom.startOverlay.style.opacity = '0';
-                setTimeout(() => dom.startOverlay.remove(), 1000);
-                
-                // Attempt play
-                dom.audio.volume = 0.4;
+            // Audio Autoplay Handler
+            dom.startScreen.addEventListener('click', () => {
+                dom.startScreen.style.opacity = '0';
+                setTimeout(() => dom.startScreen.remove(), 700);
+                dom.audio.volume = 0.5;
                 dom.audio.play().then(() => {
                     state.isMusicPlaying = true;
-                    updateMusicIcon();
-                }).catch(e => {
-                    console.log("Autoplay blocked, user must click button");
-                    state.isMusicPlaying = false;
-                    updateMusicIcon();
+                    renderMusicIcon();
+                }).catch(() => {
+                    // Try again on next interaction
+                    document.addEventListener('click', () => {
+                        if (!state.isMusicPlaying) {
+                            dom.audio.play().then(() => {
+                                state.isMusicPlaying = true;
+                                renderMusicIcon();
+                            }).catch(() => {});
+                        }
+                    }, { once: true });
                 });
             });
+
+            dom.musicToggle.addEventListener('click', toggleMusic);
+            dom.sidebarToggle.addEventListener('click', toggleSidebar);
+            dom.sidebarRestore.addEventListener('click', toggleSidebar);
+            dom.selectionOverlay.addEventListener('click', cancelSelection);
         }
 
-        // --- Sidebar Rendering ---
+        // --- Sidebar ---
         function renderSidebar() {
-            dom.sidebarContent.innerHTML = '';
-            
-            fragranceFamilies.forEach(family => {
-                // Container
+            dom.notesList.innerHTML = '';
+            fragranceData.forEach(cat => {
                 const container = document.createElement('div');
-                container.className = 'rounded-xl overflow-hidden transition-all duration-300';
+                container.className = "rounded-2xl overflow-hidden transition-all duration-300";
                 
-                // Header (Closed State: Opaque color of family)
                 const header = document.createElement('button');
-                // Mix opacity: family color but stronger opacity when closed
-                header.className = `family-header w-full text-left px-4 py-3 flex justify-between items-center text-sm font-bold uppercase tracking-wider transition-colors hover:brightness-95 ${family.color.replace('bg-', 'bg-opacity-80 bg-')}`;
-                header.innerHTML = `
-                    <span>${family.name}</span>
-                    <svg class="w-4 h-4 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                `;
-                
-                // Content (Notes)
+                header.className = `family-header w-full text-left px-5 py-4 flex justify-between items-center text-xs font-bold uppercase tracking-widest hover:brightness-95 transition-all ${cat.color.replace('bg-', 'bg-opacity-90 bg-')}`;
+                header.innerHTML = `<span>${cat.family}</span><svg class="w-4 h-4 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
+
                 const content = document.createElement('div');
-                content.className = 'family-content bg-white/40';
-                const notesGrid = document.createElement('div');
-                notesGrid.className = 'p-3 flex flex-wrap gap-2';
-                
-                family.notes.forEach(note => {
+                content.className = "family-content bg-white/40";
+                const grid = document.createElement('div');
+                grid.className = "p-4 flex flex-wrap gap-2";
+
+                cat.notes.forEach(note => {
                     const pill = document.createElement('span');
-                    pill.className = `note-pill px-3 py-1 rounded-full text-xs font-semibold shadow-sm border ${family.color}`;
-                    pill.textContent = note;
+                    pill.className = `cursor-pointer select-none px-3 py-1.5 rounded-full text-[11px] font-bold shadow-sm border transition-all duration-200 hover:-translate-y-1 hover:shadow-md ${cat.color}`;
+                    pill.innerText = note;
+                    pill.draggable = true;
+                    pill.dataset.note = note;
+                    pill.dataset.color = cat.color;
+                    
+                    // Click handler
                     pill.addEventListener('click', (e) => {
-                        e.stopPropagation(); // Prevent folding accordion
-                        selectNote(note, family.color);
-                    });
-                    notesGrid.appendChild(pill);
-                });
-                
-                content.appendChild(notesGrid);
-                container.appendChild(header);
-                container.appendChild(content);
-                
-                // Accordion Logic
-                header.addEventListener('click', () => {
-                    const isActive = header.classList.contains('active');
-                    // Close all
-                    document.querySelectorAll('.family-header').forEach(h => {
-                        h.classList.remove('active');
-                        h.querySelector('svg').style.transform = 'rotate(0deg)';
+                        e.stopPropagation();
+                        initiateSelection(note, cat.color);
                     });
                     
-                    if (!isActive) {
-                        header.classList.add('active');
-                        header.querySelector('svg').style.transform = 'rotate(180deg)';
-                    }
+                    // Drag handlers
+                    pill.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', note);
+                        e.dataTransfer.setData('color', cat.color);
+                        pill.classList.add('note-dragging');
+                    });
+                    
+                    pill.addEventListener('dragend', () => {
+                        pill.classList.remove('note-dragging');
+                    });
+                    
+                    grid.appendChild(pill);
                 });
 
-                dom.sidebarContent.appendChild(container);
+                content.appendChild(grid);
+                container.appendChild(header);
+                container.appendChild(content);
+
+                header.addEventListener('click', () => {
+                    document.querySelectorAll('.family-header').forEach(h => {
+                        if(h !== header) {
+                            h.classList.remove('active');
+                            h.querySelector('svg').style.transform = 'rotate(0deg)';
+                        }
+                    });
+                    header.classList.toggle('active');
+                    header.querySelector('svg').style.transform = header.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+                });
+
+                dom.notesList.appendChild(container);
             });
         }
 
         function toggleSidebar() {
-            state.isSidebarOpen = !state.isSidebarOpen;
-            
-            if (state.isSidebarOpen) {
-                dom.sidebar.classList.remove('minimized');
-                dom.restoreBtn.classList.add('hidden');
-                // Change icon to X or Minus
-                dom.toggleIcon.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>';
+            state.sidebarOpen = !state.sidebarOpen;
+            if(state.sidebarOpen) {
+                dom.sidebarContainer.classList.remove('closed');
+                dom.sidebarRestore.classList.add('-translate-x-[150%]', 'opacity-0');
             } else {
-                dom.sidebar.classList.add('minimized');
-                setTimeout(() => dom.restoreBtn.classList.remove('hidden'), 500); // Show restore button after anim
+                dom.sidebarContainer.classList.add('closed');
+                setTimeout(() => dom.sidebarRestore.classList.remove('-translate-x-[150%]', 'opacity-0'), 300);
             }
         }
 
-        // --- Interaction: Select & Place ---
+        // --- Drop Zones Setup ---
+        function setupDropZones() {
+            document.querySelectorAll('.drop-layer').forEach(layer => {
+                const layerId = layer.dataset.level;
+                
+                // Click handler for selection mode
+                layer.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (state.selectedNote) {
+                        handleLayerClick(layerId);
+                    }
+                });
+                
+                // Drag and drop handlers
+                layer.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    layer.classList.add('drop-zone-active');
+                });
+                
+                layer.addEventListener('dragleave', () => {
+                    layer.classList.remove('drop-zone-active');
+                });
+                
+                layer.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    layer.classList.remove('drop-zone-active');
+                    
+                    const noteName = e.dataTransfer.getData('text/plain');
+                    const noteColor = e.dataTransfer.getData('color');
+                    
+                    if (noteName && noteColor) {
+                        addNoteToLayer(layerId, noteName, noteColor);
+                        updateMemory();
+                    }
+                });
+            });
+        }
 
-        function selectNote(noteName, colorClass) {
-            state.selectedNote = { name: noteName, color: colorClass };
+        // --- Selection Logic ---
+        function initiateSelection(note, color) {
+            state.selectedNote = { name: note, color };
             
-            // Visuals
             dom.selectionOverlay.classList.remove('hidden');
-            // Trigger reflow
-            void dom.selectionOverlay.offsetWidth; 
+            void dom.selectionOverlay.offsetWidth;
             dom.selectionOverlay.classList.remove('opacity-0');
             
-            dom.selectedNoteName.textContent = noteName;
+            dom.selectedNoteDisplay.innerText = note;
+            document.body.classList.add('selection-active');
             
-            // Highlight Layers
-            Object.values(dom.layers).forEach(layer => {
-                layer.classList.add('layer-highlight');
-                // Ensure z-index is higher than overlay
-                layer.style.zIndex = '60';
-            });
-
-            // Blur sidebar? Already handled by overlay covering everything but layers
-            dom.sidebar.style.filter = 'blur(4px)';
-        }
-
-        function handleLayerClick(layerId) {
-            if (!state.selectedNote) return;
-
-            // Add note to data
-            state.pyramid[layerId].push(state.selectedNote);
-            
-            // Render Note in Layer
-            renderNoteInLayer(layerId, state.selectedNote);
-            
-            // Update Memory Text
-            generateMemory();
-
-            // Exit Selection Mode
-            cancelSelection();
-        }
-
-        function renderNoteInLayer(layerId, noteObj) {
-            const container = dom.noteContainers[layerId];
-            const pill = document.createElement('span');
-            // Smaller pill for pyramid
-            pill.className = `animate-[fadeIn_0.5s_ease-out] inline-block px-2 py-0.5 m-0.5 rounded-full text-[10px] md:text-xs font-bold shadow-sm border cursor-pointer hover:bg-red-100 hover:text-red-800 transition-colors ${noteObj.color}`;
-            pill.textContent = noteObj.name;
-            pill.title = "Click to remove";
-            
-            // Click to remove logic
-            pill.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent layer click logic
-                removeNote(layerId, noteObj, pill);
-            });
-
-            container.appendChild(pill);
-        }
-
-        function removeNote(layerId, noteObj, element) {
-            // Remove from data
-            const index = state.pyramid[layerId].indexOf(noteObj);
-            if (index > -1) {
-                state.pyramid[layerId].splice(index, 1);
-            }
-            // Remove from DOM
-            element.remove();
-            generateMemory();
+            Object.values(dom.layers).forEach(l => l.classList.add('layer-highlight'));
         }
 
         function cancelSelection() {
             state.selectedNote = null;
-            
             dom.selectionOverlay.classList.add('opacity-0');
+            document.body.classList.remove('selection-active');
+            Object.values(dom.layers).forEach(l => l.classList.remove('layer-highlight'));
             setTimeout(() => dom.selectionOverlay.classList.add('hidden'), 300);
+        }
+
+        function handleLayerClick(layerId) {
+            if (!state.selectedNote) return;
             
-            Object.values(dom.layers).forEach(layer => {
-                layer.classList.remove('layer-highlight');
-                layer.style.zIndex = '20';
+            addNoteToLayer(layerId, state.selectedNote.name, state.selectedNote.color);
+            updateMemory();
+            cancelSelection();
+        }
+
+        function addNoteToLayer(layerId, noteName, noteColor) {
+            // Check for duplicates
+            const exists = state.pyramid[layerId].some(n => n.name === noteName);
+            if (exists) return;
+            
+            const noteData = { name: noteName, color: noteColor };
+            state.pyramid[layerId].push(noteData);
+            
+            const chip = document.createElement('span');
+            chip.className = `animate-fade-in inline-block px-2 py-0.5 m-0.5 rounded-full text-[10px] font-bold border cursor-pointer hover:bg-red-100 hover:text-red-900 transition-colors ${noteColor}`;
+            chip.innerText = noteName;
+            chip.title = "Click to remove";
+            
+            chip.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeNote(layerId, noteData, chip);
             });
 
-            dom.sidebar.style.filter = 'none';
+            dom.contents[layerId].appendChild(chip);
         }
 
-        // --- Music Logic ---
-
-        function toggleMusic() {
-            if (state.isMusicPlaying) {
-                dom.audio.pause();
-                state.isMusicPlaying = false;
-            } else {
-                dom.audio.play();
-                state.isMusicPlaying = true;
-            }
-            updateMusicIcon();
-        }
-
-        function updateMusicIcon() {
-            // User req: 
-            // Default (Playing): Button with music note and line across (Meaning "Off music")
-            // Off (Muted): Button with music note (Meaning "On music")
-            
-            if (state.isMusicPlaying) {
-                // Show "Turn Off" icon (Note with line)
-                dom.musicIconContainer.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 18V5l12-2v13"></path>
-                        <circle cx="6" cy="18" r="3"></circle>
-                        <circle cx="18" cy="16" r="3"></circle>
-                        <line x1="2" y1="2" x2="22" y2="22"></line>
-                    </svg>
-                `;
-            } else {
-                // Show "Turn On" icon (Note)
-                dom.musicIconContainer.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 18V5l12-2v13"></path>
-                        <circle cx="6" cy="18" r="3"></circle>
-                        <circle cx="18" cy="16" r="3"></circle>
-                    </svg>
-                `;
-            }
+        function removeNote(layerId, noteObj, element) {
+            const idx = state.pyramid[layerId].findIndex(n => n.name === noteObj.name);
+            if(idx > -1) state.pyramid[layerId].splice(idx, 1);
+            element.remove();
+            updateMemory();
         }
 
         // --- Memory Engine ---
-        function generateMemory() {
+        function updateMemory() {
             const p = state.pyramid;
-            const top = p.top.map(n => n.name);
-            const mid = p.middle.map(n => n.name);
-            const base = p.base.map(n => n.name);
+            const top = p.top.map(n => n.name.toLowerCase());
+            const mid = p.middle.map(n => n.name.toLowerCase());
+            const base = p.base.map(n => n.name.toLowerCase());
             const all = [...top, ...mid, ...base];
 
-            // Animation for text change
-            dom.memoryTitle.style.opacity = '0';
-            dom.memoryDesc.style.opacity = '0';
+            dom.memContainer.style.opacity = '0';
 
             setTimeout(() => {
-                const memory = craftText(top, mid, base, all);
-                dom.memoryTitle.textContent = memory.title;
-                dom.memoryDesc.textContent = memory.description;
-                
-                dom.memoryTitle.style.opacity = '1';
-                dom.memoryDesc.style.opacity = '1';
-            }, 300);
+                const txt = generatePoetry(top, mid, base, all);
+                dom.memTitle.innerText = txt.title;
+                dom.memDesc.innerText = txt.desc;
+                dom.memContainer.style.opacity = '1';
+            }, 500);
         }
 
-        function craftText(top, mid, base, all) {
-            // Empty State
-            if (all.length === 0) {
-                return {
-                    title: "The Scent of Blank Canvas",
-                    description: "Add notes to the pyramid to awaken a memory. The top notes introduce the moment, the heart notes tell the story, and the base notes linger like a feeling you can't shake."
-                };
-            }
+        function generatePoetry(top, mid, base, all) {
+            if(all.length === 0) return {
+                title: "The Scent of Blank Canvas",
+                desc: "Add notes to the pyramid to awaken a memory. The top notes introduce the moment, the heart notes tell the story, and the base notes linger like a feeling you can't shake."
+            };
 
-            // Logic Helpers
-            //const has = (note) => all.includes(note);
-            /*const hasFamily = (famName) => {
-                const famNotes = fragranceFamilies.find(f => f.name === famName).notes;
-                return all.some(n => famNotes.includes(n));
-            };*/
-
-            const allNotes = all
-
-            const has = (...notes) => notes.some(n => allNotes.includes(n));
-            const hasAny = (noteArray) => noteArray.some(n => allNotes.includes(n));
-            const count = (noteArray) => noteArray.filter(n => allNotes.includes(n)).length;
+            const has = (...notes) => notes.some(n => all.includes(n.toLowerCase()));
+            const hasAny = (noteArray) => noteArray.some(n => all.includes(n.toLowerCase()));
+            const count = (noteArray) => noteArray.filter(n => all.includes(n.toLowerCase())).length;
             
             const florals = ['lavender', 'clary sage', 'geranium', 'saffron', 'lotus', 'lily-of-the-valley', 'marigold', 'begonia', 'jasmine', 'wild cyclamen', 'ylang ylang', 'rose', 'heliotrope', 'tuberose', 'osmanthus', 'magnolia', 'immortelle', 'violet', 'iris', 'water lily', 'freesia', 'vanilla', 'gardenia', 'frangipani', 'honeysuckle', 'mimosa'];
             const woody = ['cedar', 'sandalwood', 'oud', 'vetiver', 'oak', 'cypress', 'rosewood', 'guaiacwood', 'patchouli', 'oakmoss', 'tree moss', 'hazelnut', 'tonka bean'];
@@ -644,593 +583,167 @@
             const hasWarm = hasAny(warm);
             const hasSynthetic = hasAny(synthetic);
             
-            // SPECIFIC NOTE COMBINATIONS (most specific first)
-            
-            // New note-specific scenes
+            // Specific combinations
             if (has('rose', 'oud') && hasMusk) {
-                return {
-                    title: "Silk Road Caravan",
-                    description: "Velvet pouches spill precious oud chips beside dried rose petals from Damascus. Merchants haggle in languages that blend like the scents themselves. This is luxury measured in grams, beauty that survives thousand-mile journeys across desert and mountain."
-                };
+                return { title: "Silk Road Caravan", desc: "Velvet pouches spill precious oud chips beside dried rose petals from Damascus. Merchants haggle in languages that blend like the scents themselves. This is luxury measured in grams, beauty that survives thousand-mile journeys across desert and mountain." };
             }
             
             if (has('iris', 'violet') && hasWoody) {
-                return {
-                    title: "Parisian Powder Room",
-                    description: "Carved wooden vanities hold crystal bottles from another century. Powdered iris and violet sachets perfume silk-lined drawers where pearl necklaces rest. The air tastes of elegance refined through generations, of beauty as architecture."
-                };
+                return { title: "Parisian Powder Room", desc: "Carved wooden vanities hold crystal bottles from another century. Powdered iris and violet sachets perfume silk-lined drawers where pearl necklaces rest. The air tastes of elegance refined through generations, of beauty as architecture." };
             }
             
             if (has('tuberose', 'ylang ylang') && has('vanilla')) {
-                return {
-                    title: "Bali Temple Evening",
-                    description: "White flowers illuminate dusk like earthbound stars, their narcotic perfume thickening as day fades. Vanilla-scented offerings steam at shrine bases while ylang ylang petals scatter in tropical winds. Paradise exists, but only in moments like these."
-                };
+                return { title: "Bali Temple Evening", desc: "White flowers illuminate dusk like earthbound stars, their narcotic perfume thickening as day fades. Vanilla-scented offerings steam at shrine bases while ylang ylang petals scatter in tropical winds. Paradise exists, but only in moments like these." };
             }
             
             if (has('osmanthus', 'peach') && hasGreen) {
-                return {
-                    title: "Chinese Autumn Garden",
-                    description: "Osmanthus blooms scatter like sweet snow over paths lined with peach trees past their fruit-bearing prime. Tea cools in porcelain cups as the afternoon stretches golden and eternal. This is beauty tinged with impermanence, sweetness shadowed by farewell."
-                };
-            }
-            
-            if (has('magnolia', 'citron') && hasMusk) {
-                return {
-                    title: "Southern Estate Morning",
-                    description: "Magnolias bloom impossibly large against white columns while citron trees perfume the breakfast terrace. Everything moves slowly here—conversation, time, the drift of perfume through humid air. Grace isn't rushed; it's cultivated like the gardens themselves."
-                };
+                return { title: "Chinese Autumn Garden", desc: "Osmanthus blooms scatter like sweet snow over paths lined with peach trees past their fruit-bearing prime. Tea cools in porcelain cups as the afternoon stretches golden and eternal. This is beauty tinged with impermanence, sweetness shadowed by farewell." };
             }
             
             if (has('fig', 'fig leaf') && hasWoody) {
-                return {
-                    title: "Mediterranean Courtyard Siesta",
-                    description: "Fig trees drop heavy fruit into shadows cast by weathered stone. The leaves release their milky green scent in the afternoon heat while wooden shutters keep rooms cool and dark. Time suspends between sleep and waking, sweetness and shade."
-                };
+                return { title: "Mediterranean Courtyard Siesta", desc: "Fig trees drop heavy fruit into shadows cast by weathered stone. The leaves release their milky green scent in the afternoon heat while wooden shutters keep rooms cool and dark. Time suspends between sleep and waking, sweetness and shade." };
             }
             
             if (has('patchouli', 'rose') && has('vanilla')) {
-                return {
-                    title: "Bohemian Apartment, 1970s",
-                    description: "Vintage velvet cushions scatter across wooden floors where incense burns beside wilting roses. Patchouli oil stains silk scarves as vinyl records spin. This is beauty unpolished, romance unstructured, an aesthetic of authentic imperfection."
-                };
-            }
-            
-            if (has('tonka bean', 'vanilla', 'honey')) {
-                return {
-                    title: "Patisserie Kitchen at Dawn",
-                    description: "Bakers fold warm tonka into custards as vanilla pods steep in cream. Honey drizzles golden over yesterday's work while ovens promise today's magic. The air is so sweet it almost aches, so rich you could get drunk on breathing."
-                };
+                return { title: "Bohemian Apartment, 1970s", desc: "Vintage velvet cushions scatter across wooden floors where incense burns beside wilting roses. Patchouli oil stains silk scarves as vinyl records spin. This is beauty unpolished, romance unstructured, an aesthetic of authentic imperfection." };
             }
             
             if (has('yuzu', 'ginger') && hasGreen) {
-                return {
-                    title: "Japanese Bathhouse",
-                    description: "Yuzu fruits float in steaming water as ginger tea cools on cypress benches. The air is thick with vapor and healing—every breath cleanses, every moment restores. Here, bathing isn't hygiene but ceremony, self-care elevated to art."
-                };
+                return { title: "Japanese Bathhouse", desc: "Yuzu fruits float in steaming water as ginger tea cools on cypress benches. The air is thick with vapor and healing—every breath cleanses, every moment restores. Here, bathing isn't hygiene but ceremony, self-care elevated to art." };
             }
             
             if (has('black tea', 'bergamot') && hasMusk) {
-                return {
-                    title: "English Library, Teatime",
-                    description: "Earl Grey steeps in bone china as rain streaks library windows. Leather chairs cradle bodies weary from reading while bergamot perfumes the pause between chapters. Civilization distills to this: warmth, words, the ritual of afternoon tea."
-                };
+                return { title: "English Library, Teatime", desc: "Earl Grey steeps in bone china as rain streaks library windows. Leather chairs cradle bodies weary from reading while bergamot perfumes the pause between chapters. Civilization distills to this: warmth, words, the ritual of afternoon tea." };
             }
             
             if (has('leather note', 'tobacco') && hasWoody) {
-                return {
-                    title: "Gentleman's Club Smoking Room",
-                    description: "Leather armchairs hold the shape of decades of contemplation. Pipe tobacco curls toward coffered oak ceilings as brandy catches firelight. This room knows secrets kept, deals struck, the weight of words spoken among equals."
-                };
+                return { title: "Gentleman's Club Smoking Room", desc: "Leather armchairs hold the shape of decades of contemplation. Pipe tobacco curls toward coffered oak ceilings as brandy catches firelight. This room knows secrets kept, deals struck, the weight of words spoken among equals." };
             }
             
             if (has('ink', 'violet leaf') && hasWoody) {
-                return {
-                    title: "Writer's Desk at Midnight",
-                    description: "Fountain pens leak ink onto manuscript pages as violets wilt in a water glass. Wooden desk drawers hold rejection letters and hope in equal measure. Creation happens here in the small hours, messy and private and utterly necessary."
-                };
-            }
-            
-            if (has('suede note', 'iris') && hasMusk) {
-                return {
-                    title: "Luxury Boutique Dressing Room",
-                    description: "Suede gloves rest on velvet cushions as iris-scented candles flicker in mirrors multiplied to infinity. Every texture whispers quality, every surface suggests taste. Shopping here isn't transaction but transformation, fantasy briefly made flesh."
-                };
+                return { title: "Writer's Desk at Midnight", desc: "Fountain pens leak ink onto manuscript pages as violets wilt in a water glass. Wooden desk drawers hold rejection letters and hope in equal measure. Creation happens here in the small hours, messy and private and utterly necessary." };
             }
             
             if (has('mimosa', 'honey', 'beeswax')) {
-                return {
-                    title: "Apiary in Spring",
-                    description: "Mimosa blossoms dust everything gold as bees work their ancient alchemy. Wax cells fill with honey that tastes of sunshine and time. The air hums with purpose, sweet with industry, alive with the compact between flower and insect."
-                };
-            }
-            
-            if (has('heliotrope', 'vanilla', 'almond')) {
-                return {
-                    title: "Grandmother's Kitchen",
-                    description: "Heliotrope from the garden scents the windowsill as almond cookies cool beside vanilla pudding. Everything here speaks of care made tangible, love expressed through sugar and butter. Memory lives in scent more than any photograph could capture."
-                };
+                return { title: "Apiary in Spring", desc: "Mimosa blossoms dust everything gold as bees work their ancient alchemy. Wax cells fill with honey that tastes of sunshine and time. The air hums with purpose, sweet with industry, alive with the compact between flower and insect." };
             }
             
             if (has('frangipani', 'coconut') && hasMusk) {
-                return {
-                    title: "Polynesian Moonlight",
-                    description: "Frangipani leis drape on palm bark as coconut husks smolder in fire pits. The ocean breathes against white sand while stars pierce the darkness like scattered seeds. Paradise isn't a place but a feeling, and it smells like this."
-                };
-            }
-            
-            if (has('immortelle', 'curry') || has('immortelle', 'tamarind')) {
-                return {
-                    title: "Moroccan Spice Market",
-                    description: "Immortelle flowers pile beside curry spice pyramids under striped awnings. The air is a riot of gold and amber, sweet and savory colliding in unexpected harmony. Every breath is an adventure, every scent a story waiting to be told."
-                };
-            }
-            
-            if (has('water lily', 'lotus') && hasSynthetic) {
-                return {
-                    title: "Minimalist Spa Sanctuary",
-                    description: "Lotus and water lilies float in infinity pools where architecture disappears into water, water into sky. The scent is barely there, more suggestion than statement, perfection pursued through subtraction. Luxury whispers; it never shouts."
-                };
+                return { title: "Polynesian Moonlight", desc: "Frangipani leis drape on palm bark as coconut husks smolder in fire pits. The ocean breathes against white sand while stars pierce the darkness like scattered seeds. Paradise isn't a place but a feeling, and it smells like this." };
             }
             
             if (has('gardenia', 'tuberose') && hasMusk) {
-                return {
-                    title: "Tropical Wedding Night",
-                    description: "Gardenia and tuberose crown the bride as candles gutter in humid darkness. The air is so thick with flowers it's almost indecent, beauty bordering on excess. Love announced this loudly can't help but succeed—or spectacularly fail."
-                };
+                return { title: "Tropical Wedding Night", desc: "Gardenia and tuberose crown the bride as candles gutter in humid darkness. The air is so thick with flowers it's almost indecent, beauty bordering on excess. Love announced this loudly can't help but succeed—or spectacularly fail." };
             }
             
-            if (has('honeysuckle', 'peach') && hasGreen) {
-                return {
-                    title: "Southern Summer Porch",
-                    description: "Honeysuckle vines tangle on porch railings as peach preserves simmer in the kitchen. The afternoon is liquid gold, time moving like honey, conversation flowing like sweet tea. Nothing urgent exists here, only the gentle insistence of now."
-                };
-            }
-            
-            if (has('rosewood', 'rose') && hasWarm) {
-                return {
-                    title: "Sacred Rose Garden",
-                    description: "Rosewood prayer beads click softly as dawn illuminates rose bushes planted by devotees. Incense trails between petals and pews, the sacred and beautiful inseparable. Worship here happens through beauty, faith expressed in cultivation."
-                };
-            }
-            
-            if (has('guaiacwood', 'pepper') && hasGreen) {
-                return {
-                    title: "Argentine Asado Smoke",
-                    description: "Guaiacwood smolders under meat as pepper cracks over chimichurri. The smoke is sweet, spicy, primal—a scent that speaks to something ancient in human memory. Cooking like this isn't just feeding; it's communion."
-                };
-            }
-            
-            if (has('oakmoss', 'tree moss') && hasFloral) {
-                return {
-                    title: "Enchanted Forest Clearing",
-                    description: "Moss carpets everything—stones, fallen logs, the bases of trees so old they seem mythic. Wildflowers break through green in unexpected bursts of color. Fairy tales start in places like this, where nature feels intentional, almost conscious."
-                };
-            }
-            
-            if (has('hazelnut', 'tonka bean', 'vanilla')) {
-                return {
-                    title: "Chocolate Shop Window",
-                    description: "Hazelnut pralines pile beside tonka-infused truffles as vanilla ganache sets on marble slabs. Everything here is almost too beautiful to eat, luxury measured in cocoa percentages and careful craftsmanship. Temptation made visible, touchable, impossible to resist."
-                };
-            }
-            
-            if (has('pomelo', 'grapefruit') && hasGreen) {
-                return {
-                    title: "Vietnamese Morning Market",
-                    description: "Vendors slice pomelo and grapefruit into flower shapes as mint and basil bundle beside them. The air vibrates with freshness—sharp, green, impossibly alive. Markets like this don't sell ingredients; they sell optimism, each dawn a new chance."
-                };
-            }
-            
-            if (has('blood orange', 'cinnamon') && hasWoody) {
-                return {
-                    title: "Winter Spiced Drink",
-                    description: "Blood orange wheels float in mulled wine as cinnamon sticks sink toward the bottom. Wood crackles in the fireplace while snow piles against windows. Warmth tastes like this—sharp fruit softened by spice, cold held at bay by careful preparation."
-                };
-            }
-            
-            if (has('lime', 'mint', 'coriander')) {
-                return {
-                    title: "Mexican Street Food Stand",
-                    description: "Lime juice sprays over everything as cilantro and mint pile beside tacos. The air is bright, herbal, hungry-making—scents that promise satisfaction before the first bite. Street food at its best is alchemy: simple ingredients transformed through skill and love."
-                };
-            }
-            
-            if (has('tangerine', 'clove') || has('tangerine', 'cinnamon')) {
-                return {
-                    title: "Christmas Market Twilight",
-                    description: "Tangerines stud clove-studded oranges hanging in wooden stalls. Cinnamon swirls through cold air as lights begin twinkling against early darkness. Holidays smell like this—anticipation mixed with tradition, sweetness spiced with nostalgia."
-                };
-            }
-            
-            if (has('plum', 'cinnamon') && hasWoody) {
-                return {
-                    title: "Autumn Preserving Kitchen",
-                    description: "Plums simmer with cinnamon sticks as jars sterilize on wood counters. The kitchen windows fog with steam that carries summer into winter, fruit transformed into patience. This is time made edible, seasons captured in glass."
-                };
-            }
-            
-            if (has('apricot', 'honey', 'beeswax')) {
-                return {
-                    title: "Orchard Beekeeper's Cottage",
-                    description: "Apricot trees shade hives humming with industry. Honey extracted this morning still holds the warmth of beeswax and sunlight. Everything here exists in symbiosis—trees feed bees, bees pollinate trees, humans harvest carefully, gratefully."
-                };
-            }
-            
-            if (has('cherry', 'almond') || has('cherry', 'tonka bean')) {
-                return {
-                    title: "Viennese Coffeehouse Afternoon",
-                    description: "Cherry strudel cools beside almond tortes as coffee machines hiss baroque patterns. Newspapers rustle at marble tables where time moves differently—slower, thicker, richer. Cafés like this aren't businesses; they're institutions, temples to the art of lingering."
-                };
-            }
-            
-            if (has('banana', 'coconut', 'vanilla')) {
-                return {
-                    title: "Tropical Smoothie Bar",
-                    description: "Blenders whir banana and coconut into sweet oblivion as vanilla extract sweetens already-sweet fruit. The air is vacation in liquid form, sunshine made drinkable. Health food rarely tastes this much like dessert, guilt-free indulgence served cold."
-                };
-            }
-            
-            if (has('blueberry', 'lemon') && hasGreen) {
-                return {
-                    title: "Summer Farm Breakfast",
-                    description: "Fresh blueberries tumble into lemon-drizzled pancakes as mint tea steeps. Morning light makes everything golden—the table, the fields beyond, the possibilities of a whole day stretching ahead. Mornings like this feel like gifts unwrapped slowly."
-                };
-            }
-            
-            if (has('violet leaf', 'cucumber') || (has('violet leaf') && hasSynthetic)) {
-                return {
-                    title: "Modern Skincare Laboratory",
-                    description: "Green extracts suspend in clear gel as scientists measure violet leaf molecules. Everything here is controlled, intentional, designed for effect. Beauty science pursues nature not to copy but to distill, to isolate the essential from the merely present."
-                };
-            }
-            
-            if (has('red tea', 'honey') && hasCitrus) {
-                return {
-                    title: "Cape Town Sunset Tea",
-                    description: "Rooibos steeps amber-red as honey dissolves into warmth and citrus peels curl beside the cup. Mountains silhouette against orange sky while the Atlantic whispers. This brew tastes of earth and sun, a continent distilled into comfort."
-                };
-            }
-            
-            if (has('rosemary', 'lemon') && hasWoody) {
-                return {
-                    title: "Tuscan Hillside Villa",
-                    description: "Rosemary hedges line lemon groves climbing toward a stone farmhouse. The air is so clean it shimmers, herbs and fruit mingling with cypress and distance. Beauty here isn't decoration; it's the landscape's native language."
-                };
-            }
-            
-            if (has('thyme', 'honey') && hasWoody) {
-                return {
-                    title: "Greek Island Taverna",
-                    description: "Thyme honey drips onto yogurt as wooden tables creak under the weight of simple abundance. Olive trees shade whitewashed walls while the sea glitters beyond. Food this simple shouldn't taste this complex, but terroir works its magic."
-                };
-            }
-            
-            if (has('fennel', 'anise') && hasCitrus) {
-                return {
-                    title: "Mediterranean Fish Market",
-                    description: "Fennel and anise season the day's catch as lemon halves wait on cutting boards. Everything smells of the sea and the herbs that grow beside it. Cooking here honors both elements—water's gifts prepared with land's blessings."
-                };
-            }
-            
-            if (has('sage', 'tobacco') && hasWoody) {
-                return {
-                    title: "Desert Sunset Ceremony",
-                    description: "Sage smoke spirals skyward as tobacco offerings burn beside juniper wood. The desert air is thin, clear, holy—every scent travels far, every prayer seems heard. Ritual here isn't performance; it's conversation with the infinite."
-                };
-            }
-            
-            if (has('forest fern', 'oakmoss', 'vetiver')) {
-                return {
-                    title: "Pacific Northwest Trail",
-                    description: "Ferns unfurl beside moss-covered logs as vetiver roots anchor steep slopes. The air tastes green, damp, ancient—forests so old they feel like cathedrals. Walking here isn't exercise; it's pilgrimage to where the wild things still rule."
-                };
-            }
-            
-            if (has('milk', 'vanilla', 'honey')) {
-                return {
-                    title: "Childhood Bedtime Ritual",
-                    description: "Warm milk sweetens with honey and vanilla as a parent's voice reads stories into the darkness. Safety smells like this—simple, sweet, utterly reliable. Every adult carries this scent memory, a touchstone to innocence and being unconditionally loved."
-                };
-            }
-            
-            if (has('beeswax', 'frankincense', 'myrrh')) {
-                return {
-                    title: "Byzantine Cathedral",
-                    description: "Beeswax candles illuminate icons painted in gold leaf as frankincense censers swing through ancient liturgy. The air is so thick with centuries of prayer it almost glows. Faith accumulates here like sediment, layer upon believing layer."
-                };
-            }
-            
-            if (has('pepper', 'ginger', 'coriander')) {
-                return {
-                    title: "Indian Spice Bazaar",
-                    description: "Vendors grind pepper, ginger, and coriander in mortar and pestle, clouds of spice making eyes water and mouths anticipate. This isn't cooking; it's chemistry, magic practiced daily, flavor as alchemy. India tastes like this—complex, vibrant, impossible to simplify."
-                };
-            }
-            
-            if (has('tamarind', 'cinnamon') && hasCitrus) {
-                return {
-                    title: "Thai Night Market",
-                    description: "Tamarind paste sweetens pad thai as cinnamon scents iced tea beside lime wedges. Neon reflects in puddles while vendors shout in languages that taste like their food—layered, surprising, perfectly balanced. Street food here is haute cuisine that hasn't forgotten its roots."
-                };
-            }
-            
-            if (has('ambroxan', 'iris') && hasWoody) {
-                return {
-                    title: "Luxury Department Store Perfume Floor",
-                    description: "Ambroxan amplifies iris into something almost supernatural as sales associates spray testers on cardstock. Everything here is aspirational—scents that promise transformation, beauty as purchase, identity in crystal bottles. You don't just smell these perfumes; you imagine who you'd become wearing them."
-                };
-            }
-            
-            // Previous combinations continue...
             if (has('marine note', 'salty note') && hasCitrus) {
-                return {
-                    title: "Cliffside at Dawn",
-                    description: "Salt spray mists your face as waves crash against ancient rocks below. The first rays of sun illuminate citrus groves climbing the hillside, their bright scent carried on ocean winds. You stand at the edge of land and sea, breathing in the raw power of nature's meeting point."
-                };
-            }
-            
-            if (has('ozonic note') && hasCitrus && hasGreen) {
-                return {
-                    title: "After the Storm",
-                    description: "Rain-washed air sparkles with electricity as storm clouds retreat over distant hills. Crushed leaves and bright citrus mingle in puddles reflecting clearing skies. Everything feels impossibly clean, renewed, alive with possibility."
-                };
+                return { title: "Cliffside at Dawn", desc: "Salt spray mists your face as waves crash against ancient rocks below. The first rays of sun illuminate citrus groves climbing the hillside, their bright scent carried on ocean winds. You stand at the edge of land and sea, breathing in the raw power of nature's meeting point." };
             }
             
             if (has('jasmine', 'saffron') && hasMusk) {
-                return {
-                    title: "Persian Palace Garden",
-                    description: "Night falls on a marble courtyard where jasmine vines climb ancient walls. Saffron-stained carpets flutter in archways as servants light oil lamps. The air is thick with luxury, sensuality, and the weight of empires."
-                };
+                return { title: "Persian Palace Garden", desc: "Night falls on a marble courtyard where jasmine vines climb ancient walls. Saffron-stained carpets flutter in archways as servants light oil lamps. The air is thick with luxury, sensuality, and the weight of empires." };
             }
             
             if (has('lavender') && hasWoody && hasCitrus) {
-                return {
-                    title: "Provence Farmhouse",
-                    description: "Purple fields stretch toward cedar-shuttered windows where lemon cakes cool on stone sills. Cicadas drone in the afternoon heat as lavender waves in the mistral wind. This is summer distilled to its essence—warm, languid, perfect."
-                };
+                return { title: "Provence Farmhouse", desc: "Purple fields stretch toward cedar-shuttered windows where lemon cakes cool on stone sills. Cicadas drone in the afternoon heat as lavender waves in the mistral wind. This is summer distilled to its essence—warm, languid, perfect." };
             }
             
-            // BROADER CATEGORY COMBINATIONS
+            if (has('tonka bean', 'vanilla', 'honey')) {
+                return { title: "Patisserie Kitchen at Dawn", desc: "Bakers fold warm tonka into custards as vanilla pods steep in cream. Honey drizzles golden over yesterday's work while ovens promise today's magic. The air is so sweet it almost aches, so rich you could get drunk on breathing." };
+            }
             
+            if (has('suede note', 'iris') && hasMusk) {
+                return { title: "Luxury Boutique Dressing Room", desc: "Suede gloves rest on velvet cushions as iris-scented candles flicker in mirrors multiplied to infinity. Every texture whispers quality, every surface suggests taste. Shopping here isn't transaction but transformation, fantasy briefly made flesh." };
+            }
+            
+            if (has('honeysuckle', 'peach') && hasGreen) {
+                return { title: "Southern Summer Porch", desc: "Honeysuckle vines tangle on porch railings as peach preserves simmer in the kitchen. The afternoon is liquid gold, time moving like honey, conversation flowing like sweet tea. Nothing urgent exists here, only the gentle insistence of now." };
+            }
+            
+            // Broader combinations
             if (hasCitrus && hasFruit && hasFloral && count(florals) >= 2) {
-                return {
-                    title: "Garden Party in Full Bloom",
-                    description: "Flower arrangements tower beside fruit platters as citrus drinks sparkle in crystal. Guests in summer whites drift through gardens where every sense celebrates abundance. This is joy made visible, beauty as generous as the hosts."
-                };
+                return { title: "Garden Party in Full Bloom", desc: "Flower arrangements tower beside fruit platters as citrus drinks sparkle in crystal. Guests in summer whites drift through gardens where every sense celebrates abundance. This is joy made visible, beauty as generous as the hosts." };
             }
             
-            if (hasWoody && hasGreen && hasCitrus && !hasFloral) {
-                return {
-                    title: "Morning Forest Hike",
-                    description: "Sunlight filters through cedar boughs as you crush pine needles underfoot. The air is sharp with resin, herbs, and the bright promise of citrus groves in the valley below. Every breath clears the mind, grounds the spirit, reconnects you to earth."
-                };
+            if (hasWoody && hasGreen && hasMusk) {
+                return { title: "Forest After Rain", desc: "Water drips from pine needles onto earth dark with ancient leaf mold. Cedar bark releases its oils in the damp air as ferns unfurl new fronds. You're surrounded by growth, decay, and rebirth in perfect balance." };
             }
             
             if (hasFloral && hasMusk && hasWarm && count(florals) >= 3) {
-                return {
-                    title: "Perfumer's Masterpiece",
-                    description: "Flowers bloom across base notes of musk and warmth, a composition decades in the making. Each sniff reveals new layers—this isn't fragrance but architecture, scent as storytelling. Wearing this means carrying a small work of art everywhere you go."
-                };
+                return { title: "Perfumer's Masterpiece", desc: "Flowers bloom across base notes of musk and warmth, a composition decades in the making. Each sniff reveals new layers—this isn't fragrance but architecture, scent as storytelling. Wearing this means carrying a small work of art everywhere you go." };
             }
             
-            if (hasFruit && hasWarm && hasWoody && !hasCitrus) {
-                return {
-                    title: "Autumn Harvest Feast",
-                    description: "Roasted fruits glaze under spiced honey as wooden tables groan with abundance. Smoke from the hearth mingles with cinnamon and clove. This is gratitude made tangible, community gathered around plenty, the season's final gift before winter's arrival."
-                };
+            if (hasFruit && hasWarm && !hasCitrus) {
+                return { title: "Autumn Harvest Feast", desc: "Roasted fruits glaze under spiced honey as wooden tables groan with abundance. Smoke from the hearth mingles with cinnamon and clove. This is gratitude made tangible, community gathered around plenty, the season's final gift before winter's arrival." };
             }
             
-            if (hasGreen && hasCitrus && hasSynthetic && !hasFloral) {
-                return {
-                    title: "Rooftop Garden, Modern City",
-                    description: "Herb boxes and citrus trees thrive impossible stories above street level. The air is green and fresh despite urban surroundings, nature reclaimed through human ingenuity. This is hope planted in concrete, beauty insisting on its place even in steel and glass."
-                };
+            // Family-based fallbacks
+            if (hasFloral && all.length >= 3) {
+                return { title: "Secret Garden Path", desc: "Flowers bloom in unexpected corners where gardeners rarely reach. The air is perfumed chaos, beauty unplanned, nature's own arrangements always surpassing human design. Walking here feels like discovering something meant just for you." };
             }
             
-            if (hasSynthetic && hasFloral && hasMusk && count(florals) >= 2) {
-                return {
-                    title: "Avant-Garde Perfume Launch",
-                    description: "Models glide through installations where flowers are projected onto walls and scent is pumped through vents. This isn't perfume; it's experience design, fragrance as concept art. Beauty here is engineered, calculated, and somehow still manages to move you."
-                };
+            if (hasWoody && all.length >= 2) {
+                return { title: "Woodworker's Morning", desc: "Different woods release distinct songs as saws and planes transform them. The air is meditation and muscle memory, craft practiced until it becomes prayer. Creating with wood connects us to forests, to trees, to time itself." };
             }
             
-            if (hasWarm && hasFruit && hasCitrus) {
-                return {
-                    title: "Moroccan Riad Breakfast",
-                    description: "Spiced fruit compote steams beside fresh citrus as honey drizzles over everything. Sunlight filters through pierced screens, painting geometric patterns on tiled floors. Mornings here are unhurried rituals where every sense is honored, every moment savored."
-                };
-            }
-            
-            if (hasWoody && hasMusk && hasWarm && !hasFloral && !hasCitrus) {
-                return {
-                    title: "Private Library After Dark",
-                    description: "Leather-bound volumes line oak shelves as amber lamps cast pools of warmth. The air is thick with age, knowledge, and the musk of time itself. This room rewards those who linger, revealing its secrets only to patient souls."
-                };
-            }
-            
-            if (hasFruit && hasGreen && hasFloral && hasCitrus) {
-                return {
-                    title: "Botanical Garden Conservatory",
-                    description: "Fruit trees and flowers coexist in climate-controlled paradise as herbs carpet the pathways. The air is layered—citrus brightness over green earthiness over floral sweetness. This is the world in miniature, ecosystems from every continent gathered under glass."
-                };
-            }
-            
-            // SINGLE FAMILY DOMINANT SCENES (more specific)
-            
-            if (count(florals) >= 5) {
-                return {
-                    title: "Royal Wedding Bouquet",
-                    description: "Dozens of flower species cascade in careful arrangement, each chosen for meaning as much as beauty. The scent is almost overwhelming—a symphony where every instrument insists on being heard. This is florals unrestrained, beauty bordering on excess, love announced without subtlety."
-                };
-            }
-            
-            if (count(woody) >= 4) {
-                return {
-                    title: "Ancient Forest Temple",
-                    description: "Trees older than memory shelter wooden structures weathered to silver. The air is meditation itself—grounding, centering, eternal. Walk here and you'll understand why humans have always sought the divine among trees."
-                };
-            }
-            
-            if (count(citrus) >= 4) {
-                return {
-                    title: "Amalfi Coast Drive",
-                    description: "Lemon groves cling to cliffs as the road curves impossibly above azure water. Every variety of citrus grows here, their fruits bright as jewels against green leaves. The air tastes of vacation, freedom, the Mediterranean in its most generous mood."
-                };
-            }
-            
-            if (count(greens) >= 4) {
-                return {
-                    title: "Herb Garden After Rain",
-                    description: "Every variety of green releases its oils as raindrops trigger aromatic explosions. The air is almost edible—savory, fresh, alive with chlorophyll and possibility. Gardens like this feed body and soul, sustenance measured in more than calories."
-                };
-            }
-            
-            if (count(warm) >= 3) {
-                return {
-                    title: "Spice Trader's Warehouse",
-                    description: "Burlap sacks split at the seams, spilling cinnamon bark and dried peppers across wooden floors. The air burns pleasantly, warmth that awakens rather than soothes. Fortunes are made here, adventures begin here, every journey starts with spice."
-                };
-            }
-            
-            // FAMILY PAIR COMBINATIONS (more variations)
-            
-            if (hasFloral && hasWoody && count(florals) >= 2 && count(woody) >= 2) {
-                return {
-                    title: "Botanical Artist's Studio",
-                    description: "Pressed flowers arrange beside wood samples as reference for paintings half-finished. The studio smells of creation—natural materials transformed through art, beauty studied and celebrated. Every surface tells a story of observation becoming interpretation."
-                };
-            }
-            
-            if (hasCitrus && hasWoody && !hasFloral && !hasFruit) {
-                return {
-                    title: "Carpentry Workshop, Lemon Grove",
-                    description: "Wood shavings curl beside open windows where lemon trees perfume the breeze. The scent marriage is unexpected but perfect—citrus brightness cutting through sawdust richness. Craft happens here, honest work that smells of earth and effort."
-                };
-            }
-            
-            if (hasFruit && hasMusk && !hasFloral && !hasCitrus) {
-                return {
-                    title: "Vintner's Private Cellar",
-                    description: "Fruit ferments in oak barrels acquiring depth and complexity. The air is sweet, funky, alive with transformation. Wine isn't made here; it's midwifed, natural processes guided by knowledge earned across generations."
-                };
-            }
-            
-            if (hasGreen && hasWarm && !hasFloral) {
-                return {
-                    title: "Apothecary's Workbench",
-                    description: "Herbs dry in bundles as spices grind into healing preparations. The air speaks of remedy, of nature's pharmacy carefully catalogued. Medicine here isn't just chemistry; it's tradition, wisdom, the earth's gifts skillfully applied."
-                };
-            }
-            
-            if (hasSynthetic && hasCitrus && !hasFloral && !hasFruit) {
-                return {
-                    title: "Science Lab Meets Nature",
-                    description: "Beakers hold citrus extracts being analyzed molecule by molecule. The scent is both natural and artificial, truth and interpretation existing side by side. Research here chases understanding, breaking beauty down to build it back better."
-                };
-            }
-            
-            if (hasMusk && hasFloral && count(florals) === 1) {
-                return {
-                    title: "Vintage Perfume Discovery",
-                    description: "A single flower note blooms from a base of aged musk, simple but profound. This is perfumery's essence—two elements becoming more than their sum. Sometimes the most powerful statements are the quietest ones."
-                };
-            }
-            
-            // TRIPLE FAMILY COMBINATIONS (additional)
-            
-            if (hasWoody && hasGreen && hasWarm) {
-                return {
-                    title: "Mountain Monastery Kitchen",
-                    description: "Herbs from the garden season simple meals cooked over wood fires. Spices from trade routes add warmth to ascetic fare. Self-sufficiency smells like this—grounded, grateful, surprisingly rich in its simplicity."
-                };
-            }
-            
-            if (hasCitrus && hasFruit && hasGreen) {
-                return {
-                    title: "Farmers Market Peak Season",
-                    description: "Fruit stands neighbor herb bundles as citrus pyramids catch morning sun. Everything here was picked this dawn, still holding dew and possibility. Markets like this are community made visible, the land's abundance shared."
-                };
-            }
-            
-            if (hasFloral && hasFruit && hasMusk) {
-                return {
-                    title: "Haute Couture Fashion Show",
-                    description: "Models trail flower and fruit scents as fabric whispers past. Musk grounds the sweetness, adding skin and sensuality. This is luxury as theater, beauty as performance, fashion that engages every sense."
-                };
-            }
-            
-            // COMPREHENSIVE FALLBACKS (by family)
-            
-            if (hasFloral && allNotes.length >= 3) {
-                return {
-                    title: "Secret Garden Path",
-                    description: "Flowers bloom in unexpected corners where gardeners rarely reach. The air is perfumed chaos, beauty unplanned, nature's own arrangements always surpassing human design. Walking here feels like discovering something meant just for you."
-                };
-            }
-            
-            if (hasWoody && allNotes.length >= 2) {
-                return {
-                    title: "Woodworker's Morning",
-                    description: "Different woods release distinct songs as saws and planes transform them. The air is meditation and muscle memory, craft practiced until it becomes prayer. Creating with wood connects us to forests, to trees, to time itself."
-                };
-            }
-            
-            if (hasCitrus && allNotes.length >= 2) {
-                return {
-                    title: "Citrus Sunrise Ritual",
-                    description: "You slice into bright fruit as morning light floods the kitchen. Juice runs sticky-sweet, the day's first taste sharp and promising. Mornings that start like this seem destined for good things."
-                };
+            if (hasCitrus) {
+                return { title: "Citrus Sunrise Ritual", desc: "You slice into bright fruit as morning light floods the kitchen. Juice runs sticky-sweet, the day's first taste sharp and promising. Mornings that start like this seem destined for good things." };
             }
             
             if (hasFruit) {
-                return {
-                    title: "Summer's Peak Moment",
-                    description: "Fruit ripens to perfect sweetness, that single day between under-ripe and over. The air is heavy with the season's generosity, with nature's timing, with flavors you'll spend winter remembering. Abundance like this is brief but total."
-                };
+                return { title: "Summer's Peak Moment", desc: "Fruit ripens to perfect sweetness, that single day between under-ripe and over. The air is heavy with the season's generosity, with nature's timing, with flavors you'll spend winter remembering. Abundance like this is brief but total." };
             }
             
             if (hasGreen) {
-                return {
-                    title: "First Day of Spring",
-                    description: "Green pushes through brown as plants remember their purpose. The air tastes of chlorophyll and promise, winter's grip finally broken. Everything growing seems to do so audibly, the earth exhaling relief and renewal."
-                };
+                return { title: "First Day of Spring", desc: "Green pushes through brown as plants remember their purpose. The air tastes of chlorophyll and promise, winter's grip finally broken. Everything growing seems to do so audibly, the earth exhaling relief and renewal." };
             }
             
             if (hasMusk) {
-                return {
-                    title: "Skin Scent Memory",
-                    description: "This smells like someone—warm skin, individual chemistry, the way bodies carry scent. It's intimate without being intrusive, personal without being private. We all have this smell; few of us really know it."
-                };
+                return { title: "Skin Scent Memory", desc: "This smells like someone—warm skin, individual chemistry, the way bodies carry scent. It's intimate without being intrusive, personal without being private. We all have this smell; few of us really know it." };
             }
             
             if (hasWarm) {
-                return {
-                    title: "Comfort in Cold",
-                    description: "Warmth becomes tangible—not just temperature but feeling, not just heat but haven. The air promises safety, offers solace, wraps around you like the arms of someone who loves you. Winter is defeated here, one spice at a time."
-                };
+                return { title: "Comfort in Cold", desc: "Warmth becomes tangible—not just temperature but feeling, not just heat but haven. The air promises safety, offers solace, wraps around you like the arms of someone who loves you. Winter is defeated here, one spice at a time." };
             }
             
             if (hasSynthetic) {
-                return {
-                    title: "Tomorrow's Scent Today",
-                    description: "This smells like nothing nature ever made, and that's precisely the point. It's the future announcing itself, technology serving beauty, humans extending nature's palette. Not imitation but innovation, not copy but creation."
-                };
+                return { title: "Tomorrow's Scent Today", desc: "This smells like nothing nature ever made, and that's precisely the point. It's the future announcing itself, technology serving beauty, humans extending nature's palette. Not imitation but innovation, not copy but creation." };
             }
             
-            // ULTIMATE FALLBACK
-            const noteList = allNotes.slice(0, 5).join(', ');
-            const extras = allNotes.length > 5 ? ` and ${allNotes.length - 5} more` : '';
+            // Ultimate fallback
+            const noteList = all.slice(0, 5).join(', ');
+            const extras = all.length > 5 ? ` and ${all.length - 5} more` : '';
             
             return {
                 title: "Your Unique Olfactory Journey",
-                description: `This blend of ${noteList}${extras} creates something entirely new—a scent landscape that exists only in your imagination and nowhere else on earth. Like the best memories, it defies simple description, living instead as feeling, as atmosphere, as a private world you've built from nature's infinite vocabulary.`
+                desc: `This blend of ${noteList}${extras} creates something entirely new—a scent landscape that exists only in your imagination and nowhere else on earth. Like the best memories, it defies simple description, living instead as feeling, as atmosphere, as a private world you've built from nature's infinite vocabulary.`
             };
+        }
+
+        // --- Music ---
+        function toggleMusic() {
+            if(state.isMusicPlaying) {
+                dom.audio.pause();
+                state.isMusicPlaying = false;
+            } else {
+                dom.audio.play().then(() => {
+                    state.isMusicPlaying = true;
+                }).catch(() => {});
+            }
+            renderMusicIcon();
+        }
+
+        function renderMusicIcon() {
+            const iconSize = 32;
+            if(state.isMusicPlaying) {
+                dom.musicIconWrapper.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle><line x1="2" y1="2" x2="22" y2="22"></line></svg>`;
+            } else {
+                dom.musicIconWrapper.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`;
+            }
         }
 
         // Run
         init();
-
     </script>
 </body>
 </html>

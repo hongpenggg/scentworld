@@ -49,17 +49,14 @@
 
         <div class="flex-1 px-4 md:px-8 pb-8 flex flex-col items-center justify-start gap-8">
             <div class="w-full max-w-3xl flex flex-col gap-2">
-                <!-- TOP -->
                 <div class="flex items-center gap-4">
                     <div class="w-24 text-right hidden sm:block"><span class="text-xs font-bold uppercase tracking-widest text-stone-400">Top</span><div class="text-[10px] text-stone-300">First Impression</div></div>
                     <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" ondrop="drop(event, 'top')" ondragover="allowDrop(event)" id="zone-top"><span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Top Notes Here</span></div>
                 </div>
-                <!-- HEART -->
                 <div class="flex items-center gap-4">
                     <div class="w-24 text-right hidden sm:block"><span class="text-xs font-bold uppercase tracking-widest text-pink-300">Heart</span><div class="text-[10px] text-stone-300">The Core</div></div>
                     <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" ondrop="drop(event, 'heart')" ondragover="allowDrop(event)" id="zone-heart"><span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Heart Notes Here</span></div>
                 </div>
-                <!-- BASE -->
                 <div class="flex items-center gap-4">
                     <div class="w-24 text-right hidden sm:block"><span class="text-xs font-bold uppercase tracking-widest text-amber-700">Base</span><div class="text-[10px] text-stone-300">The Trail</div></div>
                     <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" ondrop="drop(event, 'base')" ondragover="allowDrop(event)" id="zone-base"><span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Base Notes Here</span></div>
@@ -96,11 +93,8 @@
     </main>
 
     <script>
-        // OPENROUTER API KEY - Will be injected by GitHub Actions or loaded from .env.local
-        const OPENROUTER_API_KEY = "%%VITE_OPENROUTER_API_KEY%%"; // Placeholder for GitHub Actions
-        
-        // For local development, you can hardcode your key here temporarily:
-        // const OPENROUTER_API_KEY = "sk-or-v1-your-key-here";
+        // OPENROUTER API KEY - Will be injected by GitHub Actions
+        const OPENROUTER_API_KEY = "%%VITE_OPENROUTER_API_KEY%%";
 
         const families = {
             "Floral": ["Rose", "Jasmine", "Lavender", "Ylang Ylang", "Tuberose", "Iris", "Violet", "Lily-of-the-valley", "Gardenia", "Freesia", "Magnolia", "Osmanthus", "Peony", "Lilac", "Carnation", "Heliotrope", "Orange Blossom", "Neroli", "Chamomile", "Geranium", "Honeysuckle", "Mimosa", "Narcissus", "Hyacinth", "Lotus", "Water Lily", "Frangipani", "Plumeria", "Wisteria", "Begonia", "Wild Cyclamen", "Clary Sage", "Marigold", "Saffron", "Immortelle", "Cassia", "Peach Blossom", "Cherry Blossom", "Apple Blossom", "Tiare Flower"],
@@ -138,18 +132,18 @@
 
         let currentMix = { top: [], heart: [], base: [] };
 
-        // --- OPENROUTER API CALLER ---
+        // --- OPENROUTER FREE TIER API ---
         async function callOpenRouter(prompt) {
             let apiKey = OPENROUTER_API_KEY;
             
-            // Check if placeholder wasn't replaced (local development)
             if (apiKey.includes("%%")) {
-                alert("⚠️ API Key not configured!\n\nFor local development:\n1. Get a free API key from https://openrouter.ai/\n2. Create a .env.local file\n3. Add: VITE_OPENROUTER_API_KEY=your-key-here\n\nFor GitHub Pages:\n1. Go to repo Settings → Secrets\n2. Add secret: VITE_OPENROUTER_API_KEY");
+                alert("⚠️ API Key not configured!\n\nFor local development:\n1. Get a free API key from https://openrouter.ai/\n2. Replace the placeholder with your key\n\nFor GitHub Pages:\n1. Go to repo Settings → Secrets\n2. Add secret: VITE_OPENROUTER_API_KEY");
                 return null;
             }
 
             const url = "https://openrouter.ai/api/v1/chat/completions";
             
+            // CRITICAL: Use "openrouter/free" for free tier routing
             const payload = {
                 model: "openrouter/free",
                 messages: [
@@ -161,8 +155,7 @@
                         role: "user",
                         content: prompt
                     }
-                ],
-                response_format: { type: "json_object" }
+                ]
             };
 
             try {
@@ -186,7 +179,16 @@
                 }
                 
                 const content = data.choices?.[0]?.message?.content;
-                return content ? JSON.parse(content) : null;
+                if (!content) return null;
+                
+                // Parse JSON response
+                try {
+                    return JSON.parse(content);
+                } catch (e) {
+                    // Fallback: extract JSON from text
+                    const jsonMatch = content.match(/\{[^}]+\}/);
+                    return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+                }
             } catch (error) {
                 console.error("Connection Failed:", error);
                 alert("Connection failed. Check console for details.");
@@ -194,7 +196,6 @@
             }
         }
 
-        // --- AI FEATURES ---
         async function generateAIDream() {
             const btn = document.getElementById('btn-dream');
             const loader = document.getElementById('dream-loader');
@@ -209,12 +210,12 @@
             btn.classList.add('hidden'); loader.classList.remove('hidden'); descEl.classList.add('opacity-50');
 
             const mixString = `Top: ${currentMix.top.map(n=>n.name).join(', ')||'None'}, Heart: ${currentMix.heart.map(n=>n.name).join(', ')||'None'}, Base: ${currentMix.base.map(n=>n.name).join(', ')||'None'}`;
-            const prompt = `You are a master perfumer and poet. Based on this fragrance blend: ${mixString}. Create a creative name (max 4 words) and write a short, evocative memory/scene description (3-4 sentences, vivid and sensory). Return as JSON: { "name": "string", "description": "string" }`;
+            const prompt = `Based on this fragrance blend: ${mixString}. Create: 1) A creative name (max 4 words), 2) A short evocative memory scene (3-4 sentences, vivid and sensory). Respond ONLY with JSON: {"name": "string", "description": "string"}`;
 
             const result = await callOpenRouter(prompt);
 
             loader.classList.add('hidden'); btn.classList.remove('hidden'); descEl.classList.remove('opacity-50');
-            if (result) {
+            if (result && result.name && result.description) {
                 titleEl.classList.remove('fade-in'); descEl.classList.remove('fade-in'); void titleEl.offsetWidth; titleEl.classList.add('fade-in'); descEl.classList.add('fade-in');
                 titleEl.innerText = result.name; descEl.innerText = result.description;
             }
@@ -233,12 +234,15 @@
             btn.innerHTML = `<span class="animate-spin">⏳</span> Consulting...`; btn.disabled = true;
 
             const mixString = `Top: ${currentMix.top.map(n=>n.name).join(', ')}, Heart: ${currentMix.heart.map(n=>n.name).join(', ')}, Base: ${currentMix.base.map(n=>n.name).join(', ')}`;
-            const prompt = `You are a fragrance alchemist. Analyze this perfume blend: ${mixString}. Provide: 1) A brief critique on the balance and harmony (1-2 sentences), 2) ONE specific suggestion to improve it. Be concise and expert. Return as JSON: { "critique": "string" }`;
+            const prompt = `Analyze this perfume blend: ${mixString}. Provide: 1) A brief critique on balance (1-2 sentences), 2) ONE specific suggestion. Be expert and concise. Respond ONLY with JSON: {"critique": "string"}`;
 
             const result = await callOpenRouter(prompt);
 
             btn.innerHTML = originalBtnText; btn.disabled = false;
-            if (result) { feedbackBox.classList.remove('hidden'); feedbackText.innerText = result.critique; }
+            if (result && result.critique) { 
+                feedbackBox.classList.remove('hidden'); 
+                feedbackText.innerText = result.critique; 
+            }
         }
 
         function init() { lucide.createIcons(); renderSidebar(); }
@@ -317,7 +321,6 @@
             document.getElementById('alchemist-feedback').classList.add('hidden'); generateStandardScene();
         }
 
-        // --- ENHANCED SCENE GENERATOR ---
         function generateStandardScene() {
             const allNotes = [...currentMix.top, ...currentMix.heart, ...currentMix.base];
             const titleEl = document.getElementById('scene-title'); const descEl = document.getElementById('scene-desc');

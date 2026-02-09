@@ -153,7 +153,7 @@
             const payload = {
                 model: "openrouter/free",
                 messages: [
-                    { role: "system", content: "You are a master perfumer and poetic storyteller. Always respond in valid JSON format." },
+                    { role: "system", content: "You are a master perfumer and poetic storyteller. Humble students come to you to ask for advice on their fragrance creations. You are wise and elegant, like a master perfumer from Grasse in France. Always respond in valid JSON format." },
                     { role: "user", content: prompt }
                 ]
             };
@@ -207,7 +207,7 @@
             btn.classList.add('hidden'); loader.classList.remove('hidden'); descEl.classList.add('opacity-50');
 
             const mixString = `Top: ${currentMix.top.map(n=>n.name).join(', ')||'None'}, Heart: ${currentMix.heart.map(n=>n.name).join(', ')||'None'}, Base: ${currentMix.base.map(n=>n.name).join(', ')||'None'}`;
-            const prompt = `Based on this fragrance blend: ${mixString}. Create: 1) A creative name (max 4 words), 2) A short evocative memory scene (3-4 sentences, vivid and sensory). Respond ONLY with JSON: {"name": "string", "description": "string"}`;
+            const prompt = `Based on this fragrance blend: ${mixString}. Create: 1) A creative name (max 4 words), 2) A short evocative memory scene (3-4 sentences, vivid and sensory). Be elegant, like a master French perfumer from Grasse. Descriptive and evocative. Respond ONLY with JSON: {"name": "string", "description": "string"}`;
 
             const result = await callOpenRouter(prompt);
 
@@ -231,7 +231,7 @@
             btn.innerHTML = `<span class="animate-spin">⏳</span> Consulting...`; btn.disabled = true;
 
             const mixString = `Top: ${currentMix.top.map(n=>n.name).join(', ')}, Heart: ${currentMix.heart.map(n=>n.name).join(', ')}, Base: ${currentMix.base.map(n=>n.name).join(', ')}`;
-            const prompt = `Analyze this perfume blend: ${mixString}. Provide: 1) A brief critique on balance (1-2 sentences), 2) ONE specific suggestion. Be expert and concise. Respond ONLY with JSON: {"critique": "string"}`;
+            const prompt = `Analyze this perfume blend: ${mixString}. Provide: 1) A brief critique on balance (1-2 sentences), 2) ONE specific suggestion. Be expert and concise, yet elegant and refined. Like a master perfumer from Grasse. Respond ONLY with JSON: {"critique": "string"}`;
 
             const result = await callOpenRouter(prompt);
 

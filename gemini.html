@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scent Memory Playground</title>
+    <title>ScentWorld AI - Olfactory Playground</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -24,6 +24,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .animate-shimmer { background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%); background-size: 200% 100%; animation: shimmer 2s infinite; }
+        .family-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden text-slate-800">
@@ -34,15 +35,16 @@
             <h2 class="font-bold text-stone-700 tracking-wide uppercase text-sm" id="sidebar-title">Fragrance Notes</h2>
             <button onclick="toggleSidebar()" class="p-1 hover:bg-stone-200 rounded text-stone-500 transition-colors"><i data-lucide="panel-left-close" id="toggle-icon"></i></button>
         </div>
-        <div class="flex-1 overflow-y-auto p-4 sidebar-scroll space-y-6" id="notes-container"></div>
+        <div class="flex-1 overflow-y-auto p-4 sidebar-scroll space-y-2" id="notes-container"></div>
         <div class="p-4 bg-stone-50 text-xs text-stone-400 border-t border-stone-100 text-center">Drag notes to the pyramid</div>
     </aside>
 
     <main class="flex-1 flex flex-col h-full relative overflow-y-auto bg-[#FAFAFA]">
         <button id="open-sidebar-btn" onclick="toggleSidebar()" class="absolute top-4 left-4 z-10 p-2 bg-white shadow-md rounded-md hover:bg-stone-50 hidden"><i data-lucide="panel-left-open"></i></button>
         <header class="pt-8 pb-4 px-8 text-center">
-            <h1 class="text-3xl md:text-4xl text-stone-800 mb-2 serif italic">The Olfactory Playground</h1>
-            <p class="text-stone-500 max-w-2xl mx-auto">Drag ingredients into the pyramid. The memory scene below will evolve as you blend.</p>
+            <h1 class="text-3xl md:text-4xl text-stone-800 mb-2 serif italic">ScentWorld AI</h1>
+            <p class="text-stone-500 max-w-2xl mx-auto">Drag ingredients into the pyramid. The AI will craft your memory.</p>
+            <div class="mt-4"><a href="index.html" class="text-sm text-stone-400 hover:text-stone-600 underline">← Back to Main Version</a></div>
         </header>
 
         <div class="flex-1 px-4 md:px-8 pb-8 flex flex-col items-center justify-start gap-8">
@@ -94,50 +96,84 @@
     </main>
 
     <script>
-        /** =================================================================
-         * IMPORTANT: API KEY SETUP
-         * =================================================================
-         * 1. Use your working key from the Debug Tool.
-         * 2. Paste it below.
-         */
-        const GOOGLE_API_KEY = "AIzaSyBxUNXyOfS5aBldZOiEKV_5hgA8VU3pkGA"; 
-                
-        // ------------------------------------------------------------------
+        // OPENROUTER API KEY - Will be injected by GitHub Actions or loaded from .env.local
+        const OPENROUTER_API_KEY = "%%VITE_OPENROUTER_API_KEY%%"; // Placeholder for GitHub Actions
+        
+        // For local development, you can hardcode your key here temporarily:
+        // const OPENROUTER_API_KEY = "sk-or-v1-your-key-here";
 
         const families = {
-            "Floral": ["Lavender", "Clary sage", "Geranium", "Saffron", "Lotus", "Lily-of-the-valley", "Marigold", "Begonia", "Jasmine", "Wild cyclamen", "Ylang Ylang", "Rose", "Heliotrope", "Tuberose", "Osmanthus", "Magnolia", "Immortelle", "Violet", "Iris", "Water Lily", "Freesia", "Vanilla", "Gardenia", "Frangipani", "Honeysuckle", "Mimosa"],
-            "Woody": ["Cedar", "Sandalwood", "Oud", "Incense", "Vetiver", "Oak", "Cypress", "Rosewood", "Guaicwood", "Patchouli", "Oakmoss", "Tree Moss", "Hazelnut", "Tonka Bean"],
-            "Citrus": ["Bergamot", "Bitter orange", "Citron", "Grapefruit", "Lemon", "Lemongrass", "Mandarin orange", "Pomelo", "Yuzu", "Blood Orange", "Lime", "Tangerine"],
-            "Fruit": ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Coconut", "Peach", "Plum", "Fig"],
-            "Greens": ["Basil", "Blackcurrant leaf", "Citron leaf", "Oolong", "Ginkgo", "Juniper leaf", "Mint", "Fig Leaf", "Violet Leaf", "Red Tea", "Black Tea", "Rosemary", "Thyme", "Fennel", "Sage", "Anise", "Forest Fern"],
-            "Musks": ["Amber", "Ambergris", "White musk", "Musk", "Beeswax", "Milk"],
-            "Warm": ["Honey", "Tobacco", "Frankincense", "Cinnamon", "Pepper", "Ginger", "Coriander", "Tamarind"],
-            "Synthetic": ["Ambroxan", "Ozonic note", "Airy note", "Marine note", "Salty note", "Ink", "Leather Notes", "Suede Notes"]
+            "Floral": ["Rose", "Jasmine", "Lavender", "Ylang Ylang", "Tuberose", "Iris", "Violet", "Lily-of-the-valley", "Gardenia", "Freesia", "Magnolia", "Osmanthus", "Peony", "Lilac", "Carnation", "Heliotrope", "Orange Blossom", "Neroli", "Chamomile", "Geranium", "Honeysuckle", "Mimosa", "Narcissus", "Hyacinth", "Lotus", "Water Lily", "Frangipani", "Plumeria", "Wisteria", "Begonia", "Wild Cyclamen", "Clary Sage", "Marigold", "Saffron", "Immortelle", "Cassia", "Peach Blossom", "Cherry Blossom", "Apple Blossom", "Tiare Flower"],
+            "Woody": ["Sandalwood", "Cedar", "Vetiver", "Patchouli", "Oud", "Agarwood", "Cypress", "Pine", "Fir", "Spruce", "Juniper", "Rosewood", "Guaiacwood", "Oak", "Birch", "Cashmere Wood", "Hinoki", "Teak", "Ebony", "Mahogany", "Bamboo", "Driftwood", "Tree Moss", "Oakmoss", "Virginian Cedar", "Atlas Cedar", "Texas Cedar", "Papyrus", "Clearwood", "Iso E Super"],
+            "Citrus": ["Bergamot", "Lemon", "Lime", "Orange", "Grapefruit", "Mandarin", "Tangerine", "Yuzu", "Pomelo", "Citron", "Blood Orange", "Bitter Orange", "Petitgrain", "Lemongrass", "Lemon Verbena", "Neroli", "Orange Blossom", "Kumquat", "Clementine", "Calamansi"],
+            "Fruit": ["Apple", "Peach", "Pear", "Plum", "Apricot", "Fig", "Cherry", "Strawberry", "Raspberry", "Blackberry", "Blueberry", "Blackcurrant", "Redcurrant", "Gooseberry", "Grape", "Melon", "Watermelon", "Mango", "Papaya", "Passionfruit", "Lychee", "Guava", "Pomegranate", "Persimmon", "Quince", "Coconut", "Date", "Banana", "Pineapple", "Kiwi"],
+            "Greens": ["Green Tea", "Black Tea", "White Tea", "Oolong Tea", "Mate", "Mint", "Spearmint", "Peppermint", "Basil", "Sage", "Rosemary", "Thyme", "Tarragon", "Bay Leaf", "Eucalyptus", "Galbanum", "Violet Leaf", "Fig Leaf", "Tomato Leaf", "Blackcurrant Leaf", "Geranium Leaf", "Ivy", "Fern", "Grass", "Cut Grass", "Clover", "Artemisia", "Angelica", "Celery", "Rhubarb", "Cucumber", "Green Apple"],
+            "Musks": ["White Musk", "Musk", "Amber", "Ambergris", "Cashmeran", "Galaxolide", "Muscone", "Civetone", "Musk Ketone", "Celestolide", "Habanolide", "Helvetolide", "Tonkin Musk", "Deer Musk", "Beeswax", "Honey Wax", "Milk", "Skin Musk"],
+            "Warm Spices": ["Cinnamon", "Cardamom", "Clove", "Nutmeg", "Ginger", "Black Pepper", "Pink Pepper", "Sichuan Pepper", "Allspice", "Star Anise", "Coriander", "Cumin", "Saffron", "Turmeric", "Paprika", "Chili", "Fennel", "Caraway", "Juniper Berry", "Bay Leaf", "Tamarind"],
+            "Synthetic": ["Ambroxan", "Iso E Super", "Hedione", "Calone", "Aldehyde", "Ozonic Notes", "Aquatic Notes", "Marine Notes", "Mineral Notes", "Metallic Notes", "Salty Notes", "Airy Notes", "Clean Notes", "Soapy Notes", "Powder Notes"],
+            "Gourmand": ["Vanilla", "Tonka Bean", "Chocolate", "Caramel", "Coffee", "Cocoa", "Honey", "Praline", "Almond", "Hazelnut", "Pistachio", "Chestnut", "Marzipan", "Nougat", "Toffee", "Butterscotch", "Maple Syrup", "Condensed Milk", "Whipped Cream", "Custard", "Crème Brûlée", "Cotton Candy", "Marshmallow", "Licorice"],
+            "Aquatic": ["Sea Water", "Ocean Breeze", "Seaweed", "Algae", "Sea Salt", "Driftwood", "Sand", "Mineral Water", "Rain", "Ozone", "Waterfall", "River Water"],
+            "Resinous": ["Frankincense", "Myrrh", "Benzoin", "Labdanum", "Elemi", "Copal", "Styrax", "Balsam Fir", "Peru Balsam", "Tolu Balsam", "Gum Arabic", "Pine Resin", "Amber Resin"],
+            "Boozy": ["Rum", "Whiskey", "Cognac", "Brandy", "Wine", "Champagne", "Sake", "Beer", "Absinthe", "Gin"],
+            "Earthy": ["Soil", "Wet Earth", "Peat", "Mushroom", "Truffle", "Moss", "Lichen", "Tree Bark", "Dry Wood", "Volcanic Rock", "Clay"],
+            "Animalic": ["Leather", "Suede", "Castoreum", "Civet", "Hyraceum", "Ambergris", "Musk (animalic)", "Hide", "Fur", "Horse Saddle"]
         };
-        const familyColors = { "Floral": "bg-pink-100 text-pink-800 border-pink-200", "Woody": "bg-amber-800 text-amber-100 border-amber-900", "Citrus": "bg-yellow-100 text-yellow-800 border-yellow-200", "Fruit": "bg-orange-100 text-orange-800 border-orange-200", "Greens": "bg-green-100 text-green-800 border-green-200", "Musks": "bg-purple-100 text-purple-800 border-purple-200", "Warm": "bg-amber-100 text-amber-800 border-amber-200", "Synthetic": "bg-slate-100 text-slate-800 border-slate-200" };
+
+        const familyColors = {
+            "Floral": "bg-pink-100 text-pink-800 border-pink-200",
+            "Woody": "bg-amber-800 text-amber-100 border-amber-900",
+            "Citrus": "bg-yellow-100 text-yellow-800 border-yellow-200",
+            "Fruit": "bg-orange-100 text-orange-800 border-orange-200",
+            "Greens": "bg-green-100 text-green-800 border-green-200",
+            "Musks": "bg-purple-100 text-purple-800 border-purple-200",
+            "Warm Spices": "bg-red-100 text-red-800 border-red-200",
+            "Synthetic": "bg-slate-100 text-slate-800 border-slate-200",
+            "Gourmand": "bg-yellow-50 text-yellow-900 border-yellow-300",
+            "Aquatic": "bg-blue-100 text-blue-800 border-blue-200",
+            "Resinous": "bg-amber-100 text-amber-900 border-amber-200",
+            "Boozy": "bg-purple-50 text-purple-900 border-purple-200",
+            "Earthy": "bg-stone-200 text-stone-900 border-stone-300",
+            "Animalic": "bg-gray-200 text-gray-900 border-gray-300"
+        };
+
         let currentMix = { top: [], heart: [], base: [] };
 
-        // --- GEMINI API CALLER ---
-        async function callGemini(prompt, schema = null) {
-            if (!GOOGLE_API_KEY) {
-                alert("API Key missing! Open the HTML file and add your key.");
+        // --- OPENROUTER API CALLER ---
+        async function callOpenRouter(prompt) {
+            let apiKey = OPENROUTER_API_KEY;
+            
+            // Check if placeholder wasn't replaced (local development)
+            if (apiKey.includes("%%")) {
+                alert("⚠️ API Key not configured!\n\nFor local development:\n1. Get a free API key from https://openrouter.ai/\n2. Create a .env.local file\n3. Add: VITE_OPENROUTER_API_KEY=your-key-here\n\nFor GitHub Pages:\n1. Go to repo Settings → Secrets\n2. Add secret: VITE_OPENROUTER_API_KEY");
                 return null;
             }
 
-            // UPDATED: Using 'gemini-2.5-flash' based on your available model list
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`;
+            const url = "https://openrouter.ai/api/v1/chat/completions";
             
             const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { responseMimeType: "application/json" }
+                model: "openrouter/auto",
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are a master perfumer and poetic storyteller. Always respond in valid JSON format."
+                    },
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+                response_format: { type: "json_object" }
             };
-
-            if (schema) payload.generationConfig.responseSchema = schema;
 
             try {
                 const response = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`,
+                        'HTTP-Referer': window.location.href,
+                        'X-Title': 'ScentWorld AI'
+                    },
                     body: JSON.stringify(payload)
                 });
                 
@@ -148,7 +184,9 @@
                     alert(`API Error: ${data.error?.message || response.status}`);
                     return null;
                 }
-                return JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
+                
+                const content = data.choices?.[0]?.message?.content;
+                return content ? JSON.parse(content) : null;
             } catch (error) {
                 console.error("Connection Failed:", error);
                 alert("Connection failed. Check console for details.");
@@ -156,7 +194,7 @@
             }
         }
 
-        // --- FEATURES ---
+        // --- AI FEATURES ---
         async function generateAIDream() {
             const btn = document.getElementById('btn-dream');
             const loader = document.getElementById('dream-loader');
@@ -171,9 +209,9 @@
             btn.classList.add('hidden'); loader.classList.remove('hidden'); descEl.classList.add('opacity-50');
 
             const mixString = `Top: ${currentMix.top.map(n=>n.name).join(', ')||'None'}, Heart: ${currentMix.heart.map(n=>n.name).join(', ')||'None'}, Base: ${currentMix.base.map(n=>n.name).join(', ')||'None'}`;
-            const prompt = `You are a master perfumer and poet. Based on this fragrance blend: ${mixString}. 1. Create a creative name (max 4 words). 2. Write a short, evocative memory/scene description (3-4 sentences). Return JSON: { "name": "string", "description": "string" }`;
+            const prompt = `You are a master perfumer and poet. Based on this fragrance blend: ${mixString}. Create a creative name (max 4 words) and write a short, evocative memory/scene description (3-4 sentences, vivid and sensory). Return as JSON: { "name": "string", "description": "string" }`;
 
-            const result = await callGemini(prompt);
+            const result = await callOpenRouter(prompt);
 
             loader.classList.add('hidden'); btn.classList.remove('hidden'); descEl.classList.remove('opacity-50');
             if (result) {
@@ -195,33 +233,67 @@
             btn.innerHTML = `<span class="animate-spin">⏳</span> Consulting...`; btn.disabled = true;
 
             const mixString = `Top: ${currentMix.top.map(n=>n.name).join(', ')}, Heart: ${currentMix.heart.map(n=>n.name).join(', ')}, Base: ${currentMix.base.map(n=>n.name).join(', ')}`;
-            const prompt = `You are a fragrance alchemist. Analyze this blend: ${mixString}. 1. Critique the balance. 2. Suggest ONE note to add/remove. Brief (2 sentences). Return JSON: { "critique": "string" }`;
+            const prompt = `You are a fragrance alchemist. Analyze this perfume blend: ${mixString}. Provide: 1) A brief critique on the balance and harmony (1-2 sentences), 2) ONE specific suggestion to improve it. Be concise and expert. Return as JSON: { "critique": "string" }`;
 
-            const result = await callGemini(prompt);
+            const result = await callOpenRouter(prompt);
 
             btn.innerHTML = originalBtnText; btn.disabled = false;
             if (result) { feedbackBox.classList.remove('hidden'); feedbackText.innerText = result.critique; }
         }
 
         function init() { lucide.createIcons(); renderSidebar(); }
+        
         function renderSidebar() {
-            const container = document.getElementById('notes-container'); container.innerHTML = '';
+            const container = document.getElementById('notes-container');
+            container.innerHTML = '';
             for (const [family, notes] of Object.entries(families)) {
-                const group = document.createElement('div'); group.className = 'mb-6';
-                const title = document.createElement('h3'); title.className = 'text-xs font-bold text-stone-400 uppercase tracking-wider mb-2'; title.innerText = family; group.appendChild(title);
-                const noteContainer = document.createElement('div'); noteContainer.className = 'flex flex-wrap gap-2';
+                const group = document.createElement('div');
+                group.className = 'mb-4 border border-stone-100 rounded-lg overflow-hidden';
+                
+                const header = document.createElement('div');
+                header.className = 'p-2 bg-stone-50 cursor-pointer hover:bg-stone-100 transition-colors flex justify-between items-center';
+                header.innerHTML = `<h3 class="text-xs font-bold text-stone-500 uppercase tracking-wider">${family}</h3><i data-lucide="chevron-down" class="w-4 h-4 text-stone-400 transition-transform chevron"></i>`;
+                header.onclick = () => toggleFamily(header);
+                
+                const content = document.createElement('div');
+                content.className = 'family-content bg-white';
+                
+                const noteContainer = document.createElement('div');
+                noteContainer.className = 'flex flex-wrap gap-2 p-3';
                 notes.forEach(note => {
-                    const chip = document.createElement('div'); chip.className = `note-chip px-3 py-1.5 rounded-full text-xs font-medium border shadow-sm ${familyColors[family]}`;
+                    const chip = document.createElement('div');
+                    chip.className = `note-chip px-3 py-1.5 rounded-full text-xs font-medium border shadow-sm ${familyColors[family]}`;
                     chip.draggable = true; chip.innerText = note; chip.dataset.note = note; chip.dataset.family = family;
                     chip.addEventListener('dragstart', drag); noteContainer.appendChild(chip);
                 });
-                group.appendChild(noteContainer); container.appendChild(group);
+                
+                content.appendChild(noteContainer);
+                group.appendChild(header);
+                group.appendChild(content);
+                container.appendChild(group);
+            }
+            lucide.createIcons();
+        }
+        
+        function toggleFamily(header) {
+            const content = header.nextElementSibling;
+            const chevron = header.querySelector('.chevron');
+            const isOpen = content.style.maxHeight;
+            
+            document.querySelectorAll('.family-content').forEach(c => c.style.maxHeight = null);
+            document.querySelectorAll('.chevron').forEach(ch => ch.style.transform = '');
+            
+            if (!isOpen) {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                chevron.style.transform = 'rotate(180deg)';
             }
         }
+        
         function drag(ev) { ev.dataTransfer.setData("note", ev.target.dataset.note); ev.dataTransfer.setData("family", ev.target.dataset.family); ev.target.classList.add('dragging'); }
         function allowDrop(ev) { ev.preventDefault(); const zone = ev.target.closest('.drop-zone'); if (zone) zone.classList.add('drag-over'); }
         document.addEventListener('dragend', (ev) => { document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over')); ev.target.classList.remove('dragging'); });
         document.addEventListener('dragleave', (ev) => { if (ev.target.classList.contains('drop-zone')) ev.target.classList.remove('drag-over'); });
+        
         function drop(ev, zoneName) {
             ev.preventDefault(); const zone = document.getElementById(`zone-${zoneName}`); zone.classList.remove('drag-over');
             const noteName = ev.dataTransfer.getData("note"); const familyName = ev.dataTransfer.getData("family");
@@ -232,18 +304,20 @@
             const emptyLabel = zone.querySelector('.empty-label'); if (emptyLabel) emptyLabel.style.display = 'none'; zone.appendChild(chip);
             generateStandardScene(); document.getElementById('btn-dream').classList.remove('hidden');
         }
+        
         function removeNote(zoneName, noteName, btnElement) {
             currentMix[zoneName] = currentMix[zoneName].filter(n => n.name !== noteName); btnElement.parentElement.remove();
             const zone = document.getElementById(`zone-${zoneName}`); if (currentMix[zoneName].length === 0) zone.querySelector('.empty-label').style.display = 'flex';
             generateStandardScene();
         }
+        
         function resetPyramid() {
             currentMix = { top: [], heart: [], base: [] };
             ['top', 'heart', 'base'].forEach(zone => { const el = document.getElementById(`zone-${zone}`); const span = el.querySelector('span'); el.innerHTML = ''; el.appendChild(span); span.style.display = 'flex'; });
             document.getElementById('alchemist-feedback').classList.add('hidden'); generateStandardScene();
         }
 
-        // --- ENHANCED DEFAULT SCENE GENERATOR (Combinatorial Logic) ---
+        // --- ENHANCED SCENE GENERATOR ---
         function generateStandardScene() {
             const allNotes = [...currentMix.top, ...currentMix.heart, ...currentMix.base];
             const titleEl = document.getElementById('scene-title'); const descEl = document.getElementById('scene-desc');
@@ -256,63 +330,82 @@
 
             const familyCounts = {}; 
             allNotes.forEach(n => familyCounts[n.family] = (familyCounts[n.family] || 0) + 1);
-            
-            // Sort families by count to get Dominant and Secondary
             const sortedFamilies = Object.keys(familyCounts).sort((a,b) => familyCounts[b] - familyCounts[a]);
             const primary = sortedFamilies[0];
-            const secondary = sortedFamilies[1] || primary; // Fallback to primary if only one family
+            const secondary = sortedFamilies[1] || primary;
 
-            // 1. Base Settings (Primary)
             const baseSettings = {
-                "Floral": { title: "The Secret Garden", text: "You step into a lush, overgrown garden at twilight." },
-                "Woody": { title: "The Ancient Forest", text: "You are walking through a dense forest where shadows dance on mahogany bark." },
-                "Citrus": { title: "Sunlit Terrace", text: "Bright sunlight explodes over a Mediterranean terrace, blindingly white." },
-                "Fruit": { title: "Summer Market", text: "The air is sticky and sweet in a bustling town square." },
-                "Greens": { title: "After the Rain", text: "You are standing in a meadow just after a storm, the earth wet and alive." },
-                "Musks": { title: "Velvet Chamber", text: "The room is dimly lit and intimate, filled with soft textures." },
-                "Warm": { title: "Golden Library", text: "You are wrapped in a blanket near a crackling fire in an old study." },
-                "Synthetic": { title: "Neon Gallery", text: "You are in a sleek, modern space reflecting cold, electric light." }
+                "Floral": { title: "The Secret Garden", text: "You step into an overgrown conservatory at twilight. Glass walls drip with condensation. The air is humid, thick, and heavy with the narcotic scent of night-blooming flowers." },
+                "Woody": { title: "The Ancient Library", text: "Mahogany shelves stretch into shadow. Dust motes dance in a shaft of amber light. The room smells of aged paper, dry timber, and the quiet weight of centuries." },
+                "Citrus": { title: "Amalfi Terrace", text: "Brilliant white sunlight explodes over terra cotta tiles. The Mediterranean wind carries the sharp, electric zest of freshly torn citrus rinds and sea spray." },
+                "Fruit": { title: "Summer Market", text: "A woven basket overflows with ripening fruit. The air is sticky, sweet, and buzzing with heat. Juice stains your fingers as wasps circle lazily overhead." },
+                "Greens": { title: "After the Storm", text: "You stand in a highland meadow just after rain. The earth is cold, wet, and alive. Crushed grass releases sharp, green aromas with every step." },
+                "Musks": { title: "Velvet Chamber", text: "A dimly lit room. Silk curtains pool on the floor. The atmosphere is intimate, warm, and hazy—like the scent of clean skin and soft cashmere." },
+                "Warm Spices": { title: "The Spice Bazaar", text: "Golden light filters through cloth canopies. The air burns pleasantly with cinnamon, cardamom, and distant incense smoke. Heat radiates from clay walls." },
+                "Synthetic": { title: "Neon Rain", text: "A futuristic city reflects in wet pavement. The air smells of ozone, cold metal, and electricity. Blue light hums in the mist." },
+                "Gourmand": { title: "The Patisserie", text: "Warm butter and caramelized sugar fill a tiny Parisian bakery. Golden pastries cool on wire racks. The air is rich, sweet, and impossibly comforting." },
+                "Aquatic": { title: "Coastal Dawn", text: "You wake on a deserted beach. The tide has just retreated. Salt crusts your skin. Seaweed and wet sand perfume the cold, misty air." },
+                "Resinous": { title: "Sacred Temple", text: "Frankincense smoke curls toward a vaulted ceiling. Amber resin glows in brass censers. The space feels ancient, reverent, and thick with devotion." },
+                "Boozy": { title: "The Cellar", text: "Oak barrels line stone walls. The air is cool, dark, and redolent with aged spirits—whiskey, rum, wine. A single candle flickers." },
+                "Earthy": { title: "Forest Floor", text: "You kneel on damp soil. Mushrooms push through rotting leaves. The scent is primal, organic, and grounding—life returning to earth." },
+                "Animalic": { title: "The Stable", text: "Worn leather saddles hang on hooks. Hay rustles in the loft. The air is warm, musky, and alive with the scent of hide and horse." }
             };
 
-            // 2. Atmospheric Modifiers (Secondary)
             const modifiers = {
-                "Floral": "The breeze carries a velvety romance of blooming petals.",
-                "Woody": "A deep, grounding scent of dry earth and roots anchors the scene.",
-                "Citrus": "Energy surges through the air, sharp and revitalizing.",
-                "Fruit": "A playful, mouth-watering sweetness lingers in the background.",
-                "Greens": "The scent of crushed leaves and herbal freshness cuts through the air.",
-                "Musks": "There is a whisper of warm skin and clean linens, close and personal.",
-                "Warm": "A spicy, golden aura radiates warmth, triggering deep nostalgia.",
-                "Synthetic": "An ethereal, almost metallic hum vibrates in the atmosphere."
+                "Floral": "A soft, romantic sweetness softens every edge.",
+                "Woody": "Deep, grounding shadows anchor the memory in place.",
+                "Citrus": "Bright, sparkling energy cuts through like morning light.",
+                "Fruit": "Playful, mouth-watering juiciness adds unexpected joy.",
+                "Greens": "Sharp, botanical freshness makes the air feel cold and alive.",
+                "Musks": "A hazy, dreamlike fog wraps around you like a second skin.",
+                "Warm Spices": "Glowing amber warmth radiates from the center.",
+                "Synthetic": "A strange, modern vibration hums just beneath the surface.",
+                "Gourmand": "A golden, bakery warmth makes you feel safe and nostalgic.",
+                "Aquatic": "The distant crash of waves echoes in your bones.",
+                "Resinous": "Sacred smoke adds weight and gravitas to the scene.",
+                "Boozy": "Intoxicating fumes swirl, loosening memory and time.",
+                "Earthy": "Primal, organic decay grounds you in the present.",
+                "Animalic": "Raw, musky warmth reminds you of living things."
             };
 
-            let finalTitle = baseSettings[primary].title;
-            let finalText = baseSettings[primary].text + " " + modifiers[secondary];
-
-            // 3. Specific Note Overrides (The "Secret Sauce")
-            // These check for specific note names to add unique flavor text
             const noteNames = allNotes.map(n => n.name);
-            
-            if (noteNames.includes("Ink")) finalText += " A spilled bottle of black calligraphy ink stains the desk.";
-            if (noteNames.includes("Milk") || noteNames.includes("Vanilla")) finalText += " A comforting, creamy softness smooths out the edges.";
-            if (noteNames.includes("Leather Notes") || noteNames.includes("Suede Notes")) finalText += " You sink into a well-worn leather armchair.";
-            if (noteNames.includes("Marine note") || noteNames.includes("Salty note")) finalText += " The distant sound of crashing waves echoes in your ears.";
-            if (noteNames.includes("Oud") || noteNames.includes("Incense")) finalText += " Smoke curls lazily towards the ceiling, adding a sacred weight.";
-            if (noteNames.includes("Fig") || noteNames.includes("Fig Leaf")) finalText += " The milky, green sap of crushed fruit stains your fingers.";
-            if (noteNames.includes("Yuzu") || noteNames.includes("Pomelo")) finalText += " An exotic, sparkling zest awakens your senses.";
+            let extras = [];
+            if(noteNames.includes("Oud") || noteNames.includes("Agarwood")) extras.push("Sacred smoke curls lazily upward.");
+            if(noteNames.includes("Vanilla")) extras.push("A golden, creamy sweetness soothes the soul.");
+            if(noteNames.includes("Leather") || noteNames.includes("Suede")) extras.push("You sink into a well-worn leather chair.");
+            if(noteNames.includes("Sea Water") || noteNames.includes("Sea Salt")) extras.push("The scent of brine clings to your clothes.");
+            if(noteNames.includes("Fig")) extras.push("Milky sap from crushed fruit stains your hands.");
+            if(noteNames.includes("Yuzu")) extras.push("An exotic, sparkling zest awakens your senses.");
+            if(noteNames.includes("Coffee")) extras.push("The bitter-sweet aroma of espresso lingers.");
+            if(noteNames.includes("Tobacco")) extras.push("Dry tobacco leaves rest in a leather pouch.");
 
-            // Rename title if specific combos exist
-            if (primary === "Floral" && secondary === "Woody") finalTitle = "Enchanted Woods";
-            if (primary === "Citrus" && secondary === "Synthetic") finalTitle = "Cyberpunk Soda";
-            if (primary === "Musks" && secondary === "Warm") finalTitle = "Cashmere Embrace";
+            let fTitle = baseSettings[primary].title;
+            let fText = baseSettings[primary].text + " " + modifiers[secondary];
+            if(extras.length > 0) fText += " " + extras.join(" ");
 
-            finalText += " (Click 'Dream' for a unique AI story)";
+            if(primary === "Floral" && secondary === "Woody") fTitle = "The Enchanted Woods";
+            if(primary === "Citrus" && secondary === "Synthetic") fTitle = "Cyberpunk Soda";
+            if(primary === "Musks" && secondary === "Warm Spices") fTitle = "Cashmere Embrace";
+            if(primary === "Aquatic" && secondary === "Citrus") fTitle = "Mediterranean Breeze";
 
-            titleEl.innerText = finalTitle;
-            descEl.innerText = finalText;
+            fText += " (Click 'Dream' for an AI-generated story)";
+
+            titleEl.innerText = fTitle;
+            descEl.innerText = fText;
         }
 
-        function toggleSidebar() { const sidebar = document.getElementById('sidebar'); const btn = document.getElementById('open-sidebar-btn'); if (sidebar.classList.contains('-ml-72')) { sidebar.classList.remove('-ml-72'); btn.classList.add('hidden'); } else { sidebar.classList.add('-ml-72'); btn.classList.remove('hidden'); } }
+        function toggleSidebar() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const btn = document.getElementById('open-sidebar-btn'); 
+            if (sidebar.classList.contains('-ml-72')) { 
+                sidebar.classList.remove('-ml-72'); 
+                btn.classList.add('hidden'); 
+            } else { 
+                sidebar.classList.add('-ml-72'); 
+                btn.classList.remove('hidden'); 
+            } 
+        }
+        
         init();
     </script>
 </body>

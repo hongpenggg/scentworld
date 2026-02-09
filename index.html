@@ -5,17 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ScentWorld - Fragrance Memory Painter</title>
     
-    <!-- Production Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-    
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        /* --- 1. CORE VARIABLES --- */
         :root {
             --glass-bg: rgba(255, 255, 255, 0.85);
             --glass-border: rgba(255, 255, 255, 0.6);
@@ -25,7 +19,6 @@
             --gold: #D4AF37;
         }
 
-        /* --- 2. GLOBAL STYLES --- */
         body {
             font-family: 'Lato', sans-serif;
             background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
@@ -42,7 +35,6 @@
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background-color: rgba(156, 163, 175, 0.5); border-radius: 20px; }
 
-        /* --- 3. GLASSMORPHISM --- */
         .glass-panel {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
@@ -52,7 +44,6 @@
         }
         .squircle { border-radius: 24px; }
 
-        /* --- 4. PARALLELOGRAM NAV --- */
         .nav-link {
             position: relative;
             padding: 4px 8px;
@@ -67,23 +58,22 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 40%; /* Half highlight */
+            height: 40%;
             background-color: rgba(212, 175, 55, 0.3);
             transform: skewX(-20deg);
             z-index: -1;
             transition: height 0.3s ease, background-color 0.3s ease;
         }
         .nav-link:hover .nav-link-bg {
-            height: 100%; /* Expands upwards */
+            height: 100%;
             background-color: rgba(212, 175, 55, 0.5);
         }
 
-        /* --- 5. SIDEBAR & TOGGLE ANIMATION --- */
         #sidebar {
             position: fixed;
             top: 100px;
             left: 20px;
-            bottom: 100px; /* Leave space for footer scrolling */
+            bottom: 100px;
             width: var(--sidebar-width);
             z-index: 40;
             transform: translateX(0);
@@ -97,7 +87,6 @@
             pointer-events: none;
         }
 
-        /* Floating Toggle Button */
         #sidebar-toggle {
             position: fixed;
             top: 100px;
@@ -112,12 +101,11 @@
             cursor: pointer;
         }
         
-        /* Button Position Logic */
         #sidebar-toggle.open-pos {
-            left: calc(20px + var(--sidebar-width) + 15px); /* Right of sidebar */
+            left: calc(20px + var(--sidebar-width) + 15px);
         }
         #sidebar-toggle.closed-pos {
-            left: 30px; /* Top left under header */
+            left: 30px;
         }
 
         #sidebar-toggle:hover {
@@ -125,33 +113,30 @@
             background-color: rgba(255,255,255, 0.9);
         }
 
-        /* --- 6. LAYOUT SHIFT ENGINE --- */
         #main-container {
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             width: 100%;
-            margin-top: 100px; /* Header space */
+            margin-top: 100px;
             padding-bottom: 40px;
         }
 
-        /* State: Sidebar Open */
         #main-container.with-sidebar {
-            padding-left: calc(var(--sidebar-width) + 60px); /* Push content right */
+            padding-left: calc(var(--sidebar-width) + 60px);
             padding-right: 40px;
         }
         #main-container.with-sidebar .layout-wrapper {
-            flex-direction: column; /* Stack Pyramid & Memory */
+            flex-direction: column;
             align-items: center;
         }
         #main-container.with-sidebar .pyramid-section { width: 100%; max-width: 600px; }
         #main-container.with-sidebar .memory-section { width: 100%; max-width: 600px; margin-top: 2rem; }
 
-        /* State: Sidebar Closed */
         #main-container.no-sidebar {
-            padding-left: 40px; /* Centered-ish */
+            padding-left: 40px;
             padding-right: 40px;
         }
         #main-container.no-sidebar .layout-wrapper {
-            flex-direction: row; /* Side by side */
+            flex-direction: row;
             align-items: flex-start;
             justify-content: center;
             gap: 4rem;
@@ -160,7 +145,6 @@
         #main-container.no-sidebar .pyramid-section { width: 45%; min-width: 320px; }
         #main-container.no-sidebar .memory-section { width: 45%; min-width: 320px; margin-top: 0; }
 
-        /* --- 7. CLICK-TO-ASSIGN MODE --- */
         body.mode-select #selection-overlay {
             opacity: 1;
             pointer-events: auto;
@@ -189,10 +173,8 @@
             100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
         }
 
-        /* --- 8. COMPONENTS --- */
-        /* Note Pills */
         .note-chip {
-            font-size: 10px; /* Reduced size */
+            font-size: 10px;
             padding: 3px 8px;
             border-radius: 999px;
             font-weight: 600;
@@ -203,10 +185,9 @@
         }
         .note-chip:hover {
             transform: translateY(-1px);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.1); /* Soft shadow */
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
         }
         
-        /* Drop Zones */
         .drop-zone {
             transition: all 0.3s ease;
             position: relative;
@@ -217,7 +198,6 @@
             transform: scale(1.02);
         }
 
-        /* Splash Screen */
         #splash-screen {
             position: fixed; inset: 0; background: #fdfbfb; z-index: 100;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -225,7 +205,6 @@
         }
         .splash-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
-        /* Music Button */
         #music-btn {
             position: fixed; bottom: 24px; right: 24px; z-index: 50;
             width: 48px; height: 48px; border-radius: 50%;
@@ -238,21 +217,20 @@
             transform: scale(1.05);
         }
 
+        .family-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+
     </style>
 </head>
 <body>
 
-    <!-- AUDIO -->
     <audio id="bg-music" loop>
         <source src="assets/piano.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- OVERLAY (For Click Mode) -->
     <div id="selection-overlay" class="fixed inset-0 bg-black/10 opacity-0 pointer-events-none z-50 transition-all duration-300" onclick="cancelSelection()">
         <div class="absolute top-10 left-0 right-0 text-center text-white text-xl font-serif italic drop-shadow-md">Select a layer to place the note...</div>
     </div>
 
-    <!-- SPLASH SCREEN -->
     <div id="splash-screen">
         <h1 class="text-5xl md:text-7xl font-serif italic text-gray-800 mb-4 tracking-wide">ScentWorld</h1>
         <p class="text-gray-400 mb-10 font-light tracking-[0.3em] uppercase text-xs">The Olfactory Playground</p>
@@ -261,7 +239,6 @@
         </button>
     </div>
 
-    <!-- HEADER -->
     <header class="fixed top-0 left-0 right-0 h-20 glass-panel z-40 flex justify-between items-center px-6 md:px-12 border-b-0 rounded-b-2xl mx-4 mt-2">
         <div class="text-2xl font-serif italic font-bold text-gray-800">ScentWorld</div>
         <nav class="flex gap-8">
@@ -276,40 +253,31 @@
         </nav>
     </header>
 
-    <!-- SIDEBAR TOGGLE BUTTON -->
     <div id="sidebar-toggle" class="glass-panel open-pos" onclick="toggleSidebar()">
         <i data-lucide="panel-left-close" class="text-gray-600 transition-transform duration-300"></i>
     </div>
 
-    <!-- SIDEBAR -->
     <aside id="sidebar" class="glass-panel squircle flex flex-col overflow-hidden">
         <div class="p-4 border-b border-gray-100 bg-white/40">
             <h2 class="font-bold text-gray-500 tracking-widest uppercase text-[10px]">Fragrance Library</h2>
         </div>
-        <div class="flex-1 overflow-y-auto p-3 custom-scroll space-y-2" id="notes-container">
-            <!-- JS Injects Notes Here -->
-        </div>
+        <div class="flex-1 overflow-y-auto p-3 custom-scroll space-y-2" id="notes-container"></div>
         <div class="p-3 bg-white/40 text-[9px] text-gray-400 border-t border-gray-100 text-center uppercase tracking-widest">
             Select or Drag
         </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
     <div id="main-container" class="with-sidebar">
         
-        <!-- Intro Text -->
         <div class="text-center mb-8 fade-in">
             <h1 class="text-4xl md:text-5xl text-gray-800 mb-2 serif italic">Compose Your Memory</h1>
             <p class="text-gray-500 font-light text-xs uppercase tracking-widest">Layer notes to reveal the scene</p>
         </div>
 
-        <!-- Layout Wrapper (Flexbox that shifts direction) -->
         <div class="layout-wrapper flex w-full max-w-7xl mx-auto transition-all duration-500">
 
-            <!-- PYRAMID SECTION -->
             <div class="pyramid-section flex flex-col items-center gap-3 transition-all duration-500">
                 
-                <!-- Top -->
                 <div class="w-full flex flex-col items-center">
                     <div class="text-[9px] uppercase tracking-widest text-gray-400 mb-1">Top Notes</div>
                     <div class="w-2/3 min-h-[70px] glass-panel squircle p-2 flex flex-wrap justify-center gap-2 items-center drop-zone border-2 border-dashed border-gray-300 transition-all" 
@@ -318,7 +286,6 @@
                     </div>
                 </div>
 
-                <!-- Heart -->
                 <div class="w-full flex flex-col items-center">
                     <div class="text-[9px] uppercase tracking-widest text-pink-300 mb-1">Heart Notes</div>
                     <div class="w-5/6 min-h-[80px] glass-panel squircle p-2 flex flex-wrap justify-center gap-2 items-center drop-zone border-2 border-dashed border-gray-300 transition-all" 
@@ -327,7 +294,6 @@
                     </div>
                 </div>
 
-                <!-- Base -->
                 <div class="w-full flex flex-col items-center">
                     <div class="text-[9px] uppercase tracking-widest text-amber-600 mb-1">Base Notes</div>
                     <div class="w-full min-h-[90px] glass-panel squircle p-2 flex flex-wrap justify-center gap-2 items-center drop-zone border-2 border-dashed border-gray-300 transition-all" 
@@ -341,7 +307,6 @@
                 </button>
             </div>
 
-            <!-- MEMORY SECTION -->
             <div class="memory-section transition-all duration-500">
                 <div class="relative w-full aspect-[16/9] md:aspect-[21/9] bg-gray-900 text-gray-100 flex items-center justify-center p-8 md:p-12 shadow-2xl squircle overflow-hidden group">
                     <div id="scene-bg" class="absolute inset-0 opacity-30 bg-gradient-to-br from-gray-800 via-black to-gray-900 transition-all duration-1000"></div>
@@ -358,7 +323,6 @@
         </div>
     </div>
 
-    <!-- FOOTER (Static at bottom) -->
     <footer class="bg-white border-t border-gray-200 w-full py-12 mt-auto z-10">
         <div class="max-w-7xl mx-auto px-6 md:px-12">
             <h4 class="font-serif italic text-2xl text-gray-800 mb-2">ScentWorld</h4>
@@ -367,7 +331,6 @@
         </div>
     </footer>
 
-    <!-- MUSIC BUTTON -->
     <button onclick="toggleMusic()" id="music-btn" class="glass-panel text-gray-600">
         <div id="music-icon-wrapper" class="relative">
             <i data-lucide="music" width="20"></i>
@@ -376,16 +339,21 @@
     </button>
 
     <script>
-        // --- DATA ---
         const families = {
-            "Floral": ["Lavender", "Clary sage", "Geranium", "Saffron", "Lotus", "Lily-of-the-valley", "Marigold", "Begonia", "Jasmine", "Wild cyclamen", "Ylang Ylang", "Rose", "Heliotrope", "Tuberose", "Osmanthus", "Magnolia", "Immortelle", "Violet", "Iris", "Water Lily", "Freesia", "Vanilla", "Gardenia", "Frangipani", "Honeysuckle", "Mimosa"],
-            "Woody": ["Cedar", "Sandalwood", "Oud", "Incense", "Vetiver", "Oak", "Cypress", "Rosewood", "Guaicwood", "Patchouli", "Oakmoss", "Tree Moss", "Hazelnut", "Tonka Bean"],
-            "Citrus": ["Bergamot", "Bitter orange", "Citron", "Grapefruit", "Lemon", "Lemongrass", "Mandarin orange", "Pomelo", "Yuzu", "Blood Orange", "Lime", "Tangerine"],
-            "Fruit": ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Coconut", "Peach", "Plum", "Fig"],
-            "Greens": ["Basil", "Blackcurrant leaf", "Citron leaf", "Oolong", "Ginkgo", "Juniper leaf", "Mint", "Fig Leaf", "Violet Leaf", "Red Tea", "Black Tea", "Rosemary", "Thyme", "Fennel", "Sage", "Anise", "Forest Fern"],
-            "Musks": ["Amber", "Ambergris", "White musk", "Musk", "Beeswax", "Milk"],
-            "Warm": ["Honey", "Tobacco", "Frankincense", "Cinnamon", "Pepper", "Ginger", "Coriander", "Tamarind"],
-            "Synthetic": ["Ambroxan", "Ozonic note", "Airy note", "Marine note", "Salty note", "Ink", "Leather Notes", "Suede Notes"]
+            "Floral": ["Rose", "Jasmine", "Lavender", "Ylang Ylang", "Tuberose", "Iris", "Violet", "Lily-of-the-valley", "Gardenia", "Freesia", "Magnolia", "Osmanthus", "Peony", "Lilac", "Carnation", "Heliotrope", "Orange Blossom", "Neroli", "Chamomile", "Geranium", "Honeysuckle", "Mimosa", "Narcissus", "Hyacinth", "Lotus", "Water Lily", "Frangipani", "Plumeria", "Wisteria", "Begonia", "Wild Cyclamen", "Clary Sage", "Marigold", "Saffron", "Immortelle", "Cassia", "Peach Blossom", "Cherry Blossom", "Apple Blossom", "Tiare Flower"],
+            "Woody": ["Sandalwood", "Cedar", "Vetiver", "Patchouli", "Oud", "Agarwood", "Cypress", "Pine", "Fir", "Spruce", "Juniper", "Rosewood", "Guaiacwood", "Oak", "Birch", "Cashmere Wood", "Hinoki", "Teak", "Ebony", "Mahogany", "Bamboo", "Driftwood", "Tree Moss", "Oakmoss", "Virginian Cedar", "Atlas Cedar", "Texas Cedar", "Papyrus", "Clearwood", "Iso E Super"],
+            "Citrus": ["Bergamot", "Lemon", "Lime", "Orange", "Grapefruit", "Mandarin", "Tangerine", "Yuzu", "Pomelo", "Citron", "Blood Orange", "Bitter Orange", "Petitgrain", "Lemongrass", "Lemon Verbena", "Neroli", "Orange Blossom", "Kumquat", "Clementine", "Calamansi"],
+            "Fruit": ["Apple", "Peach", "Pear", "Plum", "Apricot", "Fig", "Cherry", "Strawberry", "Raspberry", "Blackberry", "Blueberry", "Blackcurrant", "Redcurrant", "Gooseberry", "Grape", "Melon", "Watermelon", "Mango", "Papaya", "Passionfruit", "Lychee", "Guava", "Pomegranate", "Persimmon", "Quince", "Coconut", "Date", "Banana", "Pineapple", "Kiwi"],
+            "Greens": ["Green Tea", "Black Tea", "White Tea", "Oolong Tea", "Mate", "Mint", "Spearmint", "Peppermint", "Basil", "Sage", "Rosemary", "Thyme", "Tarragon", "Bay Leaf", "Eucalyptus", "Galbanum", "Violet Leaf", "Fig Leaf", "Tomato Leaf", "Blackcurrant Leaf", "Geranium Leaf", "Ivy", "Fern", "Grass", "Cut Grass", "Clover", "Artemisia", "Angelica", "Celery", "Rhubarb", "Cucumber", "Green Apple"],
+            "Musks": ["White Musk", "Musk", "Amber", "Ambergris", "Cashmeran", "Galaxolide", "Muscone", "Civetone", "Musk Ketone", "Celestolide", "Habanolide", "Helvetolide", "Tonkin Musk", "Deer Musk", "Beeswax", "Honey Wax", "Milk", "Skin Musk"],
+            "Warm Spices": ["Cinnamon", "Cardamom", "Clove", "Nutmeg", "Ginger", "Black Pepper", "Pink Pepper", "Sichuan Pepper", "Allspice", "Star Anise", "Coriander", "Cumin", "Saffron", "Turmeric", "Paprika", "Chili", "Fennel", "Caraway", "Juniper Berry", "Bay Leaf", "Tamarind"],
+            "Synthetic": ["Ambroxan", "Iso E Super", "Hedione", "Calone", "Aldehyde", "Ozonic Notes", "Aquatic Notes", "Marine Notes", "Mineral Notes", "Metallic Notes", "Salty Notes", "Airy Notes", "Clean Notes", "Soapy Notes", "Powder Notes"],
+            "Gourmand": ["Vanilla", "Tonka Bean", "Chocolate", "Caramel", "Coffee", "Cocoa", "Honey", "Praline", "Almond", "Hazelnut", "Pistachio", "Chestnut", "Marzipan", "Nougat", "Toffee", "Butterscotch", "Maple Syrup", "Condensed Milk", "Whipped Cream", "Custard", "Crème Brûlée", "Cotton Candy", "Marshmallow", "Licorice"],
+            "Aquatic": ["Sea Water", "Ocean Breeze", "Seaweed", "Algae", "Sea Salt", "Driftwood", "Sand", "Mineral Water", "Rain", "Ozone", "Waterfall", "River Water"],
+            "Resinous": ["Frankincense", "Myrrh", "Benzoin", "Labdanum", "Elemi", "Copal", "Styrax", "Balsam Fir", "Peru Balsam", "Tolu Balsam", "Gum Arabic", "Pine Resin", "Amber Resin"],
+            "Boozy": ["Rum", "Whiskey", "Cognac", "Brandy", "Wine", "Champagne", "Sake", "Beer", "Absinthe", "Gin"],
+            "Earthy": ["Soil", "Wet Earth", "Peat", "Mushroom", "Truffle", "Moss", "Lichen", "Tree Bark", "Dry Wood", "Volcanic Rock", "Clay"],
+            "Animalic": ["Leather", "Suede", "Castoreum", "Civet", "Hyraceum", "Ambergris", "Musk (animalic)", "Hide", "Fur", "Horse Saddle"]
         };
 
         const familyColors = {
@@ -395,15 +363,20 @@
             "Fruit": "bg-orange-100 text-orange-900 border-orange-200",
             "Greens": "bg-green-100 text-green-900 border-green-200",
             "Musks": "bg-purple-100 text-purple-900 border-purple-200",
-            "Warm": "bg-red-100 text-red-900 border-red-200",
-            "Synthetic": "bg-blue-100 text-blue-900 border-blue-200"
+            "Warm Spices": "bg-red-100 text-red-900 border-red-200",
+            "Synthetic": "bg-blue-100 text-blue-900 border-blue-200",
+            "Gourmand": "bg-yellow-50 text-yellow-900 border-yellow-300",
+            "Aquatic": "bg-blue-100 text-blue-800 border-blue-200",
+            "Resinous": "bg-amber-100 text-amber-900 border-amber-200",
+            "Boozy": "bg-purple-50 text-purple-900 border-purple-200",
+            "Earthy": "bg-stone-200 text-stone-900 border-stone-300",
+            "Animalic": "bg-gray-200 text-gray-900 border-gray-300"
         };
 
         let currentMix = { top: [], heart: [], base: [] };
         let isMusicPlaying = true;
-        let selectedNote = null; // { name, family }
+        let selectedNote = null;
 
-        // --- INIT ---
         function init() {
             lucide.createIcons();
             renderSidebar();
@@ -417,7 +390,6 @@
             audio.play().catch(() => { isMusicPlaying = false; updateMusicIcon(); });
         }
 
-        // --- SIDEBAR LOGIC ---
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const toggleBtn = document.getElementById('sidebar-toggle');
@@ -425,7 +397,6 @@
             const icon = toggleBtn.querySelector('i');
 
             if (sidebar.classList.contains('closed')) {
-                // OPENING
                 sidebar.classList.remove('closed');
                 toggleBtn.classList.remove('closed-pos');
                 toggleBtn.classList.add('open-pos');
@@ -433,7 +404,6 @@
                 container.classList.add('with-sidebar');
                 icon.setAttribute('data-lucide', 'panel-left-close');
             } else {
-                // CLOSING
                 sidebar.classList.add('closed');
                 toggleBtn.classList.remove('open-pos');
                 toggleBtn.classList.add('closed-pos');
@@ -447,17 +417,14 @@
         function toggleFamily(header) {
             const content = header.nextElementSibling;
             const chevron = header.querySelector('.chevron');
-            if (content.style.maxHeight) {
-                content.style.maxHeight = null;
-                chevron.style.transform = 'rotate(0deg)';
-                header.classList.remove('bg-white/50');
-            } else {
-                // Close others
-                document.querySelectorAll('.family-content').forEach(el => el.style.maxHeight = null);
-                document.querySelectorAll('.chevron').forEach(el => el.style.transform = 'rotate(0deg)');
-                document.querySelectorAll('.family-header').forEach(el => el.classList.remove('bg-white/50'));
-                
-                content.style.maxHeight = content.scrollHeight + "px";
+            const isOpen = content.style.maxHeight;
+            
+            document.querySelectorAll('.family-content').forEach(c => c.style.maxHeight = null);
+            document.querySelectorAll('.chevron').forEach(ch => ch.style.transform = '');
+            document.querySelectorAll('.family-header').forEach(h => h.classList.remove('bg-white/50'));
+            
+            if (!isOpen) {
+                content.style.maxHeight = content.scrollHeight + 'px';
                 chevron.style.transform = 'rotate(180deg)';
                 header.classList.add('bg-white/50');
             }
@@ -499,9 +466,9 @@
                 item.appendChild(content);
                 container.appendChild(item);
             }
+            lucide.createIcons();
         }
 
-        // --- INTERACTION ---
         function drag(ev) {
             ev.dataTransfer.setData("note", ev.target.dataset.note);
             ev.dataTransfer.setData("family", ev.target.dataset.family);
@@ -522,7 +489,6 @@
             addNote(zoneName, note, family);
         }
 
-        // Click Logic
         function startSelection(e, note, family) {
             e.stopPropagation();
             selectedNote = { note, family };
@@ -538,7 +504,6 @@
             document.body.classList.remove('mode-select');
         }
 
-        // Core Logic
         function addNote(zoneName, noteName, familyName) {
             if (!noteName || currentMix[zoneName].find(n => n.name === noteName)) return;
             currentMix[zoneName].push({ name: noteName, family: familyName });
@@ -571,7 +536,7 @@
             calculateScene();
         }
 
-        // --- SCENE GENERATOR ---
+        // --- ENHANCED MEMORY ENGINE ---
         function calculateScene() {
             const allNotes = [...currentMix.top, ...currentMix.heart, ...currentMix.base];
             const titleEl = document.getElementById('scene-title');
@@ -591,67 +556,138 @@
             const p = sorted[0], s = sorted[1] || p;
 
             const scenes = {
-                "Floral": { title: "The Conservatory", text: "You are standing in a glass conservatory at twilight. The air is thick, humid, and heavy with the velvet scent of blooming petals.", color: "from-pink-900 via-purple-900 to-black" },
-                "Woody": { title: "Ancient Library", text: "The room is silent, lined with mahogany shelves. Dust motes dance in a shaft of light, smelling of old paper and dry timber.", color: "from-amber-900 via-yellow-900 to-black" },
-                "Citrus": { title: "Amalfi Morning", text: "Brilliant white sunlight hits the terrace. The sea breeze carries the sharp, zesty spray of broken rinds and salt.", color: "from-yellow-600 via-orange-800 to-black" },
-                "Fruit": { title: "Summer Harvest", text: "A woven basket overflows with ripening skins. The air is sticky, sweet, and buzzing with the lazy heat of July.", color: "from-orange-800 via-red-900 to-black" },
-                "Greens": { title: "Highland Mist", text: "The storm has just passed. The ground is wet, cold, and crushed underfoot, releasing the sharp scent of broken stems.", color: "from-green-900 via-teal-900 to-black" },
-                "Musks": { title: "Skin & Silk", text: "An unmade bed in a dim room. The atmosphere is intimate, quiet, and warm, smelling of clean linens and sleep.", color: "from-purple-900 via-gray-900 to-black" },
-                "Warm": { title: "The Spice Market", text: "Golden light filters through dust. The air burns pleasantly with dry heat, ground spices, and distant smoke.", color: "from-red-900 via-orange-900 to-black" },
-                "Synthetic": { title: "Neon Rain", text: "A futuristic city reflects in a puddle. The air smells of ozone, cold glass, and electricity humming through wet pavement.", color: "from-blue-900 via-indigo-900 to-black" }
+                "Floral": { 
+                    title: "The Conservatory", 
+                    text: "You step into a glass conservatory at twilight. Humidity clings to the air like silk. Night-blooming flowers release their narcotic perfume in waves, thick and intoxicating. Petals bruise beneath your fingertips, staining them with fragrant oils.", 
+                    color: "from-pink-900 via-purple-900 to-black" 
+                },
+                "Woody": { 
+                    title: "Ancient Library", 
+                    text: "Mahogany shelves stretch into shadow. Dust motes dance in a single shaft of amber light. The room smells of aged paper, dry timber, and centuries of quiet contemplation. You run your hand along worn spines, feeling the weight of forgotten stories.", 
+                    color: "from-amber-900 via-yellow-900 to-black" 
+                },
+                "Citrus": { 
+                    title: "Amalfi Morning", 
+                    text: "Brilliant white sunlight explodes over terra cotta tiles. The Mediterranean wind carries the sharp, electric scent of freshly torn citrus rinds and sea spray. Everything sparkles—the light, the air, the salt on your skin. Energy hums in every breath.", 
+                    color: "from-yellow-600 via-orange-800 to-black" 
+                },
+                "Fruit": { 
+                    title: "Summer Harvest", 
+                    text: "A woven basket overflows with ripening fruit. The air is thick, sticky, and buzzing with lazy heat. Juice stains your fingers. Wasps circle overhead. The scent is almost too sweet, like childhood condensed into a single, perfect afternoon.", 
+                    color: "from-orange-800 via-red-900 to-black" 
+                },
+                "Greens": { 
+                    title: "Highland Storm", 
+                    text: "You stand in a meadow just after rain. The earth is cold, wet, and alive. Crushed grass releases sharp, green aromas with every step. The wind cuts through you, carrying the scent of distant pines and wild herbs growing between rocks.", 
+                    color: "from-green-900 via-teal-900 to-black" 
+                },
+                "Musks": { 
+                    title: "Velvet Reverie", 
+                    text: "A dimly lit room. Silk curtains pool on the floor. The atmosphere is intimate, warm, and hazy—like the scent of clean skin, soft cashmere, and sleep. You sink into something formless and comforting, losing track of time.", 
+                    color: "from-purple-900 via-gray-900 to-black" 
+                },
+                "Warm Spices": { 
+                    title: "The Spice Bazaar", 
+                    text: "Golden light filters through cloth canopies. The air burns pleasantly with cinnamon, cardamom, and distant incense smoke. Clay walls radiate heat. Merchants speak in low voices. You taste the warmth on your tongue before you even breathe it in.", 
+                    color: "from-red-900 via-orange-900 to-black" 
+                },
+                "Synthetic": { 
+                    title: "Neon Rain", 
+                    text: "A futuristic city reflects in wet pavement. The air smells of ozone, cold metal, and electricity. Blue light hums in the mist. Everything feels clean, sharp, and almost alien—like standing inside a machine that dreams.", 
+                    color: "from-blue-900 via-indigo-900 to-black" 
+                },
+                "Gourmand": { 
+                    title: "The Patisserie", 
+                    text: "Warm butter and caramelized sugar fill a tiny Parisian bakery. Golden pastries cool on wire racks. The air is rich, sweet, and impossibly comforting—like being wrapped in a blanket made of childhood memories and Sunday mornings.", 
+                    color: "from-yellow-900 via-orange-900 to-black" 
+                },
+                "Aquatic": { 
+                    title: "Coastal Dawn", 
+                    text: "You wake on a deserted beach. The tide has just retreated, leaving behind wet sand and scattered shells. Salt crusts your skin. Seaweed and mineral-rich water perfume the cold, misty air. The world feels newborn and ancient at once.", 
+                    color: "from-blue-900 via-cyan-900 to-black" 
+                },
+                "Resinous": { 
+                    title: "Sacred Temple", 
+                    text: "Frankincense smoke curls toward a vaulted ceiling. Amber resin glows in brass censers. The space feels ancient, reverent, and thick with devotion. Stone walls hold the prayers of centuries. Time moves differently here.", 
+                    color: "from-amber-900 via-orange-900 to-black" 
+                },
+                "Boozy": { 
+                    title: "The Cellar", 
+                    text: "Oak barrels line damp stone walls. The air is cool, dark, and redolent with aged spirits—whiskey, rum, wine. A single candle flickers. The scent is intoxicating, loosening memory and time until both blur into golden warmth.", 
+                    color: "from-purple-900 via-red-900 to-black" 
+                },
+                "Earthy": { 
+                    title: "Forest Floor", 
+                    text: "You kneel on damp soil. Mushrooms push through rotting leaves. The scent is primal, organic, and grounding—life returning to earth, death feeding new growth. Your hands sink into soft moss. You feel rooted, ancient, alive.", 
+                    color: "from-green-900 via-gray-900 to-black" 
+                },
+                "Animalic": { 
+                    title: "The Stable", 
+                    text: "Worn leather saddles hang on hooks. Hay rustles in the loft above. The air is warm, musky, and alive with the scent of hide, horse, and hard work. It smells raw, honest, and deeply human—like sweat and effort and survival.", 
+                    color: "from-gray-900 via-stone-900 to-black" 
+                }
             };
 
             const atmos = {
-                "Floral": "A soft, romantic sweetness softens the edges.",
-                "Woody": "A deep, grounding shadow anchors the memory.",
-                "Citrus": "A bright, energetic light cuts through the dark.",
-                "Fruit": "A playful, mouth-watering juiciness adds joy.",
-                "Greens": "A sharp, botanical freshness makes the air cold.",
-                "Musks": "A hazy, dreamlike fog wraps around you.",
-                "Warm": "A glowing, amber warmth radiates from the center.",
-                "Synthetic": "A strange, modern vibration hums nearby."
+                "Floral": "A soft, romantic sweetness softens every sharp edge, wrapping you in velvet.",
+                "Woody": "Deep, grounding shadows anchor the memory, pulling you down into stillness.",
+                "Citrus": "Bright, sparkling energy cuts through like morning light on broken glass.",
+                "Fruit": "Playful, mouth-watering juiciness adds unexpected joy, like laughter in the rain.",
+                "Greens": "Sharp, botanical freshness makes the air feel cold, alive, and impossibly clean.",
+                "Musks": "A hazy, dreamlike fog wraps around you like a second skin, warm and familiar.",
+                "Warm Spices": "Glowing amber warmth radiates from the center, like a hearth in winter.",
+                "Synthetic": "A strange, modern vibration hums just beneath the surface, electric and alien.",
+                "Gourmand": "A golden, bakery warmth makes you feel safe, nostalgic, and impossibly loved.",
+                "Aquatic": "The distant crash of waves echoes in your bones, pulling you toward the horizon.",
+                "Resinous": "Sacred smoke adds weight and gravitas, turning the mundane into ritual.",
+                "Boozy": "Intoxicating fumes swirl around you, loosening memory and loosening time.",
+                "Earthy": "Primal, organic decay grounds you in the present, undeniable and real.",
+                "Animalic": "Raw, musky warmth reminds you of living things—breathing, sweating, surviving."
             };
 
             const names = allNotes.map(n => n.name);
             let ex = [];
-            if(names.includes("Ink")) ex.push("A spilled bottle of black ink stains the wood.");
-            if(names.includes("Milk")) ex.push("There is a nostalgic scent of warm milk.");
-            if(names.includes("Leather Notes") || names.includes("Suede Notes")) ex.push("You are wearing a worn leather jacket.");
-            if(names.includes("Oud")) ex.push("Sacred smoke curls towards the ceiling.");
-            if(names.includes("Marine note") || names.includes("Salty note")) ex.push("The distant crash of waves echoes.");
-            if(names.includes("Fig")) ex.push("Milky sap stains your fingers.");
-            if(names.includes("Vanilla")) ex.push("A golden, bakery warmth makes you feel safe.");
+            if(names.includes("Oud") || names.includes("Agarwood")) ex.push("Sacred smoke curls lazily upward, carrying prayers you never spoke.");
+            if(names.includes("Vanilla")) ex.push("A golden, creamy sweetness soothes your soul like a lullaby.");
+            if(names.includes("Leather") || names.includes("Suede")) ex.push("You sink into a well-worn leather chair, feeling its history.");
+            if(names.includes("Sea Water") || names.includes("Sea Salt")) ex.push("The scent of brine clings to your clothes, your hair, your memory.");
+            if(names.includes("Fig")) ex.push("Milky sap from crushed fruit stains your hands, sticky and sweet.");
+            if(names.includes("Yuzu")) ex.push("An exotic, sparkling zest awakens senses you forgot you had.");
+            if(names.includes("Coffee")) ex.push("The bitter-sweet aroma of espresso lingers, sharp and clarifying.");
+            if(names.includes("Tobacco")) ex.push("Dry tobacco leaves rest in a leather pouch, earthy and contemplative.");
+            if(names.includes("Iris")) ex.push("A powdery, aristocratic elegance lifts the scene into something refined.");
+            if(names.includes("Patchouli")) ex.push("Dark, earthy patchouli roots you to the ground like ancient trees.");
+            if(names.includes("Honey")) ex.push("Golden honey drips slowly, catching the light, impossibly rich.");
+            if(names.includes("Incense")) ex.push("Coils of incense smoke spiral upward, marking time in fragrant rings.");
 
             let fTitle = scenes[p].title;
             let fText = scenes[p].text + " " + atmos[s];
-            if(ex.length > 0) fText += " " + ex.join(" ");
+            if(ex.length > 0) fText += " " + ex.slice(0, 2).join(" ");
 
-            if(p === "Floral" && s === "Woody") fTitle = "The Enchanted Forest";
-            if(p === "Citrus" && s === "Synthetic") fTitle = "Cyber-Soda";
-            if(p === "Musks" && s === "Warm") fTitle = "Cashmere Sweater";
+            if(p === "Floral" && s === "Woody") fTitle = "The Enchanted Woods";
+            if(p === "Citrus" && s === "Synthetic") fTitle = "Cyberpunk Soda";
+            if(p === "Musks" && s === "Warm Spices") fTitle = "Cashmere Embrace";
             if(p === "Greens" && s === "Floral") fTitle = "Monet's Garden";
+            if(p === "Aquatic" && s === "Citrus") fTitle = "Mediterranean Breeze";
+            if(p === "Woody" && s === "Resinous") fTitle = "Cathedral of Trees";
+            if(p === "Gourmand" && s === "Warm Spices") fTitle = "Chai & Nostalgia";
 
             titleEl.innerText = fTitle;
             descEl.innerText = fText;
             bgEl.className = `absolute inset-0 opacity-40 bg-gradient-to-br ${scenes[p].color} transition-all duration-1000`;
         }
 
-        // --- MUSIC ---
         function toggleMusic() {
             const audio = document.getElementById('bg-music');
             const strike = document.getElementById('music-strike');
             if (isMusicPlaying) {
                 audio.pause();
                 isMusicPlaying = false;
-                strike.classList.add('hidden'); // Hidden line = Music ON button (per your req: "button with only music note") wait..
-                // Re-reading req: "default state music playing, button with music note and line across (off button). If music off, button will change to 'on music' button, which is the off button but without the line across."
-                // OK. Playing = Line Shown (click to stop). Stopped = Line Hidden (click to play).
-                // My logic above was inverted. Let's fix.
-                strike.classList.add('hidden'); // Stopped -> Show "Play" icon (No line)
+                strike.classList.add('hidden');
             } else {
                 audio.play();
                 isMusicPlaying = true;
-                strike.classList.remove('hidden'); // Playing -> Show "Stop" icon (Line)
+                strike.classList.remove('hidden');
             }
         }
         

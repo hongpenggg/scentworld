@@ -11,32 +11,103 @@
 
         body { font-family: 'Inter', sans-serif; background-color: #f8f5f2; }
         h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
+        
         .sidebar-scroll::-webkit-scrollbar { width: 6px; }
         .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
         .sidebar-scroll::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 20px; }
+        
         .note-chip { cursor: grab; transition: all 0.2s ease; user-select: none; }
         .note-chip:active { cursor: grabbing; transform: scale(0.95); }
         .note-chip.dragging { opacity: 0.5; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         .note-chip.hidden { display: none; }
         .family-group.hidden { display: none; }
+        
         .squircle-container { clip-path: url(#squircleClip); border-radius: 24px; }
         .drop-zone { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .drop-zone.drag-over { background-color: #f3f4f6; border-color: #9ca3af; transform: scale(1.02); }
+        
+        /* Click-to-assign mode styles */
+        body.mode-select #selection-overlay {
+            opacity: 1;
+            pointer-events: auto;
+            backdrop-filter: blur(8px);
+        }
+        body.mode-select .drop-zone {
+            z-index: 60;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-color: #D4AF37;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            transform: scale(1.05);
+            cursor: pointer;
+            animation: pulse-gold 2s infinite;
+        }
+        body.mode-select .drop-zone .empty-label { color: #888; }
+        body.mode-select #sidebar, 
+        body.mode-select header { 
+            filter: blur(4px); 
+            pointer-events: none; 
+        }
+        
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+        
         .fade-in { animation: fadeIn 0.8s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .animate-shimmer { background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%); background-size: 200% 100%; animation: shimmer 2s infinite; }
         .family-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 85vw;
+                max-width: 300px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 100;
+            }
+            #sidebar.open-mobile {
+                transform: translateX(0);
+            }
+            #mobile-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.5);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+                z-index: 99;
+            }
+            #mobile-overlay.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
     </style>
 </head>
-<body class="h-screen flex overflow-hidden text-slate-800">
+<body class="min-h-screen flex flex-col md:flex-row overflow-hidden text-slate-800">
     <svg width="0" height="0" class="absolute"><defs><clipPath id="squircleClip" clipPathUnits="objectBoundingBox"><path d="M .5,0 C .1,0 0,.1 0,.5 0,.9 .1,1 .5,1 .9,1 1,.9 1,.5 1,.1 .9,0 .5,0 Z" /></clipPath></defs></svg>
 
-    <aside id="sidebar" class="w-72 bg-white border-r border-stone-200 flex flex-col transition-all duration-300 relative z-20 shadow-lg">
+    <!-- Selection overlay for click-to-assign -->
+    <div id="selection-overlay" class="fixed inset-0 bg-black/10 opacity-0 pointer-events-none z-50 transition-all duration-300" onclick="cancelSelection()">
+        <div class="absolute top-10 left-0 right-0 text-center text-white text-lg font-serif italic drop-shadow-md px-4">Select a layer to place the note...</div>
+    </div>
+    
+    <!-- Mobile overlay -->
+    <div id="mobile-overlay" onclick="toggleSidebarMobile()"></div>
+
+    <aside id="sidebar" class="w-full md:w-72 bg-white border-r border-stone-200 flex flex-col transition-all duration-300 relative shadow-lg">
         <div class="p-4 border-b border-stone-100 bg-stone-50">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="font-bold text-stone-700 tracking-wide uppercase text-sm">Fragrance Notes</h2>
-                <button onclick="toggleSidebar()" class="p-1 hover:bg-stone-200 rounded text-stone-500 transition-colors"><i data-lucide="panel-left-close" id="toggle-icon"></i></button>
+                <button onclick="toggleSidebarMobile()" class="md:hidden p-1 hover:bg-stone-200 rounded text-stone-500 transition-colors"><i data-lucide="x"></i></button>
             </div>
             <div class="relative">
                 <input type="text" id="search-input" placeholder="Search notes..." 
@@ -46,35 +117,61 @@
             </div>
         </div>
         <div class="flex-1 overflow-y-auto p-4 sidebar-scroll space-y-2" id="notes-container"></div>
-        <div class="p-4 bg-stone-50 text-xs text-stone-400 border-t border-stone-100 text-center">Drag notes to the pyramid</div>
+        <div class="p-4 bg-stone-50 text-xs text-stone-400 border-t border-stone-100 text-center">Click or drag notes to the pyramid</div>
     </aside>
 
-    <main class="flex-1 flex flex-col h-full relative overflow-y-auto bg-[#FAFAFA]">
-        <button id="open-sidebar-btn" onclick="toggleSidebar()" class="absolute top-4 left-4 z-10 p-2 bg-white shadow-md rounded-md hover:bg-stone-50 hidden"><i data-lucide="panel-left-open"></i></button>
-        <header class="pt-8 pb-4 px-8 text-center">
-            <h1 class="text-3xl md:text-4xl text-stone-800 mb-2 serif italic">ScentWorld AI</h1>
-            <p class="text-stone-500 max-w-2xl mx-auto">Drag ingredients into the pyramid. The AI will craft your memory.</p>
-            <div class="mt-4"><a href="index.html" class="text-sm text-stone-400 hover:text-stone-600 underline">← Back to Main Version</a></div>
+    <main class="flex-1 flex flex-col h-screen relative overflow-y-auto bg-[#FAFAFA]">
+        <button id="open-sidebar-btn" onclick="toggleSidebarMobile()" class="md:hidden fixed top-4 left-4 z-10 p-2 bg-white shadow-md rounded-md hover:bg-stone-50"><i data-lucide="menu"></i></button>
+        
+        <header class="pt-6 md:pt-8 pb-4 px-4 md:px-8 text-center">
+            <h1 class="text-2xl md:text-3xl lg:text-4xl text-stone-800 mb-2 serif italic">ScentWorld AI</h1>
+            <p class="text-sm md:text-base text-stone-500 max-w-2xl mx-auto px-4">Drag or click ingredients into the pyramid. The AI will craft your memory.</p>
+            <div class="mt-4"><a href="index.html" class="text-xs md:text-sm text-stone-400 hover:text-stone-600 underline">← Back to Main Version</a></div>
         </header>
 
-        <div class="flex-1 px-4 md:px-8 pb-8 flex flex-col items-center justify-start gap-8">
+        <div class="flex-1 px-4 md:px-8 pb-8 flex flex-col items-center justify-start gap-6 md:gap-8">
             <div class="w-full max-w-3xl flex flex-col gap-2">
-                <div class="flex items-center gap-4">
-                    <div class="w-24 text-right hidden sm:block"><span class="text-xs font-bold uppercase tracking-widest text-stone-400">Top</span><div class="text-[10px] text-stone-300">First Impression</div></div>
-                    <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" ondrop="drop(event, 'top')" ondragover="allowDrop(event)" id="zone-top"><span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Top Notes Here</span></div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="w-24 text-right hidden sm:block"><span class="text-xs font-bold uppercase tracking-widest text-pink-300">Heart</span><div class="text-[10px] text-stone-300">The Core</div></div>
-                    <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" ondrop="drop(event, 'heart')" ondragover="allowDrop(event)" id="zone-heart"><span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Heart Notes Here</span></div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="w-24 text-right hidden sm:block"><span class="text-xs font-bold uppercase tracking-widest text-amber-700">Base</span><div class="text-[10px] text-stone-300">The Trail</div></div>
-                    <div class="flex-1 min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" ondrop="drop(event, 'base')" ondragover="allowDrop(event)" id="zone-base"><span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-sm font-medium empty-label">Drop Base Notes Here</span></div>
+                <!-- Top Notes -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                    <div class="w-full sm:w-24 text-left sm:text-right">
+                        <span class="text-xs font-bold uppercase tracking-widest text-stone-400">Top</span>
+                        <div class="text-[10px] text-stone-300 hidden sm:block">First Impression</div>
+                    </div>
+                    <div class="flex-1 w-full min-h-[70px] md:min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" 
+                         ondrop="drop(event, 'top')" ondragover="allowDrop(event)" onclick="handleLayerClick('top')" id="zone-top">
+                        <span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-xs md:text-sm font-medium empty-label">Drop Top Notes Here</span>
+                    </div>
                 </div>
                 
-                <div class="flex justify-between items-center mt-2 w-full">
-                    <button onclick="getAICritique()" id="btn-critique" class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-stone-800 transition-colors border border-stone-200"><span class="text-purple-500">✨</span> Consult the Alchemist</button>
-                    <button onclick="resetPyramid()" class="text-xs text-red-400 hover:text-red-600 underline cursor-pointer">Clear All Notes</button>
+                <!-- Heart Notes -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                    <div class="w-full sm:w-24 text-left sm:text-right">
+                        <span class="text-xs font-bold uppercase tracking-widest text-pink-300">Heart</span>
+                        <div class="text-[10px] text-stone-300 hidden sm:block">The Core</div>
+                    </div>
+                    <div class="flex-1 w-full min-h-[70px] md:min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" 
+                         ondrop="drop(event, 'heart')" ondragover="allowDrop(event)" onclick="handleLayerClick('heart')" id="zone-heart">
+                        <span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-xs md:text-sm font-medium empty-label">Drop Heart Notes Here</span>
+                    </div>
+                </div>
+                
+                <!-- Base Notes -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                    <div class="w-full sm:w-24 text-left sm:text-right">
+                        <span class="text-xs font-bold uppercase tracking-widest text-amber-700">Base</span>
+                        <div class="text-[10px] text-stone-300 hidden sm:block">The Trail</div>
+                    </div>
+                    <div class="flex-1 w-full min-h-[70px] md:min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" 
+                         ondrop="drop(event, 'base')" ondragover="allowDrop(event)" onclick="handleLayerClick('base')" id="zone-base">
+                        <span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-xs md:text-sm font-medium empty-label">Drop Base Notes Here</span>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row justify-between items-center mt-2 w-full gap-2">
+                    <button onclick="getAICritique()" id="btn-critique" class="w-full sm:w-auto flex items-center justify-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-stone-800 transition-colors border border-stone-200">
+                        <span class="text-purple-500">✨</span> Consult the Alchemist
+                    </button>
+                    <button onclick="resetPyramid()" class="w-full sm:w-auto text-xs text-red-400 hover:text-red-600 underline cursor-pointer">Clear All Notes</button>
                 </div>
 
                 <div id="alchemist-feedback" class="hidden w-full bg-stone-50 border border-stone-200 p-4 rounded-xl text-sm text-stone-700 mt-2 relative">
@@ -84,16 +181,16 @@
                 </div>
             </div>
 
-            <div class="w-full max-w-2xl mt-4">
-                <div class="relative w-full aspect-[16/9] md:aspect-[21/9] bg-stone-900 text-stone-100 flex flex-col items-center justify-center p-8 md:p-12 shadow-2xl squircle-container overflow-hidden rounded-[2rem] group">
+            <div class="w-full max-w-2xl mt-2 md:mt-4 px-2 md:px-0">
+                <div class="relative w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[21/9] bg-stone-900 text-stone-100 flex flex-col items-center justify-center p-6 md:p-8 lg:p-12 shadow-2xl squircle-container overflow-hidden rounded-2xl md:rounded-[2rem] group">
                     <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gray-100 via-gray-900 to-black pointer-events-none transition-opacity duration-1000" id="scene-bg"></div>
-                    <div class="relative z-10 text-center max-w-xl flex flex-col items-center">
-                        <h3 class="text-xl md:text-2xl font-serif mb-4 text-white/90 italic" id="scene-title">The Blank Canvas</h3>
-                        <p class="text-sm md:text-base text-stone-300 leading-relaxed font-light min-h-[4.5rem]" id="scene-desc">The air is still, waiting for the first drop of inspiration. The room is silent, a void of pure potential where memories have yet to be formed. Begin by adding a note to shape this world.</p>
-                        <button onclick="generateAIDream()" id="btn-dream" class="mt-6 group/btn relative overflow-hidden rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 px-6 py-2 text-sm font-medium transition-all backdrop-blur-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300">
+                    <div class="relative z-10 text-center max-w-xl flex flex-col items-center px-2">
+                        <h3 class="text-lg md:text-xl lg:text-2xl font-serif mb-3 md:mb-4 text-white/90 italic" id="scene-title">The Blank Canvas</h3>
+                        <p class="text-xs md:text-sm lg:text-base text-stone-300 leading-relaxed font-light min-h-[3rem] md:min-h-[4.5rem]" id="scene-desc">The air is still, waiting for the first drop of inspiration. The room is silent, a void of pure potential where memories have yet to be formed. Begin by adding a note to shape this world.</p>
+                        <button onclick="generateAIDream()" id="btn-dream" class="mt-4 md:mt-6 group/btn relative overflow-hidden rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium transition-all backdrop-blur-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300">
                             <span class="absolute inset-0 animate-shimmer opacity-0 group-hover/btn:opacity-100"></span><span>✨ Dream up a Scene</span>
                         </button>
-                        <div id="dream-loader" class="hidden mt-6">
+                        <div id="dream-loader" class="hidden mt-4 md:mt-6">
                             <div class="flex items-center gap-2 text-xs text-white/50 uppercase tracking-widest"><span class="animate-bounce" style="animation-delay: 0s">●</span><span class="animate-bounce" style="animation-delay: 0.1s">●</span><span class="animate-bounce" style="animation-delay: 0.2s">●</span> Dreaming</div>
                         </div>
                     </div>
@@ -140,6 +237,7 @@
         };
 
         let currentMix = { top: [], heart: [], base: [] };
+        let selectedNote = null;
 
         async function callOpenRouter(prompt) {
             let apiKey = OPENROUTER_API_KEY;
@@ -244,6 +342,13 @@
 
         function init() { lucide.createIcons(); renderSidebar(); }
         
+        function toggleSidebarMobile() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            sidebar.classList.toggle('open-mobile');
+            overlay.classList.toggle('active');
+        }
+        
         function filterNotes() {
             const query = document.getElementById('search-input').value.toLowerCase().trim();
             const allNoteChips = document.querySelectorAll('.note-chip[data-note]');
@@ -303,7 +408,9 @@
                     const chip = document.createElement('div');
                     chip.className = `note-chip px-3 py-1.5 rounded-full text-xs font-medium border shadow-sm ${familyColors[family]}`;
                     chip.draggable = true; chip.innerText = note; chip.dataset.note = note; chip.dataset.family = family;
-                    chip.addEventListener('dragstart', drag); noteContainer.appendChild(chip);
+                    chip.addEventListener('dragstart', drag);
+                    chip.addEventListener('click', (e) => startSelection(e, note, family));
+                    noteContainer.appendChild(chip);
                 });
                 
                 content.appendChild(noteContainer);
@@ -328,6 +435,24 @@
             }
         }
         
+        // Click-to-assign functionality
+        function startSelection(e, note, family) {
+            e.stopPropagation();
+            selectedNote = { note, family };
+            document.body.classList.add('mode-select');
+        }
+        
+        function handleLayerClick(zoneName) {
+            if (!selectedNote) return;
+            addNote(zoneName, selectedNote.note, selectedNote.family);
+            cancelSelection();
+        }
+        
+        function cancelSelection() {
+            selectedNote = null;
+            document.body.classList.remove('mode-select');
+        }
+        
         function drag(ev) { ev.dataTransfer.setData("note", ev.target.dataset.note); ev.dataTransfer.setData("family", ev.target.dataset.family); ev.target.classList.add('dragging'); }
         function allowDrop(ev) { ev.preventDefault(); const zone = ev.target.closest('.drop-zone'); if (zone) zone.classList.add('drag-over'); }
         document.addEventListener('dragend', (ev) => { document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over')); ev.target.classList.remove('dragging'); });
@@ -337,7 +462,13 @@
             ev.preventDefault(); const zone = document.getElementById(`zone-${zoneName}`); zone.classList.remove('drag-over');
             const noteName = ev.dataTransfer.getData("note"); const familyName = ev.dataTransfer.getData("family");
             if (!noteName || currentMix[zoneName].find(n => n.name === noteName)) return;
+            addNote(zoneName, noteName, familyName);
+        }
+        
+        function addNote(zoneName, noteName, familyName) {
+            if (!noteName || currentMix[zoneName].find(n => n.name === noteName)) return;
             currentMix[zoneName].push({ name: noteName, family: familyName });
+            const zone = document.getElementById(`zone-${zoneName}`);
             const chip = document.createElement('div'); chip.className = `note-chip px-3 py-1 rounded-full text-xs font-medium border flex items-center gap-1 bg-white border-stone-300 shadow-sm animate-in fade-in zoom-in duration-200`;
             chip.innerHTML = `<span class="w-2 h-2 rounded-full ${familyColors[familyName].split(' ')[0]}"></span>${noteName}<button class="ml-1 text-stone-400 hover:text-red-500" onclick="removeNote('${zoneName}', '${noteName}', this)">×</button>`;
             const emptyLabel = zone.querySelector('.empty-label'); if (emptyLabel) emptyLabel.style.display = 'none'; zone.appendChild(chip);
@@ -430,18 +561,6 @@
 
             titleEl.innerText = fTitle;
             descEl.innerText = fText;
-        }
-
-        function toggleSidebar() { 
-            const sidebar = document.getElementById('sidebar'); 
-            const btn = document.getElementById('open-sidebar-btn'); 
-            if (sidebar.classList.contains('-ml-72')) { 
-                sidebar.classList.remove('-ml-72'); 
-                btn.classList.add('hidden'); 
-            } else { 
-                sidebar.classList.add('-ml-72'); 
-                btn.classList.remove('hidden'); 
-            } 
         }
         
         init();

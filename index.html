@@ -52,6 +52,7 @@
             letter-spacing: 0.1em;
             cursor: pointer;
             z-index: 10;
+            font-size: 12px;
         }
         .nav-link-bg {
             position: absolute;
@@ -69,48 +70,150 @@
             background-color: rgba(212, 175, 55, 0.5);
         }
 
-        #sidebar {
-            position: fixed;
-            top: 100px;
-            left: 20px;
-            bottom: 100px;
-            width: var(--sidebar-width);
-            z-index: 40;
-            transform: translateX(0);
-            opacity: 1;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        #sidebar.closed {
-            transform: translateX(calc(-1 * var(--sidebar-width) - 40px));
-            opacity: 0;
-            pointer-events: none;
+        /* Desktop sidebar styles */
+        @media (min-width: 1024px) {
+            #sidebar {
+                position: fixed;
+                top: 100px;
+                left: 20px;
+                bottom: 100px;
+                width: var(--sidebar-width);
+                z-index: 40;
+                transform: translateX(0);
+                opacity: 1;
+                transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            #sidebar.closed {
+                transform: translateX(calc(-1 * var(--sidebar-width) - 40px));
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            #sidebar-toggle {
+                position: fixed;
+                top: 100px;
+                z-index: 41;
+                transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                width: 48px;
+                height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                cursor: pointer;
+            }
+            
+            #sidebar-toggle.open-pos {
+                left: calc(20px + var(--sidebar-width) + 15px);
+            }
+            #sidebar-toggle.closed-pos {
+                left: 30px;
+            }
+
+            #sidebar-toggle:hover {
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                background-color: rgba(255,255,255, 0.9);
+            }
+
+            #main-container.with-sidebar {
+                padding-left: calc(var(--sidebar-width) + 60px);
+                padding-right: 40px;
+            }
+            #main-container.with-sidebar .layout-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+            #main-container.with-sidebar .pyramid-section { width: 100%; max-width: 600px; }
+            #main-container.with-sidebar .memory-section { width: 100%; max-width: 600px; margin-top: 2rem; }
+
+            #main-container.no-sidebar {
+                padding-left: 40px;
+                padding-right: 40px;
+            }
+            #main-container.no-sidebar .layout-wrapper {
+                flex-direction: row;
+                align-items: flex-start;
+                justify-content: center;
+                gap: 4rem;
+                flex-wrap: wrap;
+            }
+            #main-container.no-sidebar .pyramid-section { width: 45%; min-width: 320px; }
+            #main-container.no-sidebar .memory-section { width: 45%; min-width: 320px; margin-top: 0; }
+
+            #mobile-menu-btn, #mobile-sidebar-overlay { display: none; }
         }
 
-        #sidebar-toggle {
-            position: fixed;
-            top: 100px;
-            z-index: 41;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-        
-        #sidebar-toggle.open-pos {
-            left: calc(20px + var(--sidebar-width) + 15px);
-        }
-        #sidebar-toggle.closed-pos {
-            left: 30px;
-        }
+        /* Mobile and tablet sidebar styles */
+        @media (max-width: 1023px) {
+            #sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 85vw;
+                max-width: 320px;
+                z-index: 100;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
 
-        #sidebar-toggle:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            background-color: rgba(255,255,255, 0.9);
+            #sidebar.open-mobile {
+                transform: translateX(0);
+            }
+
+            #sidebar-toggle {
+                display: none;
+            }
+
+            #mobile-sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 99;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+            }
+
+            #mobile-sidebar-overlay.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            #mobile-menu-btn {
+                position: fixed;
+                top: 24px;
+                left: 16px;
+                z-index: 50;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                cursor: pointer;
+            }
+
+            #main-container {
+                padding-left: 20px !important;
+                padding-right: 20px !important;
+            }
+
+            #main-container .layout-wrapper {
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+
+            #main-container .pyramid-section,
+            #main-container .memory-section {
+                width: 100% !important;
+                max-width: 600px !important;
+            }
+
+            #main-container .memory-section {
+                margin-top: 2rem !important;
+            }
         }
 
         #main-container {
@@ -120,30 +223,35 @@
             padding-bottom: 40px;
         }
 
-        #main-container.with-sidebar {
-            padding-left: calc(var(--sidebar-width) + 60px);
-            padding-right: 40px;
-        }
-        #main-container.with-sidebar .layout-wrapper {
-            flex-direction: column;
-            align-items: center;
-        }
-        #main-container.with-sidebar .pyramid-section { width: 100%; max-width: 600px; }
-        #main-container.with-sidebar .memory-section { width: 100%; max-width: 600px; margin-top: 2rem; }
+        /* Mobile header adjustments */
+        @media (max-width: 640px) {
+            header {
+                height: 64px !important;
+                padding: 0 1rem !important;
+                margin: 0.5rem !important;
+            }
 
-        #main-container.no-sidebar {
-            padding-left: 40px;
-            padding-right: 40px;
+            header .text-2xl {
+                font-size: 1.25rem !important;
+            }
+
+            header nav {
+                gap: 1rem !important;
+            }
+
+            .nav-link {
+                font-size: 10px !important;
+                padding: 3px 6px !important;
+            }
+
+            #main-container {
+                margin-top: 80px !important;
+            }
+
+            #mobile-menu-btn {
+                top: 18px !important;
+            }
         }
-        #main-container.no-sidebar .layout-wrapper {
-            flex-direction: row;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 4rem;
-            flex-wrap: wrap;
-        }
-        #main-container.no-sidebar .pyramid-section { width: 45%; min-width: 320px; }
-        #main-container.no-sidebar .memory-section { width: 45%; min-width: 320px; margin-top: 0; }
 
         body.mode-select #selection-overlay {
             opacity: 1;
@@ -202,6 +310,7 @@
             position: fixed; inset: 0; background: #fdfbfb; z-index: 100;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 0.8s ease, visibility 0.8s;
+            padding: 1rem;
         }
         .splash-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
@@ -217,8 +326,25 @@
             transform: scale(1.05);
         }
 
+        @media (max-width: 640px) {
+            #music-btn {
+                bottom: 16px;
+                right: 16px;
+                width: 40px;
+                height: 40px;
+            }
+        }
+
         .family-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
         .note-chip.hidden { display: none; }
+
+        /* Responsive adjustments for drop zones */
+        @media (max-width: 640px) {
+            .drop-zone {
+                min-height: 60px !important;
+                padding: 8px !important;
+            }
+        }
 
     </style>
 </head>
@@ -228,26 +354,34 @@
         <source src="assets/piano.mp3" type="audio/mpeg">
     </audio>
 
+    <!-- Mobile sidebar overlay -->
+    <div id="mobile-sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
+    <!-- Mobile menu button -->
+    <button id="mobile-menu-btn" class="glass-panel" onclick="toggleMobileSidebar()">
+        <i data-lucide="menu" class="text-gray-600" width="20" height="20"></i>
+    </button>
+
     <div id="selection-overlay" class="fixed inset-0 bg-black/10 opacity-0 pointer-events-none z-50 transition-all duration-300" onclick="cancelSelection()">
-        <div class="absolute top-10 left-0 right-0 text-center text-white text-xl font-serif italic drop-shadow-md">Select a layer to place the note...</div>
+        <div class="absolute top-10 left-0 right-0 text-center text-white text-xl font-serif italic drop-shadow-md px-4">Select a layer to place the note...</div>
     </div>
 
     <div id="splash-screen">
-        <h1 class="text-5xl md:text-7xl font-serif italic text-gray-800 mb-4 tracking-wide">ScentWorld</h1>
-        <p class="text-gray-400 mb-10 font-light tracking-[0.3em] uppercase text-xs">The Olfactory Playground</p>
-        <button onclick="enterWorld()" class="px-10 py-3 bg-gray-900 text-white rounded-full font-serif italic hover:bg-gray-800 transition-all transform hover:scale-105 shadow-xl">
+        <h1 class="text-4xl sm:text-5xl md:text-7xl font-serif italic text-gray-800 mb-4 tracking-wide text-center">ScentWorld</h1>
+        <p class="text-gray-400 mb-10 font-light tracking-[0.3em] uppercase text-xs text-center">The Olfactory Playground</p>
+        <button onclick="enterWorld()" class="px-8 sm:px-10 py-3 bg-gray-900 text-white rounded-full font-serif italic hover:bg-gray-800 transition-all transform hover:scale-105 shadow-xl">
             Enter
         </button>
     </div>
 
     <header class="fixed top-0 left-0 right-0 h-20 glass-panel z-40 flex justify-between items-center px-6 md:px-12 border-b-0 rounded-b-2xl mx-4 mt-2">
         <div class="text-2xl font-serif italic font-bold text-gray-800">ScentWorld</div>
-        <nav class="flex gap-8">
+        <nav class="flex gap-4 sm:gap-8">
             <a href="index.html" class="nav-link text-sm font-bold text-gray-700">
                 Home
                 <div class="nav-link-bg"></div>
             </a>
-            <a href="gemini.html" class="nav-link text-sm font-bold text-gray-700">
+            <a href="scentworldai/" class="nav-link text-sm font-bold text-gray-700">
                 ScentWorld AI
                 <div class="nav-link-bg"></div>
             </a>
@@ -260,7 +394,12 @@
 
     <aside id="sidebar" class="glass-panel squircle flex flex-col overflow-hidden">
         <div class="p-4 border-b border-gray-100 bg-white/40">
-            <h2 class="font-bold text-gray-500 tracking-widest uppercase text-[10px] mb-3">Fragrance Library</h2>
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="font-bold text-gray-500 tracking-widest uppercase text-[10px]">Fragrance Library</h2>
+                <button onclick="toggleMobileSidebar()" class="lg:hidden p-1 hover:bg-gray-200 rounded transition-colors">
+                    <i data-lucide="x" class="w-4 h-4 text-gray-600"></i>
+                </button>
+            </div>
             <div class="relative">
                 <input type="text" id="search-input" placeholder="Search notes..." 
                        class="w-full px-3 py-2 text-xs bg-white/60 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all" 
@@ -276,8 +415,8 @@
 
     <div id="main-container" class="with-sidebar">
         
-        <div class="text-center mb-8 fade-in">
-            <h1 class="text-4xl md:text-5xl text-gray-800 mb-2 serif italic">Compose Your Memory</h1>
+        <div class="text-center mb-8 fade-in px-4">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl text-gray-800 mb-2 serif italic">Compose Your Memory</h1>
             <p class="text-gray-500 font-light text-xs uppercase tracking-widest">Layer notes to reveal the scene</p>
         </div>
 
@@ -315,12 +454,12 @@
             </div>
 
             <div class="memory-section transition-all duration-500">
-                <div class="relative w-full aspect-[16/9] md:aspect-[21/9] bg-gray-900 text-gray-100 flex items-center justify-center p-8 md:p-12 shadow-2xl squircle overflow-hidden group">
+                <div class="relative w-full aspect-[16/9] md:aspect-[21/9] bg-gray-900 text-gray-100 flex items-center justify-center p-6 sm:p-8 md:p-12 shadow-2xl squircle overflow-hidden group">
                     <div id="scene-bg" class="absolute inset-0 opacity-30 bg-gradient-to-br from-gray-800 via-black to-gray-900 transition-all duration-1000"></div>
-                    <div class="relative z-10 text-center max-w-xl">
-                        <h3 class="text-2xl md:text-3xl font-serif mb-4 text-white/90 italic tracking-wide transition-all duration-700" id="scene-title">The Void</h3>
+                    <div class="relative z-10 text-center max-w-xl px-4">
+                        <h3 class="text-xl sm:text-2xl md:text-3xl font-serif mb-4 text-white/90 italic tracking-wide transition-all duration-700" id="scene-title">The Void</h3>
                         <div class="h-px w-10 bg-white/20 mx-auto mb-4"></div>
-                        <p class="text-sm text-gray-400 leading-relaxed font-light transition-all duration-700" id="scene-desc">
+                        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed font-light transition-all duration-700" id="scene-desc">
                             The air is still. The canvas is blank. Add a note to begin the memory.
                         </p>
                     </div>
@@ -330,9 +469,9 @@
         </div>
     </div>
 
-    <footer class="bg-white border-t border-gray-200 w-full py-12 mt-auto z-10">
+    <footer class="bg-white border-t border-gray-200 w-full py-8 sm:py-12 mt-auto z-10">
         <div class="max-w-7xl mx-auto px-6 md:px-12">
-            <h4 class="font-serif italic text-2xl text-gray-800 mb-2">ScentWorld</h4>
+            <h4 class="font-serif italic text-xl sm:text-2xl text-gray-800 mb-2">ScentWorld</h4>
             <p class="text-sm font-bold text-gray-600 mb-2">&copy; Hongpeng Wei, 2026.</p>
             <p class="text-[10px] text-gray-400">The music on this site is JANACEK Sonata 1.X.1905, copyright of Charlie Albright, Free Music Archive.</p>
         </div>
@@ -397,6 +536,13 @@
             audio.play().catch(() => { isMusicPlaying = false; updateMusicIcon(); });
         }
 
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            sidebar.classList.toggle('open-mobile');
+            overlay.classList.toggle('active');
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const toggleBtn = document.getElementById('sidebar-toggle');
@@ -443,7 +589,6 @@
             const allFamilyGroups = document.querySelectorAll('.family-group');
             
             if (query === '') {
-                // Show all
                 allNoteChips.forEach(chip => chip.classList.remove('hidden'));
                 allFamilyGroups.forEach(group => group.classList.remove('hidden'));
                 return;
@@ -465,7 +610,6 @@
                 
                 if (hasVisible) {
                     group.classList.remove('hidden');
-                    // Auto-expand families with matches
                     const header = group.querySelector('.family-header');
                     const content = header.nextElementSibling;
                     const chevron = header.querySelector('.chevron');
@@ -583,7 +727,6 @@
             calculateScene();
         }
 
-        // --- ENHANCED MEMORY ENGINE ---
         function calculateScene() {
             const allNotes = [...currentMix.top, ...currentMix.heart, ...currentMix.base];
             const titleEl = document.getElementById('scene-title');

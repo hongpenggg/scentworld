@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScentWorld AI - Olfactory Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap');
+
+        body { font-family: 'Inter', sans-serif; background-color: #f8f5f2; }
+        h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
+        
+        .sidebar-scroll::-webkit-scrollbar { width: 6px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 20px; }
+        
+        .note-chip { cursor: grab; transition: all 0.2s ease; user-select: none; }
+        .note-chip:active { cursor: grabbing; transform: scale(0.95); }
+        .note-chip.dragging { opacity: 0.5; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .note-chip.hidden { display: none; }
+        .family-group.hidden { display: none; }
+        
+        .squircle-container { clip-path: url(#squircleClip); border-radius: 24px; }
+        .drop-zone { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .drop-zone.drag-over { background-color: #f3f4f6; border-color: #9ca3af; transform: scale(1.02); }
+        
+        /* Click-to-assign mode styles */
+        body.mode-select #selection-overlay {
+            opacity: 1;
+            pointer-events: auto;
+            backdrop-filter: blur(8px);
+        }
+        body.mode-select .drop-zone {
+            z-index: 60;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-color: #D4AF37;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            transform: scale(1.05);
+            cursor: pointer;
+            animation: pulse-gold 2s infinite;
+        }
+        body.mode-select .drop-zone .empty-label { color: #888; }
+        body.mode-select #sidebar, 
+        body.mode-select header { 
+            filter: blur(4px); 
+            pointer-events: none; 
+        }
+        
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+        
+        .fade-in { animation: fadeIn 0.8s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .animate-shimmer { background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%); background-size: 200% 100%; animation: shimmer 2s infinite; }
+        .family-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 85vw;
+                max-width: 300px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 100;
+            }
+            #sidebar.open-mobile {
+                transform: translateX(0);
+            }
+            #mobile-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.5);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+                z-index: 99;
+            }
+            #mobile-overlay.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            main { padding-top: 1rem !important; }
+            header { padding-top: 1.5rem !important; }
+        }
+
+        @media (max-width: 640px) {
+            .drop-zone {
+                min-height: 60px !important;
+                padding: 0.75rem !important;
+            }
+
+            .note-chip {
+                font-size: 9px !important;
+                padding: 2px 6px !important;
+            }
+        }
+
+        /* Better tablet support */
+        @media (min-width: 641px) and (max-width: 1024px) {
+            #sidebar {
+                width: 280px;
+            }
+
+            .drop-zone {
+                min-height: 70px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row overflow-hidden text-slate-800">
+    <svg width="0" height="0" class="absolute"><defs><clipPath id="squircleClip" clipPathUnits="objectBoundingBox"><path d="M .5,0 C .1,0 0,.1 0,.5 0,.9 .1,1 .5,1 .9,1 1,.9 1,.5 1,.1 .9,0 .5,0 Z" /></clipPath></defs></svg>
+
+    <!-- Selection overlay for click-to-assign -->
+    <div id="selection-overlay" class="fixed inset-0 bg-black/10 opacity-0 pointer-events-none z-50 transition-all duration-300" onclick="cancelSelection()">
+        <div class="absolute top-10 left-0 right-0 text-center text-white text-lg font-serif italic drop-shadow-md px-4">Select a layer to place the note...</div>
+    </div>
+    
+    <!-- Mobile overlay -->
+    <div id="mobile-overlay" onclick="toggleSidebarMobile()"></div>
+
+    <aside id="sidebar" class="w-full md:w-72 bg-white border-r border-stone-200 flex flex-col transition-all duration-300 relative shadow-lg">
+        <div class="p-4 border-b border-stone-100 bg-stone-50">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="font-bold text-stone-700 tracking-wide uppercase text-xs sm:text-sm">Fragrance Notes</h2>
+                <button onclick="toggleSidebarMobile()" class="md:hidden p-1 hover:bg-stone-200 rounded text-stone-500 transition-colors"><i data-lucide="x"></i></button>
+            </div>
+            <div class="relative">
+                <input type="text" id="search-input" placeholder="Search notes..." 
+                       class="w-full px-3 py-2 text-xs bg-white border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all" 
+                       oninput="filterNotes()">
+                <i data-lucide="search" class="absolute right-2.5 top-2.5 w-3.5 h-3.5 text-stone-400 pointer-events-none"></i>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 sidebar-scroll space-y-2" id="notes-container"></div>
+        <div class="p-3 sm:p-4 bg-stone-50 text-[10px] sm:text-xs text-stone-400 border-t border-stone-100 text-center">Click or drag notes to the pyramid</div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen relative overflow-y-auto bg-[#FAFAFA]">
+        <button id="open-sidebar-btn" onclick="toggleSidebarMobile()" class="md:hidden fixed top-4 left-4 z-10 p-2 bg-white shadow-md rounded-md hover:bg-stone-50"><i data-lucide="menu"></i></button>
+        
+        <header class="pt-6 md:pt-8 pb-4 px-4 md:px-8 text-center">
+            <h1 class="text-2xl md:text-3xl lg:text-4xl text-stone-800 mb-2 serif italic">ScentWorld AI</h1>
+            <p class="text-xs sm:text-sm md:text-base text-stone-500 max-w-2xl mx-auto px-4">Drag or click ingredients into the pyramid. The AI will craft your memory.</p>
+            <div class="mt-4"><a href="../" class="text-xs md:text-sm text-stone-400 hover:text-stone-600 underline">← Back to Main Version</a></div>
+        </header>
+
+        <div class="flex-1 px-4 md:px-8 pb-8 flex flex-col items-center justify-start gap-6 md:gap-8">
+            <div class="w-full max-w-3xl flex flex-col gap-2">
+                <!-- Top Notes -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                    <div class="w-full sm:w-24 text-left sm:text-right">
+                        <span class="text-xs font-bold uppercase tracking-widest text-stone-400">Top</span>
+                        <div class="text-[10px] text-stone-300 hidden sm:block">First Impression</div>
+                    </div>
+                    <div class="flex-1 w-full min-h-[70px] md:min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" 
+                         ondrop="drop(event, 'top')" ondragover="allowDrop(event)" onclick="handleLayerClick('top')" id="zone-top">
+                        <span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-xs md:text-sm font-medium empty-label">Drop Top Notes Here</span>
+                    </div>
+                </div>
+                
+                <!-- Heart Notes -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                    <div class="w-full sm:w-24 text-left sm:text-right">
+                        <span class="text-xs font-bold uppercase tracking-widest text-pink-300">Heart</span>
+                        <div class="text-[10px] text-stone-300 hidden sm:block">The Core</div>
+                    </div>
+                    <div class="flex-1 w-full min-h-[70px] md:min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" 
+                         ondrop="drop(event, 'heart')" ondragover="allowDrop(event)" onclick="handleLayerClick('heart')" id="zone-heart">
+                        <span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-xs md:text-sm font-medium empty-label">Drop Heart Notes Here</span>
+                    </div>
+                </div>
+                
+                <!-- Base Notes -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                    <div class="w-full sm:w-24 text-left sm:text-right">
+                        <span class="text-xs font-bold uppercase tracking-widest text-amber-700">Base</span>
+                        <div class="text-[10px] text-stone-300 hidden sm:block">The Trail</div>
+                    </div>
+                    <div class="flex-1 w-full min-h-[70px] md:min-h-[80px] bg-white border-2 border-dashed border-stone-200 rounded-xl p-3 flex flex-wrap gap-2 items-center drop-zone transition-colors relative" 
+                         ondrop="drop(event, 'base')" ondragover="allowDrop(event)" onclick="handleLayerClick('base')" id="zone-base">
+                        <span class="absolute inset-0 flex items-center justify-center text-stone-200 pointer-events-none text-xs md:text-sm font-medium empty-label">Drop Base Notes Here</span>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row justify-between items-center mt-2 w-full gap-2">
+                    <button onclick="getAICritique()" id="btn-critique" class="w-full sm:w-auto flex items-center justify-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-stone-800 transition-colors border border-stone-200">
+                        <span class="text-purple-500">✨</span> Consult the Alchemist
+                    </button>
+                    <button onclick="resetPyramid()" class="w-full sm:w-auto text-xs text-red-400 hover:text-red-600 underline cursor-pointer">Clear All Notes</button>
+                </div>
+
+                <div id="alchemist-feedback" class="hidden w-full bg-stone-50 border border-stone-200 p-4 rounded-xl text-sm text-stone-700 mt-2 relative">
+                    <button onclick="this.parentElement.classList.add('hidden')" class="absolute top-2 right-2 text-stone-400 hover:text-stone-600">×</button>
+                    <h4 class="font-serif font-bold text-stone-800 mb-1 flex items-center gap-2"><span class="text-lg">⚗️</span> The Alchemist says:</h4>
+                    <p id="alchemist-text" class="italic">Analyzing...</p>
+                </div>
+            </div>
+
+            <div class="w-full max-w-2xl mt-2 md:mt-4 px-2 md:px-0">
+                <div class="relative w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[21/9] bg-stone-900 text-stone-100 flex flex-col items-center justify-center p-6 md:p-8 lg:p-12 shadow-2xl squircle-container overflow-hidden rounded-2xl md:rounded-[2rem] group">
+                    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gray-100 via-gray-900 to-black pointer-events-none transition-opacity duration-1000" id="scene-bg"></div>
+                    <div class="relative z-10 text-center max-w-xl flex flex-col items-center px-2">
+                        <h3 class="text-lg md:text-xl lg:text-2xl font-serif mb-3 md:mb-4 text-white/90 italic" id="scene-title">The Blank Canvas</h3>
+                        <p class="text-xs md:text-sm lg:text-base text-stone-300 leading-relaxed font-light min-h-[3rem] md:min-h-[4.5rem]" id="scene-desc">The air is still, waiting for the first drop of inspiration. The room is silent, a void of pure potential where memories have yet to be formed. Begin by adding a note to shape this world.</p>
+                        <button onclick="generateAIDream()" id="btn-dream" class="mt-4 md:mt-6 group/btn relative overflow-hidden rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium transition-all backdrop-blur-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300">
+                            <span class="absolute inset-0 animate-shimmer opacity-0 group-hover/btn:opacity-100"></span><span>✨ Dream up a Scene</span>
+                        </button>
+                        <div id="dream-loader" class="hidden mt-4 md:mt-6">
+                            <div class="flex items-center gap-2 text-xs text-white/50 uppercase tracking-widest"><span class="animate-bounce" style="animation-delay: 0s">●</span><span class="animate-bounce" style="animation-delay: 0.1s">●</span><span class="animate-bounce" style="animation-delay: 0.2s">●</span> Dreaming</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const OPENROUTER_API_KEY = "%%VITE_OPENROUTER_API_KEY%%";
+
+        const families = {
+            "Floral": ["Rose", "Jasmine", "Lavender", "Ylang Ylang", "Tuberose", "Iris", "Violet", "Lily-of-the-valley", "Gardenia", "Freesia", "Magnolia", "Osmanthus", "Peony", "Lilac", "Carnation", "Heliotrope", "Orange Blossom", "Neroli", "Chamomile", "Geranium", "Honeysuckle", "Mimosa", "Narcissus", "Hyacinth", "Lotus", "Water Lily", "Frangipani", "Plumeria", "Wisteria", "Begonia", "Wild Cyclamen", "Clary Sage", "Marigold", "Saffron", "Immortelle", "Cassia", "Peach Blossom", "Cherry Blossom", "Apple Blossom", "Tiare Flower"],
+            "Woody": ["Sandalwood", "Cedar", "Vetiver", "Patchouli", "Oud", "Agarwood", "Cypress", "Pine", "Fir", "Spruce", "Juniper", "Rosewood", "Guaiacwood", "Oak", "Birch", "Cashmere Wood", "Hinoki", "Teak", "Ebony", "Mahogany", "Bamboo", "Driftwood", "Tree Moss", "Oakmoss", "Virginian Cedar", "Atlas Cedar", "Texas Cedar", "Papyrus", "Clearwood", "Iso E Super"],
+            "Citrus": ["Bergamot", "Lemon", "Lime", "Orange", "Grapefruit", "Mandarin", "Tangerine", "Yuzu", "Pomelo", "Citron", "Blood Orange", "Bitter Orange", "Petitgrain", "Lemongrass", "Lemon Verbena", "Neroli", "Orange Blossom", "Kumquat", "Clementine", "Calamansi"],
+            "Fruit": ["Apple", "Peach", "Pear", "Plum", "Apricot", "Fig", "Cherry", "Strawberry", "Raspberry", "Blackberry", "Blueberry", "Blackcurrant", "Redcurrant", "Gooseberry", "Grape", "Melon", "Watermelon", "Mango", "Papaya", "Passionfruit", "Lychee", "Guava", "Pomegranate", "Persimmon", "Quince", "Coconut", "Date", "Banana", "Pineapple", "Kiwi"],
+            "Greens": ["Green Tea", "Black Tea", "White Tea", "Oolong Tea", "Mate", "Mint", "Spearmint", "Peppermint", "Basil", "Sage", "Rosemary", "Thyme", "Tarragon", "Bay Leaf", "Eucalyptus", "Galbanum", "Violet Leaf", "Fig Leaf", "Tomato Leaf", "Blackcurrant Leaf", "Geranium Leaf", "Ivy", "Fern", "Grass", "Cut Grass", "Clover", "Artemisia", "Angelica", "Celery", "Rhubarb", "Cucumber", "Green Apple"],
+            "Musks": ["White Musk", "Musk", "Amber", "Ambergris", "Cashmeran", "Galaxolide", "Muscone", "Civetone", "Musk Ketone", "Celestolide", "Habanolide", "Helvetolide", "Tonkin Musk", "Deer Musk", "Beeswax", "Honey Wax", "Milk", "Skin Musk"],
+            "Warm Spices": ["Cinnamon", "Cardamom", "Clove", "Nutmeg", "Ginger", "Black Pepper", "Pink Pepper", "Sichuan Pepper", "Allspice", "Star Anise", "Coriander", "Cumin", "Saffron", "Turmeric", "Paprika", "Chili", "Fennel", "Caraway", "Juniper Berry", "Bay Leaf", "Tamarind"],
+            "Synthetic": ["Ambroxan", "Iso E Super", "Hedione", "Calone", "Aldehyde", "Ozonic Notes", "Aquatic Notes", "Marine Notes", "Mineral Notes", "Metallic Notes", "Salty Notes", "Airy Notes", "Clean Notes", "Soapy Notes", "Powder Notes"],
+            "Gourmand": ["Vanilla", "Tonka Bean", "Chocolate", "Caramel", "Coffee", "Cocoa", "Honey", "Praline", "Almond", "Hazelnut", "Pistachio", "Chestnut", "Marzipan", "Nougat", "Toffee", "Butterscotch", "Maple Syrup", "Condensed Milk", "Whipped Cream", "Custard", "Crème Brûlée", "Cotton Candy", "Marshmallow", "Licorice"],
+            "Aquatic": ["Sea Water", "Ocean Breeze", "Seaweed", "Algae", "Sea Salt", "Driftwood", "Sand", "Mineral Water", "Rain", "Ozone", "Waterfall", "River Water"],
+            "Resinous": ["Frankincense", "Myrrh", "Benzoin", "Labdanum", "Elemi", "Copal", "Styrax", "Balsam Fir", "Peru Balsam", "Tolu Balsam", "Gum Arabic", "Pine Resin", "Amber Resin"],
+            "Boozy": ["Rum", "Whiskey", "Cognac", "Brandy", "Wine", "Champagne", "Sake", "Beer", "Absinthe", "Gin"],
+            "Earthy": ["Soil", "Wet Earth", "Peat", "Mushroom", "Truffle", "Moss", "Lichen", "Tree Bark", "Dry Wood", "Volcanic Rock", "Clay"],
+            "Animalic": ["Leather", "Suede", "Castoreum", "Civet", "Hyraceum", "Ambergris", "Musk (animalic)", "Hide", "Fur", "Horse Saddle"]
+        };
+
+        const familyColors = {
+            "Floral": "bg-pink-100 text-pink-800 border-pink-200",
+            "Woody": "bg-amber-800 text-amber-100 border-amber-900",
+            "Citrus": "bg-yellow-100 text-yellow-800 border-yellow-200",
+            "Fruit": "bg-orange-100 text-orange-800 border-orange-200",
+            "Greens": "bg-green-100 text-green-800 border-green-200",
+            "Musks": "bg-purple-100 text-purple-800 border-purple-200",
+            "Warm Spices": "bg-red-100 text-red-800 border-red-200",
+            "Synthetic": "bg-slate-100 text-slate-800 border-slate-200",
+            "Gourmand": "bg-yellow-50 text-yellow-900 border-yellow-300",
+            "Aquatic": "bg-blue-100 text-blue-800 border-blue-200",
+            "Resinous": "bg-amber-100 text-amber-900 border-amber-200",
+            "Boozy": "bg-purple-50 text-purple-900 border-purple-200",
+            "Earthy": "bg-stone-200 text-stone-900 border-stone-300",
+            "Animalic": "bg-gray-200 text-gray-900 border-gray-300"
+        };
+
+        let currentMix = { top: [], heart: [], base: [] };
+        let selectedNote = null;
+
+        async function callOpenRouter(prompt) {
+            let apiKey = OPENROUTER_API_KEY;
+            
+            if (apiKey.includes("%%")) {
+                alert("⚠️ API Key not configured!\n\nFor local development:\n1. Get a free API key from https://openrouter.ai/\n2. Replace the placeholder with your key\n\nFor GitHub Pages:\n1. Go to repo Settings → Secrets\n2. Add secret: VITE_OPENROUTER_API_KEY");
+                return null;
+            }
+
+            const url = "https://openrouter.ai/api/v1/chat/completions";
+            const payload = {
+                model: "openrouter/free",
+                messages: [
+                    { role: "system", content: "You are a master perfumer and poetic storyteller. Humble students come to you to ask for advice on their fragrance creations. You are wise and elegant, like a master perfumer from Grasse in France. Always respond in valid JSON format." },
+                    { role: "user", content: prompt }
+                ]
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`,
+                        'HTTP-Referer': window.location.href,
+                        'X-Title': 'ScentWorld AI'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                if (!response.ok) {
+                    console.error("API Error:", data);
+                    alert(`API Error: ${data.error?.message || response.status}`);
+                    return null;
+                }
+                
+                const content = data.choices?.[0]?.message?.content;
+                if (!content) return null;
+                
+                try {
+                    return JSON.parse(content);
+                } catch (e) {
+                    const jsonMatch = content.match(/\{[^}]+\}/);
+                    return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+                }
+            } catch (error) {
+                console.error("Connection Failed:", error);
+                alert("Connection failed. Check console for details.");
+                return null;
+            }
+        }
+
+        async function generateAIDream() {
+            const btn = document.getElementById('btn-dream');
+            const loader = document.getElementById('dream-loader');
+            const titleEl = document.getElementById('scene-title');
+            const descEl = document.getElementById('scene-desc');
+            
+            if (currentMix.top.length === 0 && currentMix.heart.length === 0 && currentMix.base.length === 0) {
+                alert("Please add at least one note before dreaming.");
+                return;
+            }
+
+            btn.classList.add('hidden'); loader.classList.remove('hidden'); descEl.classList.add('opacity-50');
+
+            const mixString = `Top: ${currentMix.top.map(n=>n.name).join(', ')||'None'}, Heart: ${currentMix.heart.map(n=>n.name).join(', ')||'None'}, Base: ${currentMix.base.map(n=>n.name).join(', ')||'None'}`;
+            const prompt = `Based on this fragrance blend: ${mixString}. Create: 1) A creative name (max 4 words), 2) A short evocative memory scene (3-4 sentences, vivid and sensory). Be elegant, like a master French perfumer from Grasse. Descriptive and evocative. Respond ONLY with JSON: {"name": "string", "description": "string"}`;
+
+            const result = await callOpenRouter(prompt);
+
+            loader.classList.add('hidden'); btn.classList.remove('hidden'); descEl.classList.remove('opacity-50');
+            if (result && result.name && result.description) {
+                titleEl.classList.remove('fade-in'); descEl.classList.remove('fade-in'); void titleEl.offsetWidth; titleEl.classList.add('fade-in'); descEl.classList.add('fade-in');
+                titleEl.innerText = result.name; descEl.innerText = result.description;
+            }
+        }
+
+        async function getAICritique() {
+            const btn = document.getElementById('btn-critique');
+            const feedbackBox = document.getElementById('alchemist-feedback');
+            const feedbackText = document.getElementById('alchemist-text');
+
+            if (currentMix.top.length === 0 && currentMix.heart.length === 0 && currentMix.base.length === 0) {
+                feedbackBox.classList.remove('hidden'); feedbackText.innerText = "The vessel is empty. Add ingredients before seeking counsel."; return;
+            }
+
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = `<span class="animate-spin">⌛</span> Consulting...`; btn.disabled = true;
+
+            const mixString = `Top: ${currentMix.top.map(n=>n.name).join(', ')}, Heart: ${currentMix.heart.map(n=>n.name).join(', ')}, Base: ${currentMix.base.map(n=>n.name).join(', ')}`;
+            const prompt = `Analyze this perfume blend: ${mixString}. Provide: 1) A brief critique on balance (1-2 sentences), 2) ONE specific suggestion. Be expert and concise, yet elegant and refined. Like a master perfumer from Grasse. Respond ONLY with JSON: {"critique": "string"}`;
+
+            const result = await callOpenRouter(prompt);
+
+            btn.innerHTML = originalBtnText; btn.disabled = false;
+            if (result && result.critique) { 
+                feedbackBox.classList.remove('hidden'); 
+                feedbackText.innerText = result.critique; 
+            }
+        }
+
+        function init() { lucide.createIcons(); renderSidebar(); }
+        
+        function toggleSidebarMobile() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            sidebar.classList.toggle('open-mobile');
+            overlay.classList.toggle('active');
+        }
+        
+        function filterNotes() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const allNoteChips = document.querySelectorAll('.note-chip[data-note]');
+            const allFamilyGroups = document.querySelectorAll('.family-group');
+            
+            if (query === '') {
+                allNoteChips.forEach(chip => chip.classList.remove('hidden'));
+                allFamilyGroups.forEach(group => group.classList.remove('hidden'));
+                return;
+            }
+            
+            allFamilyGroups.forEach(group => {
+                const chips = group.querySelectorAll('.note-chip[data-note]');
+                let hasVisible = false;
+                
+                chips.forEach(chip => {
+                    const noteName = chip.dataset.note.toLowerCase();
+                    if (noteName.includes(query)) {
+                        chip.classList.remove('hidden');
+                        hasVisible = true;
+                    } else {
+                        chip.classList.add('hidden');
+                    }
+                });
+                
+                if (hasVisible) {
+                    group.classList.remove('hidden');
+                    const header = group.querySelector('.family-header');
+                    const content = header.nextElementSibling;
+                    const chevron = header.querySelector('.chevron');
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                    chevron.style.transform = 'rotate(180deg)';
+                } else {
+                    group.classList.add('hidden');
+                }
+            });
+        }
+        
+        function renderSidebar() {
+            const container = document.getElementById('notes-container');
+            container.innerHTML = '';
+            for (const [family, notes] of Object.entries(families)) {
+                const group = document.createElement('div');
+                group.className = 'family-group mb-4 border border-stone-100 rounded-lg overflow-hidden';
+                
+                const header = document.createElement('div');
+                header.className = 'family-header p-2 bg-stone-50 cursor-pointer hover:bg-stone-100 transition-colors flex justify-between items-center';
+                header.innerHTML = `<h3 class="text-xs font-bold text-stone-500 uppercase tracking-wider">${family}</h3><i data-lucide="chevron-down" class="w-4 h-4 text-stone-400 transition-transform chevron"></i>`;
+                header.onclick = () => toggleFamily(header);
+                
+                const content = document.createElement('div');
+                content.className = 'family-content bg-white';
+                
+                const noteContainer = document.createElement('div');
+                noteContainer.className = 'flex flex-wrap gap-2 p-3';
+                notes.forEach(note => {
+                    const chip = document.createElement('div');
+                    chip.className = `note-chip px-3 py-1.5 rounded-full text-xs font-medium border shadow-sm ${familyColors[family]}`;
+                    chip.draggable = true; chip.innerText = note; chip.dataset.note = note; chip.dataset.family = family;
+                    chip.addEventListener('dragstart', drag);
+                    chip.addEventListener('click', (e) => startSelection(e, note, family));
+                    noteContainer.appendChild(chip);
+                });
+                
+                content.appendChild(noteContainer);
+                group.appendChild(header);
+                group.appendChild(content);
+                container.appendChild(group);
+            }
+            lucide.createIcons();
+        }
+        
+        function toggleFamily(header) {
+            const content = header.nextElementSibling;
+            const chevron = header.querySelector('.chevron');
+            const isOpen = content.style.maxHeight;
+            
+            document.querySelectorAll('.family-content').forEach(c => c.style.maxHeight = null);
+            document.querySelectorAll('.chevron').forEach(ch => ch.style.transform = '');
+            
+            if (!isOpen) {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+        
+        // Click-to-assign functionality
+        function startSelection(e, note, family) {
+            e.stopPropagation();
+            selectedNote = { note, family };
+            document.body.classList.add('mode-select');
+        }
+        
+        function handleLayerClick(zoneName) {
+            if (!selectedNote) return;
+            addNote(zoneName, selectedNote.note, selectedNote.family);
+            cancelSelection();
+        }
+        
+        function cancelSelection() {
+            selectedNote = null;
+            document.body.classList.remove('mode-select');
+        }
+        
+        function drag(ev) { ev.dataTransfer.setData("note", ev.target.dataset.note); ev.dataTransfer.setData("family", ev.target.dataset.family); ev.target.classList.add('dragging'); }
+        function allowDrop(ev) { ev.preventDefault(); const zone = ev.target.closest('.drop-zone'); if (zone) zone.classList.add('drag-over'); }
+        document.addEventListener('dragend', (ev) => { document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over')); ev.target.classList.remove('dragging'); });
+        document.addEventListener('dragleave', (ev) => { if (ev.target.classList.contains('drop-zone')) ev.target.classList.remove('drag-over'); });
+        
+        function drop(ev, zoneName) {
+            ev.preventDefault(); const zone = document.getElementById(`zone-${zoneName}`); zone.classList.remove('drag-over');
+            const noteName = ev.dataTransfer.getData("note"); const familyName = ev.dataTransfer.getData("family");
+            if (!noteName || currentMix[zoneName].find(n => n.name === noteName)) return;
+            addNote(zoneName, noteName, familyName);
+        }
+        
+        function addNote(zoneName, noteName, familyName) {
+            if (!noteName || currentMix[zoneName].find(n => n.name === noteName)) return;
+            currentMix[zoneName].push({ name: noteName, family: familyName });
+            const zone = document.getElementById(`zone-${zoneName}`);
+            const chip = document.createElement('div'); chip.className = `note-chip px-3 py-1 rounded-full text-xs font-medium border flex items-center gap-1 bg-white border-stone-300 shadow-sm animate-in fade-in zoom-in duration-200`;
+            chip.innerHTML = `<span class="w-2 h-2 rounded-full ${familyColors[familyName].split(' ')[0]}"></span>${noteName}<button class="ml-1 text-stone-400 hover:text-red-500" onclick="removeNote('${zoneName}', '${noteName}', this)">×</button>`;
+            const emptyLabel = zone.querySelector('.empty-label'); if (emptyLabel) emptyLabel.style.display = 'none'; zone.appendChild(chip);
+            generateStandardScene(); document.getElementById('btn-dream').classList.remove('hidden');
+        }
+        
+        function removeNote(zoneName, noteName, btnElement) {
+            currentMix[zoneName] = currentMix[zoneName].filter(n => n.name !== noteName); btnElement.parentElement.remove();
+            const zone = document.getElementById(`zone-${zoneName}`); if (currentMix[zoneName].length === 0) zone.querySelector('.empty-label').style.display = 'flex';
+            generateStandardScene();
+        }
+        
+        function resetPyramid() {
+            currentMix = { top: [], heart: [], base: [] };
+            ['top', 'heart', 'base'].forEach(zone => { const el = document.getElementById(`zone-${zone}`); const span = el.querySelector('span'); el.innerHTML = ''; el.appendChild(span); span.style.display = 'flex'; });
+            document.getElementById('alchemist-feedback').classList.add('hidden'); generateStandardScene();
+        }
+
+        function generateStandardScene() {
+            const allNotes = [...currentMix.top, ...currentMix.heart, ...currentMix.base];
+            const titleEl = document.getElementById('scene-title'); const descEl = document.getElementById('scene-desc');
+            
+            if (allNotes.length === 0) { 
+                titleEl.innerText = "The Blank Canvas"; 
+                descEl.innerText = "The air is still, waiting for the first drop of inspiration. The room is silent, a void of pure potential where memories have yet to be formed. Begin by adding a note to shape this world."; 
+                return; 
+            }
+
+            const familyCounts = {}; 
+            allNotes.forEach(n => familyCounts[n.family] = (familyCounts[n.family] || 0) + 1);
+            const sortedFamilies = Object.keys(familyCounts).sort((a,b) => familyCounts[b] - familyCounts[a]);
+            const primary = sortedFamilies[0];
+            const secondary = sortedFamilies[1] || primary;
+
+            const baseSettings = {
+                "Floral": { title: "The Secret Garden", text: "You step into an overgrown conservatory at twilight. Glass walls drip with condensation. The air is humid, thick, and heavy with the narcotic scent of night-blooming flowers." },
+                "Woody": { title: "The Ancient Library", text: "Mahogany shelves stretch into shadow. Dust motes dance in a shaft of amber light. The room smells of aged paper, dry timber, and the quiet weight of centuries." },
+                "Citrus": { title: "Amalfi Terrace", text: "Brilliant white sunlight explodes over terra cotta tiles. The Mediterranean wind carries the sharp, electric zest of freshly torn citrus rinds and sea spray." },
+                "Fruit": { title: "Summer Market", text: "A woven basket overflows with ripening fruit. The air is sticky, sweet, and buzzing with heat. Juice stains your fingers as wasps circle lazily overhead." },
+                "Greens": { title: "After the Storm", text: "You stand in a highland meadow just after rain. The earth is cold, wet, and alive. Crushed grass releases sharp, green aromas with every step." },
+                "Musks": { title: "Velvet Chamber", text: "A dimly lit room. Silk curtains pool on the floor. The atmosphere is intimate, warm, and hazy—like the scent of clean skin and soft cashmere." },
+                "Warm Spices": { title: "The Spice Bazaar", text: "Golden light filters through cloth canopies. The air burns pleasantly with cinnamon, cardamom, and distant incense smoke. Heat radiates from clay walls." },
+                "Synthetic": { title: "Neon Rain", text: "A futuristic city reflects in wet pavement. The air smells of ozone, cold metal, and electricity. Blue light hums in the mist." },
+                "Gourmand": { title: "The Patisserie", text: "Warm butter and caramelized sugar fill a tiny Parisian bakery. Golden pastries cool on wire racks. The air is rich, sweet, and impossibly comforting." },
+                "Aquatic": { title: "Coastal Dawn", text: "You wake on a deserted beach. The tide has just retreated. Salt crusts your skin. Seaweed and wet sand perfume the cold, misty air." },
+                "Resinous": { title: "Sacred Temple", text: "Frankincense smoke curls toward a vaulted ceiling. Amber resin glows in brass censers. The space feels ancient, reverent, and thick with devotion." },
+                "Boozy": { title: "The Cellar", text: "Oak barrels line stone walls. The air is cool, dark, and redolent with aged spirits—whiskey, rum, wine. A single candle flickers." },
+                "Earthy": { title: "Forest Floor", text: "You kneel on damp soil. Mushrooms push through rotting leaves. The scent is primal, organic, and grounding—life returning to earth." },
+                "Animalic": { title: "The Stable", text: "Worn leather saddles hang on hooks. Hay rustles in the loft. The air is warm, musky, and alive with the scent of hide and horse." }
+            };
+
+            const modifiers = {
+                "Floral": "A soft, romantic sweetness softens every edge.",
+                "Woody": "Deep, grounding shadows anchor the memory in place.",
+                "Citrus": "Bright, sparkling energy cuts through like morning light.",
+                "Fruit": "Playful, mouth-watering juiciness adds unexpected joy.",
+                "Greens": "Sharp, botanical freshness makes the air feel cold and alive.",
+                "Musks": "A hazy, dreamlike fog wraps around you like a second skin.",
+                "Warm Spices": "Glowing amber warmth radiates from the center.",
+                "Synthetic": "A strange, modern vibration hums just beneath the surface.",
+                "Gourmand": "A golden, bakery warmth makes you feel safe and nostalgic.",
+                "Aquatic": "The distant crash of waves echoes in your bones.",
+                "Resinous": "Sacred smoke adds weight and gravitas to the scene.",
+                "Boozy": "Intoxicating fumes swirl, loosening memory and time.",
+                "Earthy": "Primal, organic decay grounds you in the present.",
+                "Animalic": "Raw, musky warmth reminds you of living things."
+            };
+
+            const noteNames = allNotes.map(n => n.name);
+            let extras = [];
+            if(noteNames.includes("Oud") || noteNames.includes("Agarwood")) extras.push("Sacred smoke curls lazily upward.");
+            if(noteNames.includes("Vanilla")) extras.push("A golden, creamy sweetness soothes the soul.");
+            if(noteNames.includes("Leather") || noteNames.includes("Suede")) extras.push("You sink into a well-worn leather chair.");
+            if(noteNames.includes("Sea Water") || noteNames.includes("Sea Salt")) extras.push("The scent of brine clings to your clothes.");
+            if(noteNames.includes("Fig")) extras.push("Milky sap from crushed fruit stains your hands.");
+            if(noteNames.includes("Yuzu")) extras.push("An exotic, sparkling zest awakens your senses.");
+            if(noteNames.includes("Coffee")) extras.push("The bitter-sweet aroma of espresso lingers.");
+            if(noteNames.includes("Tobacco")) extras.push("Dry tobacco leaves rest in a leather pouch.");
+
+            let fTitle = baseSettings[primary].title;
+            let fText = baseSettings[primary].text + " " + modifiers[secondary];
+            if(extras.length > 0) fText += " " + extras.join(" ");
+
+            if(primary === "Floral" && secondary === "Woody") fTitle = "The Enchanted Woods";
+            if(primary === "Citrus" && secondary === "Synthetic") fTitle = "Cyberpunk Soda";
+            if(primary === "Musks" && secondary === "Warm Spices") fTitle = "Cashmere Embrace";
+            if(primary === "Aquatic" && secondary === "Citrus") fTitle = "Mediterranean Breeze";
+
+            fText += " (Click 'Dream' for an AI-generated story)";
+
+            titleEl.innerText = fTitle;
+            descEl.innerText = fText;
+        }
+        
+        init();
+    </script>
+</body>
+</html>

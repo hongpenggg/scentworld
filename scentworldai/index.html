@@ -26,6 +26,102 @@
         .drop-zone { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .drop-zone.drag-over { background-color: #f3f4f6; border-color: #9ca3af; transform: scale(1.02); }
         
+        /* Perfume directory dropdown */
+        .perfume-directory {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .perfume-trigger {
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 500;
+            color: #78716c;
+        }
+        
+        .perfume-trigger:hover {
+            background: rgba(212, 175, 55, 0.1);
+            color: #D4AF37;
+        }
+        
+        .perfume-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 280px;
+            max-width: 320px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(120, 113, 108, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-50%) translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .perfume-directory:hover .perfume-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .perfume-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .perfume-item:last-child {
+            border-bottom: none;
+        }
+        
+        .perfume-item:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+        
+        .perfume-item-name {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            font-size: 13px;
+            color: #1c1917;
+            margin-bottom: 2px;
+        }
+        
+        .perfume-item-brand {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #a8a29e;
+        }
+
+        @media (max-width: 640px) {
+            .perfume-dropdown {
+                position: fixed;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                max-width: 90vw;
+                max-height: 70vh;
+            }
+            
+            .perfume-directory:hover .perfume-dropdown {
+                transform: translate(-50%, -50%);
+            }
+        }
+        
         /* Click-to-assign mode styles */
         body.mode-select #selection-overlay {
             opacity: 1;
@@ -151,8 +247,42 @@
         
         <header class="pt-6 md:pt-8 pb-4 px-4 md:px-8 text-center">
             <h1 class="text-2xl md:text-3xl lg:text-4xl text-stone-800 mb-2 serif italic">ScentWorld AI</h1>
-            <p class="text-xs sm:text-sm md:text-base text-stone-500 max-w-2xl mx-auto px-4">Drag or click ingredients into the pyramid. The AI will craft your memory.</p>
-            <div class="mt-4"><a href="../" class="text-xs md:text-sm text-stone-400 hover:text-stone-600 underline">← Back to Main Version</a></div>
+            <p class="text-xs sm:text-sm md:text-base text-stone-500 max-w-2xl mx-auto px-4 mb-3">Drag or click ingredients into the pyramid. The AI will craft your memory.</p>
+            
+            <!-- Perfume Directory -->
+            <div class="perfume-directory mb-2">
+                <div class="perfume-trigger">
+                    <span>✨ Or, take inspiration from existing perfumes</span>
+                </div>
+                <div class="perfume-dropdown sidebar-scroll">
+                    <div class="perfume-item" onclick="loadPerfume('issey')">
+                        <div class="perfume-item-name">L'Eau d'Issey Pour Homme</div>
+                        <div class="perfume-item-brand">Issey Miyake</div>
+                    </div>
+                    <div class="perfume-item" onclick="loadPerfume('adg')">
+                        <div class="perfume-item-name">Acqua di Giò</div>
+                        <div class="perfume-item-brand">Giorgio Armani</div>
+                    </div>
+                    <div class="perfume-item" onclick="loadPerfume('eros')">
+                        <div class="perfume-item-name">Eros EDT</div>
+                        <div class="perfume-item-brand">Versace</div>
+                    </div>
+                    <div class="perfume-item" onclick="loadPerfume('yedp')">
+                        <div class="perfume-item-name">Y Eau de Parfum</div>
+                        <div class="perfume-item-brand">Yves Saint Laurent</div>
+                    </div>
+                    <div class="perfume-item" onclick="loadPerfume('santal33')">
+                        <div class="perfume-item-name">Santal 33</div>
+                        <div class="perfume-item-brand">Le Labo</div>
+                    </div>
+                    <div class="perfume-item" onclick="loadPerfume('passage')">
+                        <div class="perfume-item-name">Passage d'Enfer</div>
+                        <div class="perfume-item-brand">L'Artisan Parfumeur</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-2"><a href="../" class="text-xs md:text-sm text-stone-400 hover:text-stone-600 underline">← Back to Main Version</a></div>
         </header>
 
         <div class="flex-1 px-4 md:px-8 pb-8 flex flex-col items-center justify-start gap-6 md:gap-8">
@@ -262,8 +392,113 @@
             "Animalic": "bg-gray-200 text-gray-900 border-gray-300"
         };
 
+        const iconicPerfumes = {
+            issey: {
+                name: "L'Eau d'Issey Pour Homme",
+                brand: "Issey Miyake",
+                top: ["Yuzu", "Lemon", "Bergamot", "Lemon Verbena", "Mandarin", "Cypress", "Calone", "Coriander", "Sage", "Tarragon"],
+                heart: ["Lotus", "Nutmeg", "Lily-of-the-valley", "Geranium", "Saffron", "Cinnamon"],
+                base: ["Vetiver", "Musk", "Cedar", "Sandalwood", "Amber", "Tobacco"],
+                description: "A fresh aquatic masterpiece that captures the essence of water cascading over yuzu and spices. Crisp, clean, and timelessly modern—evoking morning dew on a Japanese garden."
+            },
+            adg: {
+                name: "Acqua di Giò",
+                brand: "Giorgio Armani",
+                top: ["Lime", "Lemon", "Bergamot", "Jasmine", "Orange", "Mandarin", "Neroli"],
+                heart: ["Sea Water", "Jasmine", "Calone", "Rosemary", "Peach", "Freesia", "Hyacinth", "Violet", "Coriander", "Rose", "Nutmeg"],
+                base: ["White Musk", "Cedar", "Oakmoss", "Patchouli", "Amber"],
+                description: "An iconic aquatic fragrance inspired by the Mediterranean Sea. Fresh, marine, and luminous—like standing on the cliffs of Pantelleria with salt spray on your skin."
+            },
+            eros: {
+                name: "Eros EDT",
+                brand: "Versace",
+                top: ["Mint", "Apple", "Lemon"],
+                heart: ["Tonka Bean", "Ambroxan", "Geranium"],
+                base: ["Vanilla", "Virginian Cedar", "Atlas Cedar", "Vetiver", "Oakmoss"],
+                description: "Bold, seductive, and unapologetically powerful. A fresh minty opening gives way to warm vanilla and woods—embodying the strength and passion of the Greek god of love."
+            },
+            yedp: {
+                name: "Y Eau de Parfum",
+                brand: "Yves Saint Laurent",
+                top: ["Apple", "Ginger", "Bergamot"],
+                heart: ["Sage", "Juniper", "Geranium"],
+                base: ["Amber", "Tonka Bean", "Cedar", "Vetiver", "Frankincense"],
+                description: "A sophisticated woody aromatic for the modern man who questions everything. Crisp apple meets aromatic sage and warm amber—balanced, elegant, and effortlessly confident."
+            },
+            santal33: {
+                name: "Santal 33",
+                brand: "Le Labo",
+                top: ["Sandalwood", "Leather", "Ambroxan"],
+                heart: ["Papyrus", "Virginian Cedar", "Cardamom", "Violet", "Iris"],
+                base: ["Amber"],
+                description: "The cult classic. Creamy sandalwood wrapped in smoky leather and soft spices—evoking the wide open freedom of the American West. Unisex, addictive, unmistakable."
+            },
+            passage: {
+                name: "Passage d'Enfer",
+                brand: "L'Artisan Parfumeur",
+                top: ["Ginger", "Rose"],
+                heart: ["Frankincense", "Lily", "Oud"],
+                base: ["White Musk", "Benzoin", "Cedar", "Sandalwood"],
+                description: "An ethereal journey through sacred incense smoke. Frankincense mingles with white lily and woods—austere, contemplative, and hauntingly beautiful. A passage to another world."
+            }
+        };
+
         let currentMix = { top: [], heart: [], base: [] };
         let selectedNote = null;
+
+        function getNoteFamily(noteName) {
+            for (const [family, notes] of Object.entries(families)) {
+                if (notes.includes(noteName)) return family;
+            }
+            return "Synthetic";
+        }
+
+        function loadPerfume(perfumeKey) {
+            const perfume = iconicPerfumes[perfumeKey];
+            if (!perfume) return;
+
+            resetPyramid();
+
+            perfume.top.forEach(note => {
+                const family = getNoteFamily(note);
+                addNote('top', note, family, true);
+            });
+
+            perfume.heart.forEach(note => {
+                const family = getNoteFamily(note);
+                addNote('heart', note, family, true);
+            });
+
+            perfume.base.forEach(note => {
+                const family = getNoteFamily(note);
+                addNote('base', note, family, true);
+            });
+
+            // Set perfume title and description immediately
+            const titleEl = document.getElementById('scene-title');
+            const descEl = document.getElementById('scene-desc');
+            titleEl.innerText = perfume.name;
+            descEl.innerText = perfume.description;
+        }
+
+        function detectIconicPerfume() {
+            const currentNotes = {
+                top: currentMix.top.map(n => n.name),
+                heart: currentMix.heart.map(n => n.name),
+                base: currentMix.base.map(n => n.name)
+            };
+
+            for (const [key, perfume] of Object.entries(iconicPerfumes)) {
+                const matchTop = perfume.top.every(note => currentNotes.top.includes(note)) && currentNotes.top.every(note => perfume.top.includes(note));
+                const matchHeart = perfume.heart.every(note => currentNotes.heart.includes(note)) && currentNotes.heart.every(note => perfume.heart.includes(note));
+                const matchBase = perfume.base.every(note => currentNotes.base.includes(note)) && currentNotes.base.every(note => perfume.base.includes(note));
+
+                if (matchTop && matchHeart && matchBase) {
+                    return perfume;
+                }
+            }
+            return null;
+        }
 
         async function callOpenRouter(prompt) {
             let apiKey = OPENROUTER_API_KEY;
@@ -491,14 +726,15 @@
             addNote(zoneName, noteName, familyName);
         }
         
-        function addNote(zoneName, noteName, familyName) {
+        function addNote(zoneName, noteName, familyName, skipScene = false) {
             if (!noteName || currentMix[zoneName].find(n => n.name === noteName)) return;
             currentMix[zoneName].push({ name: noteName, family: familyName });
             const zone = document.getElementById(`zone-${zoneName}`);
             const chip = document.createElement('div'); chip.className = `note-chip px-3 py-1 rounded-full text-xs font-medium border flex items-center gap-1 bg-white border-stone-300 shadow-sm animate-in fade-in zoom-in duration-200`;
             chip.innerHTML = `<span class="w-2 h-2 rounded-full ${familyColors[familyName].split(' ')[0]}"></span>${noteName}<button class="ml-1 text-stone-400 hover:text-red-500" onclick="removeNote('${zoneName}', '${noteName}', this)">×</button>`;
             const emptyLabel = zone.querySelector('.empty-label'); if (emptyLabel) emptyLabel.style.display = 'none'; zone.appendChild(chip);
-            generateStandardScene(); document.getElementById('btn-dream').classList.remove('hidden');
+            if (!skipScene) generateStandardScene();
+            document.getElementById('btn-dream').classList.remove('hidden');
         }
         
         function removeNote(zoneName, noteName, btnElement) {
@@ -521,6 +757,14 @@
                 titleEl.innerText = "The Blank Canvas"; 
                 descEl.innerText = "The air is still, waiting for the first drop of inspiration. The room is silent, a void of pure potential where memories have yet to be formed. Begin by adding a note to shape this world."; 
                 return; 
+            }
+
+            // Check if current mix matches an iconic perfume
+            const detectedPerfume = detectIconicPerfume();
+            if (detectedPerfume) {
+                titleEl.innerText = detectedPerfume.name;
+                descEl.innerText = detectedPerfume.description;
+                return;
             }
 
             const familyCounts = {}; 

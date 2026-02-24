@@ -135,7 +135,7 @@
             transform: translateX(-50%) translateY(-10px);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1000;
-            max-height: 400px;
+            max-height: 500px;
             overflow-y: auto;
         }
         
@@ -567,6 +567,34 @@
                         <div class="perfume-item-name">Passage d'Enfer</div>
                         <div class="perfume-item-brand">L'Artisan Parfumeur</div>
                     </div>
+                    <div class="perfume-item" onclick="loadPerfume('baie19')">
+                        <div class="perfume-item-name">Baie 19</div>
+                        <div class="perfume-item-brand">Le Labo</div>
+                    </div>
+                    <div class="perfume-item" onclick="loadPerfume('another13')">
+                        <div class="perfume-item-name">Another 13</div>
+                        <div class="perfume-item-brand">Le Labo</div>
+                    </div>
+                    <div class="perfume-item" onclick="loadPerfume('englishpear')">
+                        <div class="perfume-item-name">English Pear & Freesia</div>
+                        <div class="perfume-item-brand">Jo Malone</div>
+                    </div>
+                    <div class="perfume-item" onclick="loadPerfume('englishoak')">
+                        <div class="perfume-item-name">English Oak & Hazelnut</div>
+                        <div class="perfume-item-brand">Jo Malone</div>
+                    </div>
+                    <div class="perfume-item" onclick="loadPerfume('sauvage')">
+                        <div class="perfume-item-name">Sauvage</div>
+                        <div class="perfume-item-brand">Dior</div>
+                    </div>
+                    <div class="perfume-item" onclick="loadPerfume('bleu')">
+                        <div class="perfume-item-name">Bleu de Chanel</div>
+                        <div class="perfume-item-brand">Chanel</div>
+                    </div>
+                    <div class="perfume-item" onclick="loadPerfume('chanel5')">
+                        <div class="perfume-item-name">N°5</div>
+                        <div class="perfume-item-brand">Chanel</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -637,17 +665,17 @@
 
     <script>
         const families = {
-            "Floral": ["Rose", "Jasmine", "Lavender", "Ylang Ylang", "Tuberose", "Iris", "Violet", "Lily-of-the-valley", "Gardenia", "Freesia", "Magnolia", "Osmanthus", "Peony", "Lilac", "Carnation", "Heliotrope", "Orange Blossom", "Neroli", "Chamomile", "Geranium", "Honeysuckle", "Mimosa", "Narcissus", "Hyacinth", "Lotus", "Water Lily", "Frangipani", "Plumeria", "Wisteria", "Begonia", "Wild Cyclamen", "Clary Sage", "Marigold", "Saffron", "Immortelle", "Cassia", "Peach Blossom", "Cherry Blossom", "Apple Blossom", "Tiare Flower"],
+            "Floral": ["Rose", "Jasmine", "Lavender", "Ylang Ylang", "Tuberose", "Iris", "Violet", "Lily-of-the-valley", "Gardenia", "Freesia", "Magnolia", "Osmanthus", "Peony", "Lilac", "Carnation", "Heliotrope", "Orange Blossom", "Neroli", "Chamomile", "Geranium", "Honeysuckle", "Mimosa", "Narcissus", "Hyacinth", "Lotus", "Water Lily", "Frangipani", "Plumeria", "Wisteria", "Begonia", "Wild Cyclamen", "Clary Sage", "Marigold", "Saffron", "Immortelle", "Cassia", "Peach Blossom", "Cherry Blossom", "Apple Blossom", "Tiare Flower", "Orris Root"],
             "Woody": ["Sandalwood", "Cedar", "Vetiver", "Patchouli", "Oud", "Agarwood", "Cypress", "Pine", "Fir", "Spruce", "Juniper", "Rosewood", "Guaiacwood", "Oak", "Birch", "Cashmere Wood", "Hinoki", "Teak", "Ebony", "Mahogany", "Bamboo", "Driftwood", "Tree Moss", "Oakmoss", "Virginian Cedar", "Atlas Cedar", "Texas Cedar", "Papyrus", "Clearwood", "Iso E Super"],
             "Citrus": ["Bergamot", "Lemon", "Lime", "Orange", "Grapefruit", "Mandarin", "Tangerine", "Yuzu", "Pomelo", "Citron", "Blood Orange", "Bitter Orange", "Petitgrain", "Lemongrass", "Lemon Verbena", "Neroli", "Orange Blossom", "Kumquat", "Clementine", "Calamansi"],
             "Fruit": ["Apple", "Peach", "Pear", "Plum", "Apricot", "Fig", "Cherry", "Strawberry", "Raspberry", "Blackberry", "Blueberry", "Blackcurrant", "Redcurrant", "Gooseberry", "Grape", "Melon", "Watermelon", "Mango", "Papaya", "Passionfruit", "Lychee", "Guava", "Pomegranate", "Persimmon", "Quince", "Coconut", "Date", "Banana", "Pineapple", "Kiwi"],
-            "Greens": ["Green Tea", "Black Tea", "White Tea", "Oolong Tea", "Mate", "Mint", "Spearmint", "Peppermint", "Basil", "Sage", "Rosemary", "Thyme", "Tarragon", "Bay Leaf", "Eucalyptus", "Galbanum", "Violet Leaf", "Fig Leaf", "Tomato Leaf", "Blackcurrant Leaf", "Geranium Leaf", "Ivy", "Fern", "Grass", "Cut Grass", "Clover", "Artemisia", "Angelica", "Celery", "Rhubarb", "Cucumber", "Green Apple"],
-            "Musks": ["White Musk", "Musk", "Amber", "Ambergris", "Cashmeran", "Galaxolide", "Muscone", "Civetone", "Musk Ketone", "Celestolide", "Habanolide", "Helvetolide", "Tonkin Musk", "Deer Musk", "Beeswax", "Honey Wax", "Milk", "Skin Musk"],
+            "Greens": ["Green Tea", "Black Tea", "White Tea", "Oolong Tea", "Mate", "Mint", "Spearmint", "Peppermint", "Basil", "Sage", "Rosemary", "Thyme", "Tarragon", "Bay Leaf", "Eucalyptus", "Galbanum", "Violet Leaf", "Fig Leaf", "Tomato Leaf", "Blackcurrant Leaf", "Geranium Leaf", "Ivy", "Fern", "Grass", "Cut Grass", "Clover", "Artemisia", "Angelica", "Celery", "Rhubarb", "Cucumber", "Green Apple", "Green Leaves"],
+            "Musks": ["White Musk", "Musk", "Amber", "Ambergris", "Cashmeran", "Galaxolide", "Muscone", "Civetone", "Musk Ketone", "Celestolide", "Habanolide", "Helvetolide", "Tonkin Musk", "Deer Musk", "Beeswax", "Honey Wax", "Milk", "Skin Musk", "Ambrette", "Civet Musk"],
             "Warm Spices": ["Cinnamon", "Cardamom", "Clove", "Nutmeg", "Ginger", "Black Pepper", "Pink Pepper", "Sichuan Pepper", "Allspice", "Star Anise", "Coriander", "Cumin", "Saffron", "Turmeric", "Paprika", "Chili", "Fennel", "Caraway", "Juniper Berry", "Bay Leaf", "Tamarind"],
-            "Synthetic": ["Ambroxan", "Iso E Super", "Hedione", "Calone", "Aldehyde", "Ozonic Notes", "Aquatic Notes", "Marine Notes", "Mineral Notes", "Metallic Notes", "Salty Notes", "Airy Notes", "Clean Notes", "Soapy Notes", "Powder Notes"],
+            "Synthetic": ["Ambroxan", "Iso E Super", "Hedione", "Calone", "Aldehyde", "Ozonic Notes", "Aquatic Notes", "Marine Notes", "Mineral Notes", "Metallic Notes", "Salty Notes", "Airy Notes", "Clean Notes", "Soapy Notes", "Powder Notes", "Amyl Salicylate", "Cetalox", "Ambrettolide"],
             "Gourmand": ["Vanilla", "Tonka Bean", "Chocolate", "Caramel", "Coffee", "Cocoa", "Honey", "Praline", "Almond", "Hazelnut", "Pistachio", "Chestnut", "Marzipan", "Nougat", "Toffee", "Butterscotch", "Maple Syrup", "Condensed Milk", "Whipped Cream", "Custard", "Crème Brûlée", "Cotton Candy", "Marshmallow", "Licorice"],
             "Aquatic": ["Sea Water", "Ocean Breeze", "Seaweed", "Algae", "Sea Salt", "Driftwood", "Sand", "Mineral Water", "Rain", "Ozone", "Waterfall", "River Water"],
-            "Resinous": ["Frankincense", "Myrrh", "Benzoin", "Labdanum", "Elemi", "Copal", "Styrax", "Balsam Fir", "Peru Balsam", "Tolu Balsam", "Gum Arabic", "Pine Resin", "Amber Resin"],
+            "Resinous": ["Frankincense", "Myrrh", "Benzoin", "Labdanum", "Elemi", "Copal", "Styrax", "Balsam Fir", "Peru Balsam", "Tolu Balsam", "Gum Arabic", "Pine Resin", "Amber Resin", "Incense"],
             "Boozy": ["Rum", "Whiskey", "Cognac", "Brandy", "Wine", "Champagne", "Sake", "Beer", "Absinthe", "Gin"],
             "Earthy": ["Soil", "Wet Earth", "Peat", "Mushroom", "Truffle", "Moss", "Lichen", "Tree Bark", "Dry Wood", "Volcanic Rock", "Clay"],
             "Animalic": ["Leather", "Suede", "Castoreum", "Civet", "Hyraceum", "Ambergris", "Musk (animalic)", "Hide", "Fur", "Horse Saddle"]
@@ -699,7 +727,7 @@
                 name: "Y Eau de Parfum",
                 brand: "Yves Saint Laurent",
                 top: ["Apple", "Ginger", "Bergamot"],
-                heart: ["Sage", "Juniper", "Geranium"],
+                heart: ["Sage", "Juniper Berry", "Geranium"],
                 base: ["Amber", "Tonka Bean", "Cedar", "Vetiver", "Frankincense"],
                 description: "A sophisticated woody aromatic for the modern man who questions everything. Crisp apple meets aromatic sage and warm amber—balanced, elegant, and effortlessly confident."
             },
@@ -715,9 +743,65 @@
                 name: "Passage d'Enfer",
                 brand: "L'Artisan Parfumeur",
                 top: ["Ginger", "Rose"],
-                heart: ["Frankincense", "Lily", "Oud"],
+                heart: ["Frankincense", "Lily-of-the-valley", "Oud"],
                 base: ["White Musk", "Benzoin", "Cedar", "Sandalwood"],
                 description: "An ethereal journey through sacred incense smoke. Frankincense mingles with white lily and woods—austere, contemplative, and hauntingly beautiful. A passage to another world."
+            },
+            baie19: {
+                name: "Baie 19",
+                brand: "Le Labo",
+                top: ["Patchouli", "Ozonic Notes", "Green Leaves"],
+                heart: ["Juniper Berry"],
+                base: ["Ambroxan", "Musk"],
+                description: "A cool, crisp walk through a Nordic forest. Green leaves and juniper berries meet earthy patchouli and airy musks. Fresh, woody, and mysteriously elegant—like fog rolling over pine trees."
+            },
+            another13: {
+                name: "Another 13",
+                brand: "Le Labo",
+                top: ["Pear", "Apple", "Bergamot"],
+                heart: ["Ambrette", "Amyl Salicylate", "Moss", "Jasmine"],
+                base: ["Iso E Super", "Cetalox", "Helvetolide", "Ambrettolide"],
+                description: "An abstract, skin-like fragrance that hovers close. Musky ambrette meets woody musks and subtle florals. Intimate, modern, and impossible to define—it smells like you, but better."
+            },
+            englishpear: {
+                name: "English Pear & Freesia",
+                brand: "Jo Malone",
+                top: ["Pear", "Melon"],
+                heart: ["Freesia", "Rose"],
+                base: ["Musk", "Patchouli", "Rhubarb", "Amber"],
+                description: "A sophisticated fusion of ripe pear and delicate freesia. Fresh, elegant, and effortlessly British. Like autumn in an English garden—crisp air, fallen leaves, and the scent of ripening fruit."
+            },
+            englishoak: {
+                name: "English Oak & Hazelnut",
+                brand: "Jo Malone",
+                top: ["Hazelnut"],
+                heart: ["Cedar"],
+                base: ["Oak"],
+                description: "A warm, woody embrace. Roasted hazelnut meets ancient oak and cedarwood. Grounding, comforting, and timeless—like sitting by a fireplace in a centuries-old manor."
+            },
+            sauvage: {
+                name: "Sauvage",
+                brand: "Dior",
+                top: ["Bergamot", "Black Pepper"],
+                heart: ["Sichuan Pepper", "Lavender", "Pink Pepper", "Vetiver", "Patchouli", "Geranium", "Elemi"],
+                base: ["Ambroxan", "Cedar", "Labdanum"],
+                description: "A raw, powerful scent inspired by wide-open spaces. Spicy pepper meets fresh bergamot and woody ambroxan. Magnetic, primal, and unapologetically masculine—like standing at the edge of the desert at dusk."
+            },
+            bleu: {
+                name: "Bleu de Chanel",
+                brand: "Chanel",
+                top: ["Grapefruit", "Lemon", "Mint", "Pink Pepper"],
+                heart: ["Ginger", "Nutmeg", "Jasmine", "Iso E Super"],
+                base: ["Incense", "Cedar", "Vetiver", "Sandalwood", "Patchouli", "Labdanum", "White Musk"],
+                description: "A fresh, woody aromatic that defines modern masculinity. Citrus and mint open the door to warm woods and incense. Refined, confident, and timeless—the fragrance of self-determination."
+            },
+            chanel5: {
+                name: "N°5",
+                brand: "Chanel",
+                top: ["Aldehyde", "Ylang Ylang", "Neroli", "Bergamot", "Lemon"],
+                heart: ["Iris", "Jasmine", "Rose", "Orris Root", "Lily-of-the-valley"],
+                base: ["Civet Musk", "Musk", "Sandalwood", "Amber", "Moss", "Vanilla", "Vetiver", "Patchouli"],
+                description: "The world's most iconic perfume. A symphony of aldehydes and florals. Powdery, elegant, and eternally feminine—the scent of Marilyn Monroe and timeless glamour. Abstract yet unforgettable."
             }
         };
 

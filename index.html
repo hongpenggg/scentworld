@@ -1019,8 +1019,17 @@
             const zone = document.getElementById(`zone-${zoneName}`);
             const chip = document.createElement('div');
             const colorClass = familyColors[familyName].split(' ')[1].replace('text', 'bg');
-            chip.className = `note-chip flex items-center gap-2 bg-white shadow-sm animate-in fade-in zoom-in duration-200 border border-gray-200`;
-            chip.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${colorClass}"></span>${noteName}<button class="text-gray-300 hover:text-red-400 ml-1 font-bold text-xs" onclick="removeNote(event, '${zoneName}', '${noteName}', this)">×</button>`;
+            chip.className = 'note-chip flex items-center gap-2 bg-white shadow-sm animate-in fade-in zoom-in duration-200 border border-gray-200';
+            const dot = document.createElement('span');
+            dot.className = `w-1.5 h-1.5 rounded-full ${colorClass}`;
+            const label = document.createTextNode(noteName);
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'text-gray-300 hover:text-red-400 ml-1 font-bold text-xs';
+            removeBtn.textContent = '×';
+            removeBtn.addEventListener('click', (e) => { e.stopPropagation(); removeNote(e, zoneName, noteName, removeBtn); });
+            chip.appendChild(dot);
+            chip.appendChild(label);
+            chip.appendChild(removeBtn);
             zone.querySelector('.empty-label').style.display = 'none';
             zone.appendChild(chip);
             if (!skipScene) calculateScene();
@@ -1038,7 +1047,11 @@
             currentMix = { top: [], heart: [], base: [] };
             ['top', 'heart', 'base'].forEach(z => {
                 const el = document.getElementById(`zone-${z}`);
-                el.innerHTML = `<span class="text-gray-300 text-[10px] font-bold uppercase tracking-wide empty-label pointer-events-none">${el.querySelector('.empty-label').innerText}</span>`;
+                const emptyLabel = el.querySelector('.empty-label');
+                Array.from(el.children).forEach(child => {
+                    if (child !== emptyLabel) child.remove();
+                });
+                if (emptyLabel) emptyLabel.style.display = 'block';
             });
             calculateScene();
         }

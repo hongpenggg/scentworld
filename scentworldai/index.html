@@ -356,8 +356,6 @@
     </main>
 
     <script>
-        const OPENROUTER_API_KEY = "%%VITE_OPENROUTER_API_KEY%%";
-
         const families = {
             "Floral": ["Rose", "Jasmine", "Lavender", "Ylang Ylang", "Tuberose", "Iris", "Violet", "Lily-of-the-valley", "Gardenia", "Freesia", "Magnolia", "Osmanthus", "Peony", "Lilac", "Carnation", "Heliotrope", "Orange Blossom", "Neroli", "Chamomile", "Geranium", "Honeysuckle", "Mimosa", "Narcissus", "Hyacinth", "Lotus", "Water Lily", "Frangipani", "Plumeria", "Wisteria", "Begonia", "Wild Cyclamen", "Clary Sage", "Marigold", "Saffron", "Immortelle", "Cassia", "Peach Blossom", "Cherry Blossom", "Apple Blossom", "Tiare Flower"],
             "Woody": ["Sandalwood", "Cedar", "Vetiver", "Patchouli", "Oud", "Agarwood", "Cypress", "Pine", "Fir", "Spruce", "Juniper", "Rosewood", "Guaiacwood", "Oak", "Birch", "Cashmere Wood", "Hinoki", "Teak", "Ebony", "Mahogany", "Bamboo", "Driftwood", "Tree Moss", "Oakmoss", "Virginian Cedar", "Atlas Cedar", "Texas Cedar", "Papyrus", "Clearwood", "Iso E Super"],
@@ -500,15 +498,8 @@
             return null;
         }
 
+        // API key is never stored client-side. All AI calls proxy through /api/openrouter.
         async function callOpenRouter(prompt) {
-            let apiKey = OPENROUTER_API_KEY;
-            
-            if (apiKey.includes("%%")) {
-                alert("⚠️ API Key not configured!\n\nFor local development:\n1. Get a free API key from https://openrouter.ai/\n2. Replace the placeholder with your key\n\nFor GitHub Pages:\n1. Go to repo Settings → Secrets\n2. Add secret: VITE_OPENROUTER_API_KEY");
-                return null;
-            }
-
-            const url = "https://openrouter.ai/api/v1/chat/completions";
             const payload = {
                 model: "openrouter/free",
                 messages: [
@@ -518,14 +509,9 @@
             };
 
             try {
-                const response = await fetch(url, {
+                const response = await fetch('/api/openrouter', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`,
-                        'HTTP-Referer': window.location.href,
-                        'X-Title': 'ScentWorld AI'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
                 
@@ -657,7 +643,14 @@
                 
                 const header = document.createElement('div');
                 header.className = 'family-header p-2 bg-stone-50 cursor-pointer hover:bg-stone-100 transition-colors flex justify-between items-center';
-                header.innerHTML = `<h3 class="text-xs font-bold text-stone-500 uppercase tracking-wider">${family}</h3><i data-lucide="chevron-down" class="w-4 h-4 text-stone-400 transition-transform chevron"></i>`;
+                const familyLabel = document.createElement('h3');
+                familyLabel.className = 'text-xs font-bold text-stone-500 uppercase tracking-wider';
+                familyLabel.textContent = family;
+                const chevronIcon = document.createElement('i');
+                chevronIcon.setAttribute('data-lucide', 'chevron-down');
+                chevronIcon.className = 'w-4 h-4 text-stone-400 transition-transform chevron';
+                header.appendChild(familyLabel);
+                header.appendChild(chevronIcon);
                 header.onclick = () => toggleFamily(header);
                 
                 const content = document.createElement('div');
@@ -730,15 +723,28 @@
             if (!noteName || currentMix[zoneName].find(n => n.name === noteName)) return;
             currentMix[zoneName].push({ name: noteName, family: familyName });
             const zone = document.getElementById(`zone-${zoneName}`);
-            const chip = document.createElement('div'); chip.className = `note-chip px-3 py-1 rounded-full text-xs font-medium border flex items-center gap-1 bg-white border-stone-300 shadow-sm animate-in fade-in zoom-in duration-200`;
-            chip.innerHTML = `<span class="w-2 h-2 rounded-full ${familyColors[familyName].split(' ')[0]}"></span>${noteName}<button class="ml-1 text-stone-400 hover:text-red-500" onclick="removeNote('${zoneName}', '${noteName}', this)">×</button>`;
-            const emptyLabel = zone.querySelector('.empty-label'); if (emptyLabel) emptyLabel.style.display = 'none'; zone.appendChild(chip);
+            const chip = document.createElement('div');
+            chip.className = 'note-chip px-3 py-1 rounded-full text-xs font-medium border flex items-center gap-1 bg-white border-stone-300 shadow-sm animate-in fade-in zoom-in duration-200';
+            const dot = document.createElement('span');
+            dot.className = `w-2 h-2 rounded-full ${familyColors[familyName].split(' ')[0]}`;
+            const label = document.createTextNode(noteName);
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'ml-1 text-stone-400 hover:text-red-500';
+            removeBtn.textContent = '\u00D7';
+            removeBtn.addEventListener('click', () => removeNote(zoneName, noteName, chip));
+            chip.appendChild(dot);
+            chip.appendChild(label);
+            chip.appendChild(removeBtn);
+            const emptyLabel = zone.querySelector('.empty-label');
+            if (emptyLabel) emptyLabel.style.display = 'none';
+            zone.appendChild(chip);
             if (!skipScene) generateStandardScene();
             document.getElementById('btn-dream').classList.remove('hidden');
         }
         
-        function removeNote(zoneName, noteName, btnElement) {
-            currentMix[zoneName] = currentMix[zoneName].filter(n => n.name !== noteName); btnElement.parentElement.remove();
+        function removeNote(zoneName, noteName, chipElement) {
+            currentMix[zoneName] = currentMix[zoneName].filter(n => n.name !== noteName);
+            chipElement.remove();
             const zone = document.getElementById(`zone-${zoneName}`); if (currentMix[zoneName].length === 0) zone.querySelector('.empty-label').style.display = 'flex';
             generateStandardScene();
         }

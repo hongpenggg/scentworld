@@ -47,3 +47,6 @@ coverage/
 *.temp
 .tmp/
 .temp/
+
+# Patch files
+*.patch

@@ -7,7 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'API key not configured' });
+    return res.status(500).json({ error: 'API key not configured on server' });
   }
 
   try {
@@ -17,9 +17,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
         'HTTP-Referer': process.env.SITE_URL || 'https://scentworld.vercel.app',
-        'X-Title': 'ScentWorld AI',
+        'X-Title': 'ScentWorld AI'
       },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify(req.body)
     });
 
     const data = await response.json();
@@ -31,6 +31,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(data);
   } catch (err) {
     console.error('OpenRouter proxy error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Upstream request failed' });
   }
 }

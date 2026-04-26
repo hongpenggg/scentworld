@@ -32,12 +32,20 @@ The core experience featuring:
 - Dynamic memory scene generation
 - Elegant glassmorphic UI with ambient music
 - Drag-and-drop or click-to-select note placement
+- Expanded inspiration catalog (classic, designer, niche icons)
+- Formula concentration controls and dominance visualization
+- IFRA/allergen checks, interaction matrix, accords builder, and cost estimator
+- Scent wheel, family radar profile, longevity/sillage estimate, and similarity matcher
+- URL-encoded formula sharing (`?formula=...`) with instant load
+- Guided perfumery tutorials + note encyclopaedia panel
 
 ### 🤖 [**ScentWorld AI**](https://hongpenggg.github.io/scentworld/gemini.html)
 AI-enhanced edition with:
 - **"Dream up a Scene"** — AI generates unique, poetic memory descriptions
 - **"Consult the Alchemist"** — Get personalized fragrance critiques and suggestions
 - Powered by OpenRouter's free models for creative text generation
+- All advanced formula/R&D tools from the main version
+- AI persona profiler output (target wearer, season suitability, gender suitability)
 
 ---
 
@@ -50,11 +58,26 @@ AI-enhanced edition with:
 - **🎵 Ambient Soundscape** — Classical piano accompaniment (toggleable)
 - **📱 Responsive Design** — Seamless experience on desktop and mobile
 - **🌈 14 Note Families** — From Florals to Synthetics, with color-coded chips
+- **💯 Note Concentration Sliders** — Per-note percentage dials + 100% lock state
+- **🧪 Concentration Type Selector** — Parfum/EDP/EDT/EDC/Aftershave longevity and sillage readout
+- **🧷 Fixative Tagging** — Base-note fixative markers + fixation score
+- **⏱️ Volatility Timeline** — Time-based active-note preview
+- **🍶 Solvent/Carrier Selector** — Ethanol/IPM/DPG/oil dry-down projection
+- **⚠️ IFRA + Allergen Panel** — Restriction warnings and auto-generated allergen declaration
+- **🧩 Interaction Matrix** — Synergy/conflict view for selected notes
+- **🧱 Accords Builder** — Preset and custom accord packs
+- **💲 Raw Material Cost Estimator** — Cost tier + estimated cost-per-gram
+- **🧭 Scent Wheel + Radar** — Family coverage and profile shape visualization
+- **🔍 Similar Fragrance Matcher** — Family-overlap similarity scoring
+- **🔗 Shareable Formula URLs** — Copy/share complete compositions via URL parameters
+- **🎓 Guided Tutorials** — Step-by-step fougère/chypre/oriental workflows
+- **📖 Note Encyclopaedia** — Click note chips to inspect material details
 
 ### AI-Powered Features
 - **✨ Dream Mode** — Generate personalized memory narratives using AI
 - **⚗️ Alchemist Critique** — Receive expert feedback on balance and composition
 - **🔮 Adaptive Storytelling** — AI interprets your fragrance choices into prose
+- **🧬 Target Persona Profiler** — Wearer profile + season + gender suitability
 
 ### Technical Highlights
 - **Zero Dependencies** — Pure HTML/CSS/JS with Tailwind CDN

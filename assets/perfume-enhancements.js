@@ -15,7 +15,7 @@
     { key: 'sauvage', name: 'Sauvage', brand: 'DIOR', top: ['Bergamot', 'Black Pepper'], heart: ['Sichuan Pepper', 'Lavender', 'Pink Pepper', 'Vetiver', 'Patchouli', 'Geranium', 'Elemi'], base: ['Ambroxan', 'Cedar', 'Labdanum'], description: 'Bright peppery freshness over ambroxan and woods.' },
     { key: 'bleu', name: 'Bleu de Chanel', brand: 'CHANEL', top: ['Grapefruit', 'Lemon', 'Mint', 'Pink Pepper'], heart: ['Ginger', 'Nutmeg', 'Jasmine', 'Iso E Super'], base: ['Incense', 'Cedar', 'Vetiver', 'Sandalwood', 'Patchouli', 'Labdanum', 'White Musk'], description: 'Fresh aromatic citrus with incense and woods.' },
     { key: 'chanel5', name: 'N°5', brand: 'CHANEL', top: ['Aldehyde', 'Ylang Ylang', 'Neroli', 'Bergamot', 'Lemon'], heart: ['Iris', 'Jasmine', 'Rose', 'Orris Root', 'Lily-of-the-valley'], base: ['Civet Musk', 'Musk', 'Sandalwood', 'Amber', 'Moss', 'Vanilla', 'Vetiver', 'Patchouli'], description: 'The archetypal aldehydic floral with plush musky base.' },
-    { key: 'shalimar', name: 'Shalimar', brand: 'GUERLAIN', top: ['Bergamot', 'Lemon'], heart: ['Iris', 'Jasmine', 'Rose'], base: ['Vanilla', 'Opoponax', 'Civet', 'Incense'], description: 'Oriental pillar with rich vanilla-resin depth.' },
+    { key: 'shalimar', name: 'Shalimar', brand: 'GUERLAIN', top: ['Bergamot', 'Lemon'], heart: ['Iris', 'Jasmine', 'Rose'], base: ['Vanilla', 'Opopanax', 'Civet', 'Incense'], description: 'Oriental pillar with rich vanilla-resin depth.' },
     { key: 'missdior', name: 'Miss Dior (Original/Chérie)', brand: 'DIOR', top: ['Galbanum', 'Green Leaves', 'Neroli'], heart: ['Rose', 'Jasmine', 'Lily-of-the-valley'], base: ['Oakmoss', 'Patchouli', 'Labdanum'], description: 'Green floral chypre structure with mossy elegance.' },
     { key: 'opium', name: 'Opium', brand: 'YVES SAINT LAURENT', top: ['Mandarin', 'Plum', 'Clove', 'Black Pepper'], heart: ['Jasmine', 'Rose', 'Carnation', 'Coriander'], base: ['Vetiver', 'Cedar', 'Sandalwood', 'Benzoin', 'Vanilla'], description: 'Spiced oriental with balsamic base.' },
     { key: 'ckone', name: 'CK One', brand: 'CALVIN KLEIN', top: ['Bergamot', 'Cardamom', 'Pineapple', 'Green Tea'], heart: ['Jasmine', 'Violet', 'Rose', 'Iris'], base: ['Musk', 'Amber', 'Sandalwood', 'Oakmoss'], description: 'Clean citrus-tea freshness with transparent musk woods.' },
@@ -59,10 +59,23 @@
     'Layer an oriental': [{ title: 'Spice start', why: 'Spark warmth.', notes: [{ l: 'top', n: 'Mandarin' }, { l: 'top', n: 'Cardamom' }] }, { title: 'Floral heart', why: 'Round the spices.', notes: [{ l: 'heart', n: 'Rose' }, { l: 'heart', n: 'Jasmine' }] }, { title: 'Resin-vanilla base', why: 'Long sensual dry-down.', notes: [{ l: 'base', n: 'Benzoin' }, { l: 'base', n: 'Vanilla' }, { l: 'base', n: 'Labdanum' }] }]
   };
   const presetAccords = [{ name: 'Rose Accord', notes: ['Rose', 'Geranium', 'Linalool'] }, { name: 'Fougère Accord', notes: ['Lavender', 'Oakmoss', 'Coumarin', 'Bergamot'] }, { name: 'Chypre Accord', notes: ['Bergamot', 'Rose', 'Patchouli', 'Oakmoss'] }, { name: 'Amber Accord', notes: ['Labdanum', 'Vanilla', 'Benzoin'] }];
+  const allergenMap = { Bergamot: ['linalool', 'limonene'], Lemon: ['limonene', 'citral'], Orange: ['limonene'], Rose: ['citronellol', 'geraniol'], Jasmine: ['benzyl benzoate', 'linalool'], Lavender: ['linalool'], Oakmoss: ['evernia prunastri extract'], 'Ylang Ylang': ['isoeugenol'], Cinnamon: ['cinnamal'] };
+  const interactionMap = { 'Calone|Labdanum': 'red', 'Hedione|Jasmine': 'green', 'Bergamot|Oakmoss': 'green', 'Rose|Patchouli': 'green', 'Vanilla|Incense': 'amber' };
+  const defaultNoteMeta = { origin: 'Varies', extraction: 'Distillation/extraction/synthesis', descriptor: 'General perfumery descriptor', uses: 'Used in classic and modern perfumery' };
   const noteMeta = { Rose: ['Rosa species', 'solvent extraction / distillation', 'petal, dewy floral', 'Miss Dior, Portrait of a Lady'], Jasmine: ['Jasminum spp.', 'solvent extraction', 'narcotic white floral', 'N°5, Flowerbomb'], Bergamot: ['Citrus bergamia', 'cold expression', 'sparkling citrus', 'cologne/chypre openings'], Sandalwood: ['Santalum spp.', 'distillation / synthesis', 'creamy woody', 'Santal 33, Oud Wood'], Patchouli: ['Pogostemon cablin', 'steam distillation', 'earthy woody', 'Angel, Flowerbomb'] };
 
   let state = { concentrations: {}, concentrationType: 'EDP', solvent: 'Ethanol 95%', timeline: 2, customAccords: [] };
+  let lastEncodedFormula = '';
+  let renderQueued = false;
   const families14 = ['Floral', 'Woody', 'Citrus', 'Fruit', 'Greens', 'Musks', 'Warm Spices', 'Synthetic', 'Gourmand', 'Aquatic', 'Resinous', 'Boozy', 'Earthy', 'Animalic'];
+  const esc = (s) => String(s).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+  function layerForAccordNote(note, idx) {
+    const family = getFamily(note);
+    if (['Citrus', 'Greens', 'Aquatic'].includes(family)) return 'top';
+    if (['Woody', 'Musks', 'Resinous', 'Earthy', 'Animalic', 'Gourmand'].includes(family)) return 'base';
+    if (['Floral', 'Fruit', 'Warm Spices'].includes(family)) return 'heart';
+    return ['top', 'heart', 'base'][idx % 3];
+  }
 
   const getFamily = (n) => {
     try {
@@ -205,10 +218,13 @@
     panel.querySelector('#sw-tutorial').onchange = () => renderTutorial();
     document.addEventListener('click', (ev) => {
       const chip = ev.target.closest('.note-chip[data-note]'); if (!chip) return;
-      const n = chip.dataset.note, d = noteMeta[n] || ['Varies', 'Distillation/extraction/synthesis', `${getFamily(n)} descriptor`, 'Used in classic and modern perfumery'];
+      const n = chip.dataset.note;
+      const d = noteMeta[n]
+        ? { origin: noteMeta[n][0], extraction: noteMeta[n][1], descriptor: noteMeta[n][2], uses: noteMeta[n][3] }
+        : { ...defaultNoteMeta, descriptor: `${getFamily(n)} descriptor` };
       const p = document.getElementById('sw-note-panel');
       p.querySelector('#sw-note-title').textContent = n;
-      p.querySelector('#sw-note-body').innerHTML = `<div><strong>Botanical/material origin:</strong> ${d[0]}</div><div><strong>Extraction method:</strong> ${d[1]}</div><div><strong>Olfactory descriptor:</strong> ${d[2]}</div><div><strong>Famous uses:</strong> ${d[3]}</div>`;
+      p.querySelector('#sw-note-body').innerHTML = `<div><strong>Botanical/material origin:</strong> ${esc(d.origin)}</div><div><strong>Extraction method:</strong> ${esc(d.extraction)}</div><div><strong>Olfactory descriptor:</strong> ${esc(d.descriptor)}</div><div><strong>Famous uses:</strong> ${esc(d.uses)}</div>`;
       p.classList.add('open');
     });
   }
@@ -229,30 +245,56 @@
     syncConcentrations();
     const panel = document.getElementById('sw-advanced-panel'); if (!panel) return;
     const list = entries();
-    panel.querySelector('#sw-conc-list').innerHTML = list.map((e) => `<div class="sw-small"><div class="sw-row"><span>${e.name} <span class="sw-muted">(${e.layer})${e.layer === 'base' && fixatives.has(e.name) ? ' 🧷' : ''}</span></span><span>${pct(e).toFixed(1)}%</span></div><input type="range" min="0" max="100" step="0.5" value="${pct(e)}" data-id="${e.id}" class="sw-input sw-conc"></div>`).join('') || '<div class="sw-small sw-muted">Add notes to configure concentration.</div>';
-    panel.querySelectorAll('.sw-conc').forEach((x) => x.oninput = () => { state.concentrations[x.dataset.id] = Number(x.value); render(); });
+    panel.querySelector('#sw-conc-list').innerHTML = list.map((e) => `<div class="sw-small"><div class="sw-row"><span>${esc(e.name)} <span class="sw-muted">(${esc(e.layer)})${e.layer === 'base' && fixatives.has(e.name) ? ' 🧷' : ''}</span></span><span>${pct(e).toFixed(1)}%</span></div><input type="range" min="0" max="100" step="0.5" value="${pct(e)}" data-id="${encodeURIComponent(e.id)}" class="sw-input sw-conc"></div>`).join('') || '<div class="sw-small sw-muted">Add notes to configure concentration.</div>';
+    panel.querySelectorAll('.sw-conc').forEach((x) => x.oninput = () => { state.concentrations[decodeURIComponent(x.dataset.id)] = Number(x.value); render(); });
     panel.querySelector('#sw-total').textContent = `${total().toFixed(1)}% ${locked() ? '🔒 locked' : '🔓 unlock'}`;
     panel.querySelector('#sw-total').className = `sw-badge ${locked() ? 'green' : 'amber'}`;
     panel.querySelector('#sw-type').value = state.concentrationType;
     panel.querySelector('#sw-solvent').value = state.solvent;
     const p = profiles[state.concentrationType];
-    panel.querySelector('#sw-long').innerHTML = `Oil concentration: <strong>${state.concentrationType}</strong> (${p.range})<br>Estimated longevity: ${p.longevity}<br>Estimated sillage: ${p.sillage}<br>Projection: strong (first hour) → moderate (2–4 hrs) → skin-close (4–8 hrs).`;
+    const projectionByType = {
+      Aftershave: 'light (first 30 min) → skin-close (1–2 hours) → very faint (2–3 hours)',
+      EDC: 'light (first hour) → soft (2–3 hours) → skin-close (3–4 hours)',
+      EDT: 'moderate (first hour) → moderate-soft (2–4 hours) → skin-close (4–6 hours)',
+      EDP: 'strong (first hour) → moderate (2–4 hours) → skin-close (4–8 hours)',
+      Parfum: 'strong-diffusive (first 2 hours) → moderate (3–6 hours) → skin-close (8–12 hours+)'
+    };
+    panel.querySelector('#sw-long').textContent = `Oil concentration: ${state.concentrationType} (${p.range}) | Estimated longevity: ${p.longevity} | Estimated sillage: ${p.sillage} | Projection: ${projectionByType[state.concentrationType]}.`;
     panel.querySelector('#sw-solvent-desc').textContent = solvents[state.solvent];
     const f = fixation();
     panel.querySelector('#sw-fix').innerHTML = `Fixation score: <strong>${f.score}/100</strong> · Fixative share: ${f.fixed.toFixed(1)}%`;
     panel.querySelector('#sw-time').value = String(state.timeline);
     panel.querySelector('#sw-time-label').textContent = `Volatility timeline preview: ${state.timeline}h`;
-    panel.querySelector('#sw-active').textContent = `Active notes now: ${(state.timeline <= 0.5 ? mix().top : state.timeline <= 4 ? mix().heart : mix().base).map((n) => n.name).join(', ') || 'none'}`;
+    let activeLayer = mix().base;
+    if (state.timeline <= 0.5) activeLayer = mix().top;
+    else if (state.timeline <= 4) activeLayer = mix().heart;
+    panel.querySelector('#sw-active').textContent = `Active notes now: ${activeLayer.map((n) => n.name).join(', ') || 'none'}`;
     const warns = ifraWarnings();
     panel.querySelector('#sw-ifra').innerHTML = warns.length ? warns.map((w) => `⚠️ ${w}`).join('<br>') : '<span class="sw-muted">No mapped restricted notes flagged.</span>';
-    const allergens = Array.from(new Set(entries().flatMap((e) => ({ Bergamot: ['linalool', 'limonene'], Lemon: ['limonene', 'citral'], Orange: ['limonene'], Rose: ['citronellol', 'geraniol'], Jasmine: ['benzyl benzoate', 'linalool'], Lavender: ['linalool'], Oakmoss: ['evernia prunastri extract'], Ylang: ['isoeugenol'], Cinnamon: ['cinnamal'] }[e.name] || [])))).sort();
+    const allergens = Array.from(new Set(entries().flatMap((e) => allergenMap[e.name] || []))).sort();
     panel.querySelector('#sw-allergen').textContent = `This formula contains: ${allergens.join(', ') || 'none of the mapped 26 allergens'}.`;
     const accordData = [...presetAccords, ...state.customAccords];
-    panel.querySelector('#sw-accords').innerHTML = accordData.map((a, i) => `<div class="sw-row"><span class="sw-small"><strong>${a.name}</strong> = ${a.notes.join(' + ')}</span><button type="button" class="sw-apply" data-i="${i}">Apply</button></div>`).join('');
-    panel.querySelectorAll('.sw-apply').forEach((b) => b.onclick = () => accordData[Number(b.dataset.i)].notes.forEach((n, i) => addNote(i === 0 ? 'top' : i === 1 ? 'heart' : 'base', n, getFamily(n))));
+    const accordsEl = panel.querySelector('#sw-accords');
+    accordsEl.innerHTML = '';
+    accordData.forEach((a, i) => {
+      const row = document.createElement('div');
+      row.className = 'sw-row';
+      const span = document.createElement('span');
+      span.className = 'sw-small';
+      span.textContent = `${a.name} = ${a.notes.join(' + ')}`;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'sw-apply';
+      btn.dataset.i = String(i);
+      btn.textContent = 'Apply';
+      btn.onclick = () => accordData[Number(btn.dataset.i)].notes.forEach((n, idx) => addNote(layerForAccordNote(n, idx), n, getFamily(n)));
+      row.appendChild(span);
+      row.appendChild(btn);
+      accordsEl.appendChild(row);
+    });
     const notes = list.slice(0, 6).map((x) => x.name);
-    const t = (a, b) => ({ 'Calone|Labdanum': 'red', 'Hedione|Jasmine': 'green', 'Bergamot|Oakmoss': 'green', 'Rose|Patchouli': 'green', 'Vanilla|Incense': 'amber' }[[a, b].sort().join('|')] || 'amber');
-    panel.querySelector('#sw-matrix').innerHTML = notes.length > 1 ? `<table class="sw-matrix" style="border-collapse:collapse;width:100%"><thead><tr><th></th>${notes.map((n) => `<th>${n.slice(0, 8)}</th>`).join('')}</tr></thead><tbody>${notes.map((r) => `<tr><th>${r.slice(0, 8)}</th>${notes.map((c) => r === c ? '<td>—</td>' : `<td style="background:${t(r, c) === 'green' ? '#bbf7d0' : t(r, c) === 'red' ? '#fecaca' : '#fef3c7'}">${t(r, c)}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '<span class="sw-muted">Select at least 2 notes.</span>';
+    const t = (a, b) => interactionMap[[a, b].sort().join('|')] || 'amber';
+    panel.querySelector('#sw-matrix').innerHTML = notes.length > 1 ? `<table class="sw-matrix" style="border-collapse:collapse;width:100%"><thead><tr><th></th>${notes.map((n) => `<th>${esc(n.slice(0, 8))}</th>`).join('')}</tr></thead><tbody>${notes.map((r) => `<tr><th>${esc(r.slice(0, 8))}</th>${notes.map((c) => r === c ? '<td>—</td>' : `<td style="background:${t(r, c) === 'green' ? '#bbf7d0' : t(r, c) === 'red' ? '#fecaca' : '#fef3c7'}">${t(r, c)}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '<span class="sw-muted">Select at least 2 notes.</span>';
     const cost = list.reduce((s, e) => {
       const q = pct(e) / 100;
       const v = ['Oud', 'Ambergris', 'Iris', 'Saffron'].includes(e.name) ? 18 : ['Sandalwood', 'Patchouli', 'Neroli', 'Vanilla'].includes(e.name) ? 5.5 : 1.2;
@@ -263,28 +305,51 @@
     list.forEach((e) => bal[e.family] = (bal[e.family] || 0) + pct(e));
     const sum = families14.reduce((s, f) => s + bal[f], 0) || 1;
     let c = 0;
-    panel.querySelector('#sw-wheel').style.background = `conic-gradient(${families14.map((f) => { const span = bal[f] / sum * 360, out = `${bal[f] ? 'rgba(212,175,55,0.85)' : 'rgba(229,231,235,0.95)'} ${c}deg ${c + span}deg`; c += span; return out; }).join(',')})`;
+    const wheelSegments = families14.map((f) => {
+      const span = (bal[f] / sum) * 360;
+      const color = bal[f] ? 'rgba(212,175,55,0.85)' : 'rgba(229,231,235,0.95)';
+      const out = `${color} ${c}deg ${c + span}deg`;
+      c += span;
+      return out;
+    });
+    panel.querySelector('#sw-wheel').style.background = `conic-gradient(${wheelSegments.join(',')})`;
     const activeFamilies = families14.filter((f) => bal[f] > 0);
     panel.querySelector('#sw-wheel-text').textContent = `Covered: ${activeFamilies.join(', ') || 'none'} · Gaps: ${families14.filter((f) => !activeFamilies.includes(f)).slice(0, 4).join(', ') || 'none'}`;
     const cx = 120, cy = 88, r = 64;
     const points = families14.map((f, i) => { const a = Math.PI * 2 * i / families14.length - Math.PI / 2, rr = Math.min(100, bal[f]) / 100 * r; return `${cx + Math.cos(a) * rr},${cy + Math.sin(a) * rr}`; }).join(' ');
     panel.querySelector('#sw-radar').innerHTML = `${families14.map((_, i) => { const a = Math.PI * 2 * i / families14.length - Math.PI / 2; return `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos(a) * r}" y2="${cy + Math.sin(a) * r}" stroke="#e5e7eb"/>`; }).join('')}<polygon points="${points}" fill="rgba(212,175,55,.25)" stroke="#b45309" stroke-width="1.2"/>`;
-    panel.querySelector('#sw-similar').innerHTML = similar().map((x) => `${x.score}% similar to ${x.name}`).join('<br>') || 'No similarity signal yet.';
+    panel.querySelector('#sw-similar').innerHTML = similar().map((x) => `${x.score}% similar to ${esc(x.name)}`).join('<br>') || 'No similarity signal yet.';
     if (panel.querySelector('#sw-persona-card')?.style.display !== 'none') {
-      const dom = Object.keys(Object.fromEntries(entries().map((e) => [e.family, 0]).map(([f]) => [f, entries().filter((e) => e.family === f).length]))).sort((a, b) => entries().filter((e) => e.family === b).length - entries().filter((e) => e.family === a).length)[0] || 'Balanced';
+      const familyCounts = {};
+      list.forEach((e) => familyCounts[e.family] = (familyCounts[e.family] || 0) + 1);
+      const dom = Object.keys(familyCounts).sort((a, b) => familyCounts[b] - familyCounts[a])[0] || 'Balanced';
       const season = dom === 'Citrus' || dom === 'Aquatic' ? 'Spring / Summer' : dom === 'Woody' || dom === 'Resinous' ? 'Autumn / Winter' : 'All-season';
       const gender = dom === 'Floral' ? 'Unisex leaning feminine' : dom === 'Woody' ? 'Unisex leaning masculine' : 'Unisex';
-      panel.querySelector('#sw-persona').innerHTML = `Ideal wearer: ${dom.toLowerCase()}-loving, style-conscious profile (approx. 24–42), versatile city-to-evening.<br><strong>Season suitability:</strong> ${season}<br><strong>Gender suitability:</strong> ${gender}`;
+      panel.querySelector('#sw-persona').innerHTML = `Ideal wearer: ${esc(dom.toLowerCase())}-loving, style-conscious profile (approx. 24–42), versatile city-to-evening.<br><strong>Season suitability:</strong> ${esc(season)}<br><strong>Gender suitability:</strong> ${esc(gender)}`;
     }
     renderTutorial();
     applyDominance();
-    const u = new URL(location.href); u.searchParams.set('formula', encodeFormula()); history.replaceState({}, '', u.toString());
+    const encoded = encodeFormula();
+    if (encoded !== lastEncodedFormula) {
+      const u = new URL(location.href);
+      u.searchParams.set('formula', encoded);
+      history.replaceState({}, '', u.toString());
+      lastEncodedFormula = encoded;
+    }
+  }
+  function scheduleRender() {
+    if (renderQueued) return;
+    renderQueued = true;
+    setTimeout(() => {
+      renderQueued = false;
+      render();
+    }, 0);
   }
   function hook() {
     ['addNote', 'removeNote', 'resetPyramid', 'loadPerfume', 'drop'].forEach((k) => {
       const fn = window[k];
       if (typeof fn !== 'function' || fn.__swHooked) return;
-      window[k] = function (...args) { const out = fn.apply(this, args); setTimeout(render, 0); return out; };
+      window[k] = function (...args) { const out = fn.apply(this, args); scheduleRender(); return out; };
       window[k].__swHooked = true;
     });
   }
